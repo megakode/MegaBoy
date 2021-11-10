@@ -6,11 +6,11 @@ enable_testing()
 find_package(GTest REQUIRED)
 include(GoogleTest)
 
-add_executable(mytests mytests.cpp)
-target_link_libraries(mytests GTest::GTest GTest::Main)
-gtest_discover_tests(mytests)
+add_executable(cputests cputests.cpp cpu.cpp )
+target_link_libraries(cputests GTest::GTest GTest::Main)
+gtest_discover_tests(cputests)
 
-add_executable(MegaBoy main.cpp)
+add_executable(MegaBoy main.cpp cpu.cpp)
 
 target_compile_features(MegaBoy PRIVATE cxx_std_17)
 
