@@ -57,12 +57,14 @@ class CPU {
         return regs.F & flag;
     }
 
+    bool has_parity( uint8_t x );
+
     // generic instructions
     void inc_r( uint8_t &reg );
     void dec_r( uint8_t &reg );
 
     // instructions
-    void NOP();
+    void NOP(); // 0x00
     void load_bc_nn();
     void load_bc_a();
     void inc_bc();
@@ -72,23 +74,46 @@ class CPU {
     void rlca();
     void ex_af();
     void add_hl_bc();
-    void load_a_bc_ptr();
+    void load_a_ptr_bc();
     void dec_bc();
     void inc_c();
     void dec_c();
     void load_c_n();
     void rrca();
 
-    void djnz_n();
+    void djnz_n(); // 0x10
     void load_de_nn();
-    void load_de_ptr_a();
+    void load_ptr_de_a();
     void inc_de();
     void inc_d();
     void dec_d();
     void load_d_n();
     void rla();
     void jr_n();
+    void add_hl_de();
+    void load_a_ptr_de();
+    void dec_de();
+    void inc_e();
+    void dec_e();
+    void ld_e_n();
+    void rra();
 
+    void jr_nz(); // 0x20
+    void ld_hl_nn();
+    void ld_ptr_nn_hl();
+    void inc_hl();
+    void inc_h();
+    void dec_h();
+    void ld_h_n();
+    void daa();
+    void jr_z();
+    void add_hl_hl();
+    void ld_hl_ptr_nn();
+    void dec_hl();
+    void inc_l();
+    void dec_l();
+    void ld_l_n();
+    void cpl();
 
     struct Instruction {
         std::string name;

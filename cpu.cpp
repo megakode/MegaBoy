@@ -13,6 +13,10 @@ uint8_t& HostMemory::operator[] (int index)
 }
 
 CPU::CPU() {
+
+    // Based on tables from:
+    // https://clrhome.org/table/
+
     opCodeLookup = { 
         {"INC",&CPU::NOP},                  // 0x00
         {"LD BC,NN",&CPU::load_bc_nn},      // 0x01
@@ -20,11 +24,11 @@ CPU::CPU() {
         {"INC BC",&CPU::inc_bc},            // 0x03
         {"INC B",&CPU::inc_b},              // 0x04
         {"DEC B",&CPU::dec_b},              // 0x05
-        {"LD B,N",&CPU::load_b_n},        // 0x06
+        {"LD B,N",&CPU::load_b_n},          // 0x06
         {"RLCA",&CPU::rlca},                // 0x07
         {"EXAF",&CPU::ex_af},               // 0x08
         {"ADD HL,BC",&CPU::add_hl_bc},      // 0x09
-        {"LD A,(BC)",&CPU::load_a_bc_ptr},  // 0x0a
+        {"LD A,(BC)",&CPU::load_a_ptr_bc},  // 0x0a
         {"DEC BC",&CPU::dec_bc},            // 0x0b
         {"INC C",&CPU::inc_c},              // 0x0c
         {"DEC C",&CPU::dec_c},              // 0x0d
@@ -33,13 +37,39 @@ CPU::CPU() {
 
         {"DJNZ N",&CPU::djnz_n},            // 0x10
         {"LD DE,NN",&CPU::load_de_nn},      // 0x11
-        {"LD (DE),A",&CPU::load_de_ptr_a},  // 0x12
+        {"LD (DE),A",&CPU::load_ptr_de_a},  // 0x12
         {"INC DE",&CPU::inc_de},            // 0x13
         {"INC D",&CPU::inc_d},              // 0x14
         {"DEC D",&CPU::dec_d},              // 0x15
         {"LD D,N",&CPU::load_d_n},          // 0x16
         {"RLA",&CPU::rla},                  // 0x17
         {"JR N",&CPU::jr_n},                // 0x18
+        {"ADD HL,DE",&CPU::add_hl_de},      // 0x19
+        {"LD A,(DE)",&CPU::load_a_ptr_de},  // 0x1a
+        {"DEC DE",&CPU::dec_de},            // 0x1b
+        {"INC E",&CPU::inc_e},              // 0x1c
+        {"DEC E",&CPU::dec_e},              // 0x1d
+        {"LD E,N",&CPU::ld_e_n},            // 0x1e
+        {"RRA",&CPU::rra},                  // 0x1f
+
+        {"JR NZ",&CPU::jr_nz},              // 0x20
+        {"LD HL,NN",&CPU::ld_hl_nn},        // 0x21
+        {"LD (NN),HL",&CPU::ld_ptr_nn_hl},  // 0x22
+        {"INC HL",&CPU::inc_hl},            // 0x23
+        {"INC H",&CPU::inc_h},              // 0x24
+        {"DEC H",&CPU::dec_h},              // 0x25
+        {"LD H,N",&CPU::ld_h_n},            // 0x26
+        {"DAA",&CPU::daa},                  // 0x27
+        {"JR Z",&CPU::jr_z},                // 0x28
+        {"ADD HL,HL",&CPU::add_hl_hl},      // 0x29
+        {"LD HL,(NN)",&CPU::ld_hl_ptr_nn},  // 0x2a
+        {"DEC HL",&CPU::dec_hl},            // 0x2b
+        {"INC L",&CPU::inc_l},              // 0x2c
+        {"DEC L",&CPU::dec_l},              // 0x2d
+        {"LD L,N",&CPU::ld_l_n},            // 0x2e
+        {"CPL",&CPU::cpl},                  // 0x2f
+
+
     };
 
 }
@@ -434,6 +464,23 @@ void CPU::step() {
 
 };
 
+
+bool CPU::has_parity( uint8_t x ){
+    /*
+    x ^= x >> 4;
+    x ^= x >> 2;
+    x ^= x >> 1;
+    return (~x) & 1;
+    */
+    uint8_t p = 1;
+    while (x)
+    {
+        p ^= 1;
+        x &= x-1; // at each iteration, we set the least significant 1 to 0
+    }
+    return p;
+}
+
 // *******************************************************
 // generic methods
 // *******************************************************
@@ -591,7 +638,7 @@ void CPU::add_hl_bc(){
 // opcode: 0x0A
 // cycles: 7
 // flags: -
-void CPU::load_a_bc_ptr(){
+void CPU::load_a_ptr_bc(){
     regs.A = mem[regs.value_in_bc()];
 }
 
@@ -667,7 +714,7 @@ void CPU::load_de_nn(){
 // load (de),a
 // opcode: 0x12
 // cycles: 7
-void CPU::load_de_ptr_a(){
+void CPU::load_ptr_de_a(){
     mem[regs.value_in_de()] = regs.A;
 }
 
@@ -709,10 +756,312 @@ void CPU::rla(){
     regs.A |= (newcarry>>7);
 }
 
+// jr n
 // opcode: 0x18
 // cycles: 12
 void CPU::jr_n(){
     int8_t jumpOffset = fetchInstruction();
     specialRegs.PC -= 2; // start calculation from beginning of this instruction
     specialRegs.PC += jumpOffset;
+}
+// add hl,de
+// opcode: 0x19
+// cycleS: 11
+// flag: C N H
+void CPU::add_hl_de() {
+    uint32_t hl = regs.value_in_hl();
+    uint32_t de = regs.value_in_de();
+    uint32_t result = hl + de;
+    setFlag(FlagBitmaskC,result & 0x10000); // Set if carry out of bit 15
+    // TODO: not sure that the half-carry is 100% correct
+    setFlag(FlagBitmaskHalfCarry, (hl & (1<<11)) &&  (result ^ (1<<11)) ); // Set if carry out of bit 11
+    setFlag(FlagBitmaskN,0);
+    regs.H = result >> 8;
+    regs.L = result;
+}
+
+// LD A,(DE)
+// opcode: 0x1a
+// cycles: 7
+// flags: -
+void CPU::load_a_ptr_de(){
+    regs.A = mem[regs.value_in_de()];
+}
+
+// DEC DE
+// opcode: 0x1b
+// cycles: 6
+void CPU::dec_de(){
+    uint16_t result = regs.value_in_de();
+    result--;
+    regs.D = result >> 8;
+    regs.E = result;
+}
+
+// INC E
+// opcode: 0x1c
+// cycles 4
+void CPU::inc_e(){
+    inc_r(regs.E);
+}
+
+// DEC E
+// opcode: 0x1d
+// cycles: 4
+void CPU::dec_e(){
+    dec_r(regs.E);
+}
+
+// LD E,n
+// opcode: 0x1e
+// cycles: 7
+// flags: -
+void CPU::ld_e_n(){
+    regs.E = fetchInstruction();
+}
+
+// RRA
+//
+// contents of A is rotated one bit right
+// The contents of bit 0 are copied to the carry flag, 
+// and the previous contents of the carry flag are copied to bit 7
+//
+// opcode: 0x1f
+// cycles: 4
+// flags: C N H
+void CPU::rra(){
+    uint8_t carry = regs.A & 1;
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    regs.A >>= 1;
+    regs.A |= (regs.F<<7); // Set bit 7 to previous carry flag
+    setFlag(FlagBitmaskC, carry); // Set new carry flag
+}
+
+// JR NZ
+// opcode: 0x20
+// cycles: 12/7
+void CPU::jr_nz(){
+    int8_t jumpOffset = fetchInstruction();
+    if(!(regs.F & FlagBitmaskZero)){ // If not zero
+        specialRegs.PC -= 2; // start calculation from beginning of this instruction
+        specialRegs.PC += jumpOffset;
+    }
+}
+
+// LD HL,NN
+// opcode: 0x21
+// cycles: 10
+// flags: -
+void CPU::ld_hl_nn(){
+    regs.L = fetchInstruction();
+    regs.H = fetchInstruction();
+}
+
+// LD (NN),HL
+// opcode: 0x22
+// flags: -
+void CPU::ld_ptr_nn_hl(){
+    uint16_t addr = fetch16BitAddress();
+    mem[addr] = regs.L;
+    mem[addr+1] = regs.H;
+}
+
+// INC HL
+// Opcode: 0x23
+// Cycles: 06
+// Flags: -
+void CPU::inc_hl(){
+    regs.L++;
+    if(regs.L==0) regs.H++;
+}
+
+// INC H
+// opcodE: 0x24
+void  CPU::inc_h(){
+    inc_r(regs.H);
+}
+
+// DEC H
+// opcode: 0x25
+void  CPU::dec_h(){
+    dec_r(regs.H);
+}
+
+void CPU::ld_h_n(){
+    regs.H = fetchInstruction();
+}
+
+
+// DAA
+// opcode: 0x27
+// cycles: 4
+// flags: S Z H PV C
+void CPU::daa(){
+
+    bool c_before_daa = (regs.F & FlagBitmaskC);
+    bool h_before_daa = (regs.F & FlagBitmaskHalfCarry);
+    uint8_t hexValueInUpper = regs.A >> 4;
+    uint8_t hexValueInLower = regs.A & 0x0f;
+
+    // Implemented according to the truth-table in the Z80 Technical manual p.141
+    // test with:
+    //
+    // ld a,$15 ; represents 15 (decimal)
+    // ld b,$27 ; represents 27 (decimal)
+    // add a,b  ; a now contains $3C (not a valid BCD number)
+    // daa      ; a now contains $42, representing 42 (decimal) = 15+27
+    //
+    // or test with:
+    // 
+    // ld a,$09 ; represents 9 (decimal)
+    // inc a    ; a now contains $0a (not a valid BCD number)
+    // daa      ; a now contains $10, representing 10 (decimal) = 9+1
+
+    if(regs.F & FlagBitmaskN){ // a SUB instruction was performed previously
+        if( c_before_daa == 0 ) {
+            if( hexValueInUpper <= 0x09 && h_before_daa == 0 && hexValueInLower <= 0x09){ 
+                regs.A += 0x00;
+                setFlag(FlagBitmaskC,false);
+            } else 
+            if( hexValueInUpper <= 0x08 && h_before_daa == 1 && hexValueInLower >= 0x06){ 
+                regs.A += 0xFA;
+                setFlag(FlagBitmaskC,false);
+            }
+        }else{
+            if( hexValueInUpper >= 0x07 && h_before_daa == 0 && hexValueInLower <= 0x09){ 
+                regs.A += 0xA0;
+                setFlag(FlagBitmaskC,true);
+            } else
+            if( hexValueInUpper >= 0x06 && h_before_daa == 1 && hexValueInLower <= 0x06){ 
+                regs.A += 0x9A;
+                setFlag(FlagBitmaskC,true);
+            }
+        }
+    } else { // an ADD instruction was performed previously
+        if( c_before_daa == 0 ) {
+            if( hexValueInUpper <= 0x09 && h_before_daa == 0 && hexValueInLower <= 0x09){ 
+                regs.A += 0x00;
+                setFlag(FlagBitmaskC,false);
+            } else 
+            if( hexValueInUpper <= 0x08 && h_before_daa == 0 && hexValueInLower >= 0x0a){
+                regs.A += 0x06;
+                setFlag(FlagBitmaskC,false);
+            } else 
+            if( hexValueInUpper <= 0x09 && h_before_daa == 1 && hexValueInLower <= 0x03){
+                regs.A += 0x06;
+                setFlag(FlagBitmaskC,false);
+            } else 
+            if( hexValueInUpper >= 0x0a && h_before_daa == 0 && hexValueInLower <= 0x09){
+                regs.A += 0x60;
+                setFlag(FlagBitmaskC,true);
+            } else 
+            if( hexValueInUpper >= 0x09 && h_before_daa == 0 && hexValueInLower >= 0x0a){
+                regs.A += 0x66;
+                setFlag(FlagBitmaskC,true);
+            } else 
+            if ( hexValueInUpper >= 0x0a && h_before_daa == 1 && hexValueInLower <= 0x03){
+                regs.A += 0x66;
+                setFlag(FlagBitmaskC,true);
+            }
+        } else {
+            if( hexValueInUpper <= 0x02 && h_before_daa == 0 && hexValueInLower <= 0x09){
+                regs.A += 0x60;
+                setFlag(FlagBitmaskC,true);
+            } else 
+            if( hexValueInUpper <= 0x02 && h_before_daa == 0 && hexValueInLower >= 0x0a){
+                regs.A += 0x66;
+                setFlag(FlagBitmaskC,true);
+            } else 
+            if( hexValueInUpper <= 0x03 && h_before_daa == 1 && hexValueInLower <= 0x03){
+                regs.A += 0x66;
+                setFlag(FlagBitmaskC,true);
+            }
+        }
+    }
+
+    setFlag( FlagBitmaskSign, regs.A & 0b10000000 );
+    setFlag( FlagBitmaskZero, regs.A == 0);
+    setFlag( FlagBitmaskPV, has_parity(regs.A) );
+    // TODO: tech.manual says "See instruction" for H flag, but it doesn't say anything else?!
+    // Parity: if number of 1s id odd p=0, if number is even p=1
+}
+
+// jr z,n
+// opcode: 0x28
+// cycles: 12/7
+// flags: -
+void CPU::jr_z(){
+    int8_t offset = fetchInstruction();
+    if((regs.F & FlagBitmaskZero)){ // If zero
+        specialRegs.PC -= 2; // start calculation from beginning of this instruction
+        specialRegs.PC += offset;
+    }
+}
+
+// add hl,hl
+// opcode: 0x29
+// cycles: 11
+// flags: C H N
+void CPU::add_hl_hl(){
+    uint32_t hl = regs.value_in_hl();
+    uint32_t result = hl << 1;
+    setFlag(FlagBitmaskC,result & 0x10000); // Set if carry out of bit 15
+    // TODO: not sure that the half-carry is 100% correct
+    setFlag(FlagBitmaskHalfCarry, (hl & (1<<11)) &&  (result ^ (1<<11)) ); // Set if carry out of bit 11
+    setFlag(FlagBitmaskN,0);
+    regs.H = result >> 8;
+    regs.L = result;
+}
+
+// ld hl,(nn)
+// opcode: 0x2a
+// cycles: 16
+// flags: -
+void CPU::ld_hl_ptr_nn(){
+    uint16_t addr = fetch16BitAddress();
+    regs.L = mem[addr];
+    regs.H = mem[addr+1];
+}
+
+// dec hl
+// opcode: 0x2b
+// cycles: 6
+// flags: -
+void CPU::dec_hl(){
+    uint16_t result = regs.value_in_hl();
+    result--;
+    regs.D = result >> 8;
+    regs.E = result;
+}
+
+// inc l
+// opcode: 0x2c
+// cycles: 4
+void CPU::inc_l(){
+    inc_r(regs.L);
+}
+
+// DEC L
+// opcode: 0x2d
+// cycles: 4
+void CPU::dec_l(){
+    dec_r(regs.L);
+}
+
+// LD L,n
+// opcode: 0x2E
+// cycles: 7
+void CPU::ld_l_n(){
+    regs.L = fetchInstruction();
+}
+
+// CPL
+// opcode: 0x2f
+// cycles: 4
+// flags: N H
+void CPU::cpl(){
+    regs.A = ~regs.A;
+    setFlag(FlagBitmaskHalfCarry,true);
+    setFlag(FlagBitmaskN,true);
 }

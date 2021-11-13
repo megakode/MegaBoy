@@ -110,6 +110,22 @@ TEST(CPUTests,DecB){
     GTEST_ASSERT_EQ(cpu.regs.F & FlagBitmaskC,0);
 }
 
+TEST(CPUTests,Parity){
+
+    // odd = false
+    // even = true
+
+    CPU cpu;
+    GTEST_ASSERT_TRUE( cpu.has_parity(0b00000000) );
+    GTEST_ASSERT_TRUE( cpu.has_parity(0b10000010) );
+    GTEST_ASSERT_TRUE( cpu.has_parity(0b11110000) );
+    GTEST_ASSERT_TRUE( cpu.has_parity(0b10110001) );
+    GTEST_ASSERT_FALSE( cpu.has_parity(0b10110000) );
+    GTEST_ASSERT_FALSE( cpu.has_parity(0b10111100) );
+    GTEST_ASSERT_TRUE( cpu.has_parity(0b11111111) );
+    
+}
+
 int main(int argc, char* argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
