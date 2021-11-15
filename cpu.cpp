@@ -69,6 +69,22 @@ CPU::CPU() {
         {"LD L,N",&CPU::ld_l_n},            // 0x2e
         {"CPL",&CPU::cpl},                  // 0x2f
 
+        {"JR NC",&CPU::jr_nc},              // 0x30
+        {"LD SP,NN",&CPU::ld_sp_nn},        // 0x31
+        {"LD (NN),A",&CPU::ld_ptr_nn_a},    // 0x32
+        {"INC SP",&CPU::inc_sp},            // 0x33
+        {"INC (HL)",&CPU::inc_ptr_hl},      // 0x34
+        {"DEC (HL)",&CPU::dec_ptr_hl},      // 0x35
+        {"LD (HL),N",&CPU::ld_ptr_hl_n},    // 0x36
+        {"SCF",&CPU::scf},                  // 0x37
+        {"JR C,N",&CPU::jr_c},              // 0x38
+        {"ADD HL,SP",&CPU::add_hl_sp},      // 0x39
+        {"LD A,(NN)",&CPU::ld_a_ptr_nn},    // 0x3a
+        {"DEC SP",&CPU::dec_sp},            // 0x3b
+        {"INC A",&CPU::inc_a},              // 0x3c
+        {"DEC A",&CPU::dec_a},              // 0x3d
+        {"LD A,N",&CPU::ld_a_n},            // 0x3e
+        {"CCF",&CPU::ccf},                  // 0x3f
 
     };
 
@@ -79,7 +95,7 @@ void CPU::step() {
     //assert(mem!=nullptr);
     
     // M1: OP Code fetch
-    uint8_t op = fetchInstruction();
+    uint8_t op = fetch8BitValue();
 
     if( op < opCodeLookup.size()  ){
         (this->*opCodeLookup[op].code)();
@@ -97,17 +113,17 @@ void CPU::step() {
     // LD r,n - (00rrr110 nnnnnnnn)
     if( (op & 0b11000111) == 0b00000110 ) {
         uint8_t reg = (op & 0b00111000) >> 3;
-        uint8_t value = fetchInstruction();
+        uint8_t value = fetch8BitValue();
         loadRN(reg,value);
     } else 
 
     if( op == 0xDD ){
-        uint8_t op2 = fetchInstruction();
+        uint8_t op2 = fetch8BitValue();
 
         // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
         if( (op2 & 0b11000111) == 0b01000101){
             uint8_t reg = (op2 & 0b00111000) >> 3;
-            int8_t d = fetchInstruction();
+            int8_t d = fetch8BitValue();
             uint16_t addr = specialRegs.IX + d;
             loadRN(reg,mem[addr]);
         } else 
@@ -115,26 +131,26 @@ void CPU::step() {
         // Load (IX+d), r (11011101,01110rrr,dddddddd )
         if( (op2 & 0b11111000) == 0b01110000 ){
             uint8_t reg = (op2 & 0b111);
-            int8_t d = fetchInstruction();
+            int8_t d = fetch8BitValue();
             uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
             mem[specialRegs.IX + d] = *regPtr;
         } else
         
         // Load (IX + d),n (DD,36,d,n)
         if(op2 == 0x36){
-            int8_t d = fetchInstruction();
-            uint8_t value = fetchInstruction();
+            int8_t d = fetch8BitValue();
+            uint8_t value = fetch8BitValue();
             mem[specialRegs.IX + d] = value;
         } else 
 
         // Load IX,nn - M:4 T:14
         if(op2 == 0x21){
-            specialRegs.IX = fetch16BitAddress();
+            specialRegs.IX = fetch16BitValue();
         }
 
         // Load IX,(nn) - M:6 T:20
         if(op2 == 0x2a){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             uint8_t lobyte = mem[addr];
             uint8_t hibyte = mem[addr+1];
             specialRegs.IX = (hibyte<<8) + lobyte;
@@ -142,7 +158,7 @@ void CPU::step() {
 
         // Load (nn),IX - (0xdd,0x22,n,n)- M:6 T:20
         if(op2 == 0x22){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = (uint8_t)specialRegs.IX;
             mem[(uint16_t)(addr+1)] = specialRegs.IX>>8;
         }
@@ -170,12 +186,12 @@ void CPU::step() {
     } else 
     
     if ( op == 0xFD ){
-        uint8_t op2 = fetchInstruction();
+        uint8_t op2 = fetch8BitValue();
 
         // Load r,(IY + d) (11 111 101,01rrr110,dddddddd)
         if( (op2 & 11000111) == 01000110 ){
             uint8_t reg = (op2 & 0b0011100) >> 3;
-            uint8_t value = fetchInstruction();
+            uint8_t value = fetch8BitValue();
             uint16_t addr = specialRegs.IY + (int8_t)regs.D;
             loadRN(reg,mem[addr]);
         } else
@@ -183,25 +199,25 @@ void CPU::step() {
         // Load (IY + d),r (11111101, 01110rrr, dddddddd)
         if( (op2 & 0b11111000) == 0b01110000){
             uint8_t reg = (op2 & 0b111);
-            int8_t d = fetchInstruction();
+            int8_t d = fetch8BitValue();
             uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
             mem[specialRegs.IY + d] = *regPtr;
         }else
         // Load (IY + d),n (FD,36,d,n)
         if(op2 == 0x36){
-            int8_t d = fetchInstruction();
-            uint8_t value = fetchInstruction();
+            int8_t d = fetch8BitValue();
+            uint8_t value = fetch8BitValue();
             mem[specialRegs.IY + d] = value;
         }else 
         
         // Load IX,nn - M:4 T:14
         if(op2 == 0x21){
-            specialRegs.IY = fetch16BitAddress();
-        }
+            specialRegs.IY = fetch16BitValue();
+        } else
 
         // Load IY,(nn) - M:6 T:20
         if(op2 == 0x2a){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             uint8_t lobyte = mem[addr];
             uint8_t hibyte = mem[addr+1];
             specialRegs.IY = (hibyte<<8) + lobyte;
@@ -209,7 +225,7 @@ void CPU::step() {
 
         // Load (nn),IY - (0xfd,0x22,n,n)- M:6 T:20
         if(op2 == 0x22){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = (uint8_t)specialRegs.IY;
             mem[addr+1] = specialRegs.IY>>8;
         }else 
@@ -217,7 +233,7 @@ void CPU::step() {
         // Load SP,IY - M:2 T:10
         if(op2 == 0xF9){
             specialRegs.SP = specialRegs.IY;
-        }
+        } else
 
         // Push IY - M:4 T:15
         if( op2 == 0xE5){
@@ -235,46 +251,8 @@ void CPU::step() {
 
     }else 
 
-    // load (HL),n (0x36,n)
-    if( op == 0x36 ){
-        uint8_t value = fetchInstruction();
-        mem[regs.value_in_hl()] = value;
-    } else
-
-    // Load A,(BC)
-    if( op == 0x0A){
-        regs.A = mem[regs.value_in_bc()];
-    } else
-
-    // Load A,(DE)
-    if( op == 0x1A){
-        regs.A = mem[regs.value_in_de()];
-    } else
-
-    // Load A,(nn) (0x3a,n,n)
-    if( op == 0x3A){
-        uint16_t addr = fetch16BitAddress();
-        regs.A = mem[addr];
-    } else
-
-    // Load (BC),A
-    if( op == 0x02){
-        mem[regs.value_in_bc()] = regs.A;
-    } else 
-
-    // Load (DE),A
-    if( op == 0x12){
-        mem[regs.value_in_de()] = regs.A;
-    } else 
-
-    // Load (nn),A
-    if( op == 0x32){
-        uint16_t addr = fetch16BitAddress();
-        mem[addr] = regs.A;
-    } else 
-
     if( op == 0xED){
-        uint8_t op2 = fetchInstruction();
+        uint8_t op2 = fetch8BitValue();
         // Load A,I
         if(op2 == 0x57){
             regs.A = specialRegs.I;
@@ -319,28 +297,28 @@ void CPU::step() {
 
         // Load BC,(nn) - M:6 T:20
         if(op2==0b01001011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             regs.C = mem[addr];
             regs.B = mem[addr+1];
         } else 
         
         // Load DE,(nn) - M:6 T:20
         if(op2==0b01011011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             regs.E = mem[addr];
             regs.D = mem[addr+1];
         } else
 
         // Load HL,(nn) - M:6 T:20
         if(op2==0b01101011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             regs.L = mem[addr];
             regs.H = mem[addr+1];
         } else 
         
         // Load SP,(nn) - M:6 T:20
         if(op2==0b01111011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             uint8_t lowbyte = mem[addr];
             uint16_t hibyte = mem[addr+1];
             specialRegs.SP = (hibyte<<8) + lowbyte;
@@ -348,28 +326,28 @@ void CPU::step() {
 
         // Load (nn),BC - M:6 T:20
         if(op2==0b01000011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = regs.C;
             mem[(uint16_t)(addr+1)] = regs.B;
         }else 
 
         // Load (nn),DE - M:6 T:20
         if(op2==0b01010011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = regs.E;
             mem[(uint16_t)(addr+1)] = regs.D;
         }else 
 
         // Load (nn),HL - M:6 T:20
         if(op2==0b01100011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = regs.L;
             mem[(uint16_t)(addr+1)] = regs.H;
         }
 
         // Load (nn),SP - M:6 T:20
         if(op2==0b01110011){
-            uint16_t addr = fetch16BitAddress();
+            uint16_t addr = fetch16BitValue();
             mem[addr] = (uint8_t)specialRegs.SP;
             mem[(uint16_t)(addr+1)] = (specialRegs.SP>>8);
         }
@@ -379,24 +357,24 @@ void CPU::step() {
 
     // Load HL,nn (0b00100001) - M:3 T:10
     if( op == 0x21 ){
-        regs.L = fetchInstruction();
-        regs.H = fetchInstruction();
+        regs.L = fetch8BitValue();
+        regs.H = fetch8BitValue();
     } else 
 
     if( op == 0x22 ){
-        uint16_t addr = fetch16BitAddress();
+        uint16_t addr = fetch16BitValue();
         mem[addr] = regs.L;
         mem[addr+1] = regs.H;
     } else
 
     // Load SP,nn (0b00110001) - M:3 T:10
     if( op == 0x31 ){
-        specialRegs.SP = fetch16BitAddress();
+        specialRegs.SP = fetch16BitValue();
     } else 
 
     // Load HL,(nn) - M:5 T:16
     if( op == 0x2A ){
-        uint16_t addr = fetch16BitAddress();
+        uint16_t addr = fetch16BitValue();
         regs.L = mem[addr];
         regs.H = mem[(uint16_t)(addr+1)];
     } else
@@ -534,7 +512,7 @@ void CPU::dec_r(uint8_t &reg){
 // Helper method to get (ix + n)
 /*
 void::CPU getValuePointedToByIXPlusN(){
-    int8_t d = fetchInstruction();
+    int8_t d = fetch8BitValue();
     uint16_t addr = specialRegs.IX + d;
     value = mem->data(addr);
     return value;
@@ -555,8 +533,8 @@ void CPU::NOP(){
 // opcode: 01 n  n
 // cycles: 10
 void CPU::load_bc_nn(){
-    regs.C = fetchInstruction();
-    regs.B = fetchInstruction();
+    regs.C = fetch8BitValue();
+    regs.B = fetch8BitValue();
 };
 
 // ld (bc),a
@@ -594,7 +572,7 @@ void CPU::dec_b(){
 // opcode: 0x06
 // cycles: 7
 void CPU::load_b_n(){
-    regs.B = fetchInstruction();
+    regs.B = fetch8BitValue();
 }
 
 // RLCA
@@ -670,7 +648,7 @@ void CPU::dec_c(){
 // opcode: 0x0e
 // cycles: 7
 void CPU::load_c_n(){
-    regs.C = fetchInstruction();
+    regs.C = fetch8BitValue();
 }
 
 // RRCA - Rotate right with carry A
@@ -697,7 +675,7 @@ void CPU::rrca(){
 void CPU::djnz_n(){
     regs.B--;
     if(regs.B != 0){
-        int8_t jumpOffset = fetchInstruction();
+        int8_t jumpOffset = fetch8BitValue();
         specialRegs.PC-=2; // measure from the start of this instruction opcode
         specialRegs.PC += jumpOffset;
     }
@@ -707,8 +685,8 @@ void CPU::djnz_n(){
 // opcode: 11 n  n
 // cycles: 10
 void CPU::load_de_nn(){
-    regs.E = fetchInstruction();
-    regs.D = fetchInstruction();
+    regs.E = fetch8BitValue();
+    regs.D = fetch8BitValue();
 };
 
 // load (de),a
@@ -743,7 +721,7 @@ void CPU::dec_d(){
 // opcode: 0x16
 // cycles: 7
 void CPU::load_d_n(){
-    regs.D = fetchInstruction();
+    regs.D = fetch8BitValue();
 }
 
 // opcode: 0x17
@@ -760,7 +738,7 @@ void CPU::rla(){
 // opcode: 0x18
 // cycles: 12
 void CPU::jr_n(){
-    int8_t jumpOffset = fetchInstruction();
+    int8_t jumpOffset = fetch8BitValue();
     specialRegs.PC -= 2; // start calculation from beginning of this instruction
     specialRegs.PC += jumpOffset;
 }
@@ -817,7 +795,7 @@ void CPU::dec_e(){
 // cycles: 7
 // flags: -
 void CPU::ld_e_n(){
-    regs.E = fetchInstruction();
+    regs.E = fetch8BitValue();
 }
 
 // RRA
@@ -842,7 +820,7 @@ void CPU::rra(){
 // opcode: 0x20
 // cycles: 12/7
 void CPU::jr_nz(){
-    int8_t jumpOffset = fetchInstruction();
+    int8_t jumpOffset = fetch8BitValue();
     if(!(regs.F & FlagBitmaskZero)){ // If not zero
         specialRegs.PC -= 2; // start calculation from beginning of this instruction
         specialRegs.PC += jumpOffset;
@@ -854,15 +832,15 @@ void CPU::jr_nz(){
 // cycles: 10
 // flags: -
 void CPU::ld_hl_nn(){
-    regs.L = fetchInstruction();
-    regs.H = fetchInstruction();
+    regs.L = fetch8BitValue();
+    regs.H = fetch8BitValue();
 }
 
 // LD (NN),HL
 // opcode: 0x22
 // flags: -
 void CPU::ld_ptr_nn_hl(){
-    uint16_t addr = fetch16BitAddress();
+    uint16_t addr = fetch16BitValue();
     mem[addr] = regs.L;
     mem[addr+1] = regs.H;
 }
@@ -889,7 +867,7 @@ void  CPU::dec_h(){
 }
 
 void CPU::ld_h_n(){
-    regs.H = fetchInstruction();
+    regs.H = fetch8BitValue();
 }
 
 
@@ -992,7 +970,7 @@ void CPU::daa(){
 // cycles: 12/7
 // flags: -
 void CPU::jr_z(){
-    int8_t offset = fetchInstruction();
+    int8_t offset = fetch8BitValue();
     if((regs.F & FlagBitmaskZero)){ // If zero
         specialRegs.PC -= 2; // start calculation from beginning of this instruction
         specialRegs.PC += offset;
@@ -1019,7 +997,7 @@ void CPU::add_hl_hl(){
 // cycles: 16
 // flags: -
 void CPU::ld_hl_ptr_nn(){
-    uint16_t addr = fetch16BitAddress();
+    uint16_t addr = fetch16BitValue();
     regs.L = mem[addr];
     regs.H = mem[addr+1];
 }
@@ -1053,7 +1031,7 @@ void CPU::dec_l(){
 // opcode: 0x2E
 // cycles: 7
 void CPU::ld_l_n(){
-    regs.L = fetchInstruction();
+    regs.L = fetch8BitValue();
 }
 
 // CPL
@@ -1065,3 +1043,154 @@ void CPU::cpl(){
     setFlag(FlagBitmaskHalfCarry,true);
     setFlag(FlagBitmaskN,true);
 }
+
+// JR NC - Jump if not carry
+// opcode: 0x30
+void CPU::jr_nc()
+{
+    int8_t offset = fetch8BitValue();
+    if(!(regs.F & FlagBitmaskC)){ // If zero
+        specialRegs.PC -= 2; // start calculation from beginning of this instruction
+        specialRegs.PC += offset;
+    }
+}
+
+// LD SP,NN
+// opcode: 0x31
+// flags: -
+void CPU::ld_sp_nn()
+{
+    specialRegs.SP = fetch16BitValue();
+}
+
+// LD (NN),A
+// opcode: 0x32
+// flags: -
+void CPU::ld_ptr_nn_a()
+{
+    mem[fetch16BitValue()] = regs.A;
+}
+
+// INC SP
+// opcode: 0x33
+// flags: -
+void CPU::inc_sp()
+{
+    specialRegs.SP++;
+
+}
+
+// INC (HL)
+// opcode: 0x34
+// N PV H S Z
+void CPU::inc_ptr_hl()
+{
+    uint8_t result = mem[regs.value_in_hl()]++;
+    setFlag(FlagBitmaskSign, result & 0x80);
+    setFlag(FlagBitmaskZero, result == 0);
+    setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00010000 );
+    setFlag(FlagBitmaskPV, result ==  0x80);
+    setFlag(FlagBitmaskN,0);
+}
+
+// DEC (HL)
+// opcode: 0x35
+void CPU::dec_ptr_hl()
+{
+    uint8_t result = mem[regs.value_in_hl()]--;
+    setFlag(FlagBitmaskSign, result & 0x80);
+    setFlag(FlagBitmaskZero, result == 0);
+    setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00001111 );
+    setFlag(FlagBitmaskPV, result ==  0x7f);
+    setFlag(FlagBitmaskN,1);
+}
+
+// LD (HL),N
+// opcode: 0x36
+void CPU::ld_ptr_hl_n()
+{
+    mem[regs.value_in_hl()] = fetch8BitValue();
+}
+
+// SCF - Set carry flag
+// opcode: 0x37
+// cycles: 4
+// flags: C H N
+void CPU::scf()
+{
+    setFlag(FlagBitmaskC,true);
+    setFlag(FlagBitmaskHalfCarry,0);
+    setFlag(FlagBitmaskN,0);
+}
+
+// JR C - jump if carry flag is set
+// opcode: 0x38
+// flags: -
+void CPU::jr_c()
+{
+    int8_t offset = fetch8BitValue();
+    if((regs.F & FlagBitmaskC)){ // If zero
+        specialRegs.PC -= 2; // start calculation from beginning of this instruction
+        specialRegs.PC += offset;
+    }
+}
+
+// ADD HL,SP
+// opcode: 0x39
+// cycles: 11
+// flags: C N H
+void CPU::add_hl_sp()
+{
+    uint32_t result = regs.value_in_hl() + specialRegs.SP;
+    setFlag(FlagBitmaskC,result & 0x100000000);
+    setFlag(FlagBitmaskH, (regs.value_in_hl() & 0xfff) > sum & 0xfff);
+    setFlag(FlagBitmaskN,0);
+    regs.L = result;
+    regs.H = result >> 8;
+}
+
+// LD A,(NN)
+// opcode: 0x3a
+void CPU::ld_a_ptr_nn()
+{
+    regs.A = mem[fetch16BitValue()];
+}
+
+// DEC SP
+// opcode: 0x3b
+void CPU::dec_sp()
+{
+    specialRegs.SP--;
+}
+
+// opcode: 0x3c
+// flags: -
+void CPU::inc_a()
+{
+    inc_r(regs.A);
+}
+
+// opcode: 0x3d
+void CPU::dec_a()
+{
+    dec_r(regs.A);
+}
+
+// opcode: 0x3e
+// flags: -
+void CPU::ld_a_n()
+{
+    regs.A = fetch8BitValue();
+}
+
+// CCF - invert carry flag
+// opcode: 0x3f
+// cycles: 4
+// flags: C N H
+void CPU::ccf()
+{
+    setFlag(FlagBitmaskHalfCarry, regs.F & FlagBitmaskC);
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskC,!(regs.F & FlagBitmaskC);
+}
+

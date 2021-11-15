@@ -115,6 +115,23 @@ class CPU {
     void ld_l_n();
     void cpl();
 
+    void jr_nc(); // 0x30
+    void ld_sp_nn();
+    void ld_ptr_nn_a();
+    void inc_sp();
+    void inc_ptr_hl();
+    void dec_ptr_hl();
+    void ld_ptr_hl_n();
+    void scf();
+    void jr_c();
+    void add_hl_sp();
+    void ld_a_ptr_nn();
+    void dec_sp();
+    void inc_a();
+    void dec_a();
+    void ld_a_n();
+    void ccf();
+
     struct Instruction {
         std::string name;
         void (CPU::*code)(void) = nullptr;
@@ -187,14 +204,14 @@ class CPU {
     uint8_t regArray[9];
 
     // Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
-    inline uint8_t fetchInstruction(){
+    inline uint8_t fetch8BitValue(){
         return mem[specialRegs.PC++];
     };
 
     // Fetch two instruction bytes from memory as a 16 bit address and increase Program Counter by +2 (PC)
-    inline uint16_t fetch16BitAddress(){
-        uint8_t lowbyte = fetchInstruction();
-        uint16_t hibyte = fetchInstruction();
+    inline uint16_t fetch16BitValue(){
+        uint8_t lowbyte = fetch8BitValue();
+        uint16_t hibyte = fetch8BitValue();
         return (hibyte<<8) + lowbyte;
     };
 
