@@ -86,7 +86,240 @@ CPU::CPU() {
         {"LD A,N",&CPU::ld_a_n},            // 0x3e
         {"CCF",&CPU::ccf},                  // 0x3f
 
+        // 0x40 - 0x7f instructions are all LD r,r which is caught in the step() function.
+        // excluding the (0x76) HALT instruction, which we explicitly add here.
+        {"LD R,R",&CPU::ld_r_r},            // 0x40
+        {"LD R,R",&CPU::ld_r_r},            // 0x41
+        {"LD R,R",&CPU::ld_r_r},            // 0x42
+        {"LD R,R",&CPU::ld_r_r},            // 0x43
+        {"LD R,R",&CPU::ld_r_r},            // 0x44
+        {"LD R,R",&CPU::ld_r_r},            // 0x45
+        {"LD R,R",&CPU::ld_r_r},            // 0x46
+        {"LD R,R",&CPU::ld_r_r},            // 0x47
+        {"LD R,R",&CPU::ld_r_r},            // 0x48
+        {"LD R,R",&CPU::ld_r_r},            // 0x49
+        {"LD R,R",&CPU::ld_r_r},            // 0x4a
+        {"LD R,R",&CPU::ld_r_r},            // 0x4b
+        {"LD R,R",&CPU::ld_r_r},            // 0x4c
+        {"LD R,R",&CPU::ld_r_r},            // 0x4d
+        {"LD R,R",&CPU::ld_r_r},            // 0x4e
+        {"LD R,R",&CPU::ld_r_r},            // 0x4f
+
+        {"LD R,R",&CPU::ld_r_r},            // 0x50
+        {"LD R,R",&CPU::ld_r_r},            // 0x51
+        {"LD R,R",&CPU::ld_r_r},            // 0x52
+        {"LD R,R",&CPU::ld_r_r},            // 0x53
+        {"LD R,R",&CPU::ld_r_r},            // 0x54
+        {"LD R,R",&CPU::ld_r_r},            // 0x55
+        {"LD R,R",&CPU::ld_r_r},            // 0x56
+        {"LD R,R",&CPU::ld_r_r},            // 0x57
+        {"LD R,R",&CPU::ld_r_r},            // 0x58
+        {"LD R,R",&CPU::ld_r_r},            // 0x59
+        {"LD R,R",&CPU::ld_r_r},            // 0x5a
+        {"LD R,R",&CPU::ld_r_r},            // 0x5b
+        {"LD R,R",&CPU::ld_r_r},            // 0x5c
+        {"LD R,R",&CPU::ld_r_r},            // 0x5d
+        {"LD R,R",&CPU::ld_r_r},            // 0x5e
+        {"LD R,R",&CPU::ld_r_r},            // 0x5f
+
+        {"LD R,R",&CPU::ld_r_r},            // 0x60
+        {"LD R,R",&CPU::ld_r_r},            // 0x61
+        {"LD R,R",&CPU::ld_r_r},            // 0x62
+        {"LD R,R",&CPU::ld_r_r},            // 0x63
+        {"LD R,R",&CPU::ld_r_r},            // 0x64
+        {"LD R,R",&CPU::ld_r_r},            // 0x65
+        {"LD R,R",&CPU::ld_r_r},            // 0x66
+        {"LD R,R",&CPU::ld_r_r},            // 0x67
+        {"LD R,R",&CPU::ld_r_r},            // 0x68
+        {"LD R,R",&CPU::ld_r_r},            // 0x69
+        {"LD R,R",&CPU::ld_r_r},            // 0x6a
+        {"LD R,R",&CPU::ld_r_r},            // 0x6b
+        {"LD R,R",&CPU::ld_r_r},            // 0x6c
+        {"LD R,R",&CPU::ld_r_r},            // 0x6d
+        {"LD R,R",&CPU::ld_r_r},            // 0x6e
+        {"LD R,R",&CPU::ld_r_r},            // 0x6f
+
+        {"LD R,R",&CPU::ld_r_r},            // 0x70
+        {"LD R,R",&CPU::ld_r_r},            // 0x71
+        {"LD R,R",&CPU::ld_r_r},            // 0x72
+        {"LD R,R",&CPU::ld_r_r},            // 0x73
+        {"LD R,R",&CPU::ld_r_r},            // 0x74
+        {"LD R,R",&CPU::ld_r_r},            // 0x75
+        {"HALT",&CPU::halt},                // 0x76
+        {"LD R,R",&CPU::ld_r_r},            // 0x77
+        {"LD R,R",&CPU::ld_r_r},            // 0x78
+        {"LD R,R",&CPU::ld_r_r},            // 0x79
+        {"LD R,R",&CPU::ld_r_r},            // 0x7a
+        {"LD R,R",&CPU::ld_r_r},            // 0x7b
+        {"LD R,R",&CPU::ld_r_r},            // 0x7c
+        {"LD R,R",&CPU::ld_r_r},            // 0x7d
+        {"LD R,R",&CPU::ld_r_r},            // 0x7e
+        {"LD R,R",&CPU::ld_r_r},            // 0x7f
+
+        {"ADD A,r",&CPU::add_a_r},          // 0x80
+        {"ADD A,r",&CPU::add_a_r},          // 0x81
+        {"ADD A,r",&CPU::add_a_r},          // 0x82
+        {"ADD A,r",&CPU::add_a_r},          // 0x83
+        {"ADD A,r",&CPU::add_a_r},          // 0x84
+        {"ADD A,r",&CPU::add_a_r},          // 0x85
+        {"ADD A,r",&CPU::add_a_r},          // 0x86
+        {"ADD A,r",&CPU::add_a_r},          // 0x87
+
+        {"ADC A,r",&CPU::adc_a_r},          // 0x88
+        {"ADC A,r",&CPU::adc_a_r},          // 0x89
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8a
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8b
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8c
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8d
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8e
+        {"ADC A,r",&CPU::adc_a_r},          // 0x8f
+
+        {"SUB r",&CPU::sub_r},              // 0x90
+        {"SUB r",&CPU::sub_r},              // 0x91
+        {"SUB r",&CPU::sub_r},              // 0x92
+        {"SUB r",&CPU::sub_r},              // 0x93
+        {"SUB r",&CPU::sub_r},              // 0x94
+        {"SUB r",&CPU::sub_r},              // 0x95
+        {"SUB r",&CPU::sub_r},              // 0x96
+        {"SUB r",&CPU::sub_r},              // 0x97
+
+        {"SBC r",&CPU::sbc_r},              // 0x98
+        {"SBC r",&CPU::sbc_r},              // 0x99
+        {"SBC r",&CPU::sbc_r},              // 0x9a
+        {"SBC r",&CPU::sbc_r},              // 0x9b
+        {"SBC r",&CPU::sbc_r},              // 0x9c
+        {"SBC r",&CPU::sbc_r},              // 0x9d
+        {"SBC r",&CPU::sbc_r},              // 0x9e
+        {"SBC r",&CPU::sbc_r},              // 0x9f
+
+        { "AND r",&CPU::and_r},             // 0xa0
+        { "AND r",&CPU::and_r},             // 0xa1
+        { "AND r",&CPU::and_r},             // 0xa2
+        { "AND r",&CPU::and_r},             // 0xa3
+        { "AND r",&CPU::and_r},             // 0xa4
+        { "AND r",&CPU::and_r},             // 0xa5
+        { "AND r",&CPU::and_r},             // 0xa6
+        { "AND r",&CPU::and_r},             // 0xa7
+
+        { "XOR r",&CPU::xor_r},             // 0xa8
+        { "XOR r",&CPU::xor_r},             // 0xa9
+        { "XOR r",&CPU::xor_r},             // 0xaa
+        { "XOR r",&CPU::xor_r},             // 0xab
+        { "XOR r",&CPU::xor_r},             // 0xac
+        { "XOR r",&CPU::xor_r},             // 0xad
+        { "XOR r",&CPU::xor_r},             // 0xae
+        { "XOR r",&CPU::xor_r},             // 0xaf
+
+        { "OR r",&CPU::or_r},             // 0xb0
+        { "OR r",&CPU::or_r},             // 0xb1
+        { "OR r",&CPU::or_r},             // 0xb2
+        { "OR r",&CPU::or_r},             // 0xb3
+        { "OR r",&CPU::or_r},             // 0xb4
+        { "OR r",&CPU::or_r},             // 0xb5
+        { "OR r",&CPU::or_r},             // 0xb6
+        { "OR r",&CPU::or_r},             // 0xb7
+
+        { "CP r",&CPU::cp_r},             // 0xb8
+        { "CP r",&CPU::cp_r},             // 0xb9
+        { "CP r",&CPU::cp_r},             // 0xba
+        { "CP r",&CPU::cp_r},             // 0xbb
+        { "CP r",&CPU::cp_r},             // 0xbc
+        { "CP r",&CPU::cp_r},             // 0xbd
+        { "CP r",&CPU::cp_r},             // 0xbe
+        { "CP r",&CPU::cp_r},             // 0xbf
+
+        {"RET NZ",&CPU::ret_cc},            // 0xc0
+        {"POP BC",&CPU::pop_qq},            // 0xc1
+        {"JP NZ NN",&CPU::jp_cc_nn},        // 0xc2
+        {"JP NN",&CPU::jp_nn},              // 0xc3
+        {"CALL NZ,NN",&CPU::call_cc_nn},    // 0xc4
+        {"PUSH BC",&CPU::push_bc},          // 0xc5
+        {"ADD A,n",&CPU::add_a_n},          // 0xc6
+        {"RST 00h",&CPU::rst},              // 0xc7
+        {"RET Z",&CPU::ret_cc},             // 0xc8
+        {"RET",&CPU::ret},                  // 0xc9
+        {"JP Z,**",&CPU::jp_cc_nn},         // 0xca
+        {"BIT opcode group",&CPU::bit_instruction_group}, // 0xcb
+        {"CALL Z,nn",&CPU::call_cc_nn},     // 0xcc
+        {"CALL nn",&CPU::call},             // 0xcd
+        {"ADC A,N",&CPU::adc_a_n},          // 0xce
+        {"RST 08h",&CPU::rst},              // 0xcf
+
+        {"RET NC",&CPU::ret_cc},            // 0xd0
+        {"POP DE",&CPU::pop_qq},            // 0xd1
+        {"JP NC,NN",&CPU::jp_cc_nn},        // 0xd2
+        {"OUT (N),A",&CPU::out_n_a},        // 0xd3
+        {"CALL NC,NN",&CPU::call_cc_nn},    // 0xd4
+        {"PUSH DE",&CPU::push_de},          // 0xd5
+        {"SUB N",&CPU::sub_n},              // 0xd6
+        {"RST 10h",&CPU::rst},              // 0xd7
+        {"RET C",&CPU::ret_cc},             // 0xd8
+        {"EXX",&CPU::exx},                  // 0xd9
+        {"JP C,NN",&CPU::jp_cc_nn},         // 0xda
+        {"IN A,(n)",&CPU::in_a_n},          // 0xdb
+        {"CALL C,NN",&CPU::call_cc_nn},     // 0xdc
+        {"IX opcode group",&CPU::ix_instruction_group}, // 0xdd
+        {"SBC N",&CPU::sbc_n},              // 0xde
+        {"RST 18h",&CPU::rst},              // 0xdf
+
+        {"RET PO",&CPU::ret_cc},            // 0xe0
+        {"POP HL",&CPU::pop_qq},            // 0xe1
+        {"JP PO,NN",&CPU::jp_cc_nn},        // 0xe2
+        {"EX (SP),HL",&CPU::ex_ptr_sp_hl},  // 0xe3
+        {"CALL PO,NN",&CPU::call_cc_nn},    // 0xe4
+        {"PUSH HL",&CPU::push_hl},          // 0xe5
+        {"AND N",&CPU::and_n},              // 0xe6
+        {"RST 20h",&CPU::rst},              // 0xe7
+        {"RET PE",&CPU::ret_cc},            // 0xe8
+        {"JP (HL)",&CPU::jp_ptr_hl},        // 0xe9
+        {"JP PE,NN",&CPU::jp_cc_nn},        // 0xea
+        {"EX DH,HL",&CPU::ex_de_hl},        // 0xeb
+        {"CALL PE,NN",&CPU::call_cc_nn},    // 0xec
+        {"Extended instruction group",&CPU::extended_instruction_group}, // 0xed
+        {"XOR N",&CPU::xor_n},              // 0xee
+        {"RST 28h",&CPU::rst},              // 0xef
+
+        {"RET P",&CPU::ret_cc},             // 0xf0
+        {"POP AF",&CPU::pop_qq},            // 0xf1
+        {"JP P,NN",&CPU::jp_cc_nn},         // 0xf2
+        {"DI",&CPU::disable_interrupts},    // 0xf3
+        {"CALL P,NN",&CPU::call_cc_nn},     // 0xf4
+        {"PUSH AF",&CPU::push_af},          // 0xf5
+        {"OR N",&CPU::or_n},                // 0xf6
+        {"RST 30h",&CPU::rst},              // 0xf7
+        {"RET M",&CPU::ret_cc},             // 0xf8
+        {"LD SP,HL",&CPU::ld_sp_hl},        // 0xf9
+        {"JP M,NN",&CPU::jp_cc_nn},         // 0xfa
+        {"EI",&CPU::enable_interrupts},     // 0xfb
+        {"CALL M,NN",&CPU::call_cc_nn},     // 0xfc
+        {"IY instruction group",&CPU::iy_instruction_group}, // 0xfd
+        {"CP N",&CPU::cp_n},                // 0xfe
+        {"RST 38h",&CPU::rst}               // 0xff
+
     };
+
+}
+
+
+
+void CPU::extended_instruction_group()
+{
+    // TODO: implement group
+}
+// opcodes: 0xCB .........
+void CPU::bit_instruction_group()
+{
+    // TODO: implement group
+}
+
+// opcodes: 0xdd .............
+void CPU::ix_instruction_group()
+{
+    // TODO: implement group
+}
+
+void CPU::iy_instruction_group()
+{
 
 }
 
@@ -95,39 +328,26 @@ void CPU::step() {
     //assert(mem!=nullptr);
     
     // M1: OP Code fetch
-    uint8_t op = fetch8BitValue();
+    currentOpcode = fetch8BitValue();
 
-    if( op < opCodeLookup.size()  ){
-        (this->*opCodeLookup[op].code)();
+    if(currentOpcode < opCodeLookup.size()  ){
+        (this->*opCodeLookup[currentOpcode].code)();
         return;
         // (this->*lookup[opcode].addrmode)();
     }
 
-    // LD r,R  - (01 rrr RRR)
-    if( (op & 0b11000000) == 0b01000000 ){
-        uint8_t dstRegCode = (op >> 3) & 0b111;
-        uint8_t srcRegCode = op & 0b111;
-        loadRR(dstRegCode,srcRegCode);
-    } else 
-
-    // LD r,n - (00rrr110 nnnnnnnn)
-    if( (op & 0b11000111) == 0b00000110 ) {
-        uint8_t reg = (op & 0b00111000) >> 3;
-        uint8_t value = fetch8BitValue();
-        loadRN(reg,value);
-    } else 
-
-    if( op == 0xDD ){
+    if(currentOpcode == 0xDD ){
         uint8_t op2 = fetch8BitValue();
 
         // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
+        /*
         if( (op2 & 0b11000111) == 0b01000101){
             uint8_t reg = (op2 & 0b00111000) >> 3;
             int8_t d = fetch8BitValue();
             uint16_t addr = specialRegs.IX + d;
             loadRN(reg,mem[addr]);
         } else 
-
+*/
         // Load (IX+d), r (11011101,01110rrr,dddddddd )
         if( (op2 & 0b11111000) == 0b01110000 ){
             uint8_t reg = (op2 & 0b111);
@@ -185,9 +405,9 @@ void CPU::step() {
     
     } else 
     
-    if ( op == 0xFD ){
+    if (currentOpcode == 0xFD ){
         uint8_t op2 = fetch8BitValue();
-
+/*
         // Load r,(IY + d) (11 111 101,01rrr110,dddddddd)
         if( (op2 & 11000111) == 01000110 ){
             uint8_t reg = (op2 & 0b0011100) >> 3;
@@ -195,7 +415,7 @@ void CPU::step() {
             uint16_t addr = specialRegs.IY + (int8_t)regs.D;
             loadRN(reg,mem[addr]);
         } else
-
+*/
         // Load (IY + d),r (11111101, 01110rrr, dddddddd)
         if( (op2 & 0b11111000) == 0b01110000){
             uint8_t reg = (op2 & 0b111);
@@ -251,7 +471,8 @@ void CPU::step() {
 
     }else 
 
-    if( op == 0xED){
+    if(currentOpcode == 0xED)
+    {
         uint8_t op2 = fetch8BitValue();
         // Load A,I
         if(op2 == 0x57){
@@ -351,95 +572,7 @@ void CPU::step() {
             mem[addr] = (uint8_t)specialRegs.SP;
             mem[(uint16_t)(addr+1)] = (specialRegs.SP>>8);
         }
-
-
-    } else 
-
-    // Load HL,nn (0b00100001) - M:3 T:10
-    if( op == 0x21 ){
-        regs.L = fetch8BitValue();
-        regs.H = fetch8BitValue();
-    } else 
-
-    if( op == 0x22 ){
-        uint16_t addr = fetch16BitValue();
-        mem[addr] = regs.L;
-        mem[addr+1] = regs.H;
-    } else
-
-    // Load SP,nn (0b00110001) - M:3 T:10
-    if( op == 0x31 ){
-        specialRegs.SP = fetch16BitValue();
-    } else 
-
-    // Load HL,(nn) - M:5 T:16
-    if( op == 0x2A ){
-        uint16_t addr = fetch16BitValue();
-        regs.L = mem[addr];
-        regs.H = mem[(uint16_t)(addr+1)];
-    } else
-
-    // Load SP,HL - M:1 T:6
-    if( op == 0xF9){
-        specialRegs.SP = regs.value_in_hl();
-    } else 
-
-    // Push BC - M:3 T:11
-    if( op == 0b11000101){
-        mem[specialRegs.SP-2] = regs.C;
-        mem[specialRegs.SP-1] = regs.B;
-        specialRegs.SP -= 2;
-    } else
-
-    // Push DE - M:3 T:11
-    if( op == 0b11010101){
-        mem[specialRegs.SP-2] = regs.E;
-        mem[specialRegs.SP-1] = regs.D;
-        specialRegs.SP -= 2;
-    } else 
-
-    // Push HL - M:3 T:11
-    if( op == 0b11100101){
-        mem[specialRegs.SP-2] = regs.L;
-        mem[specialRegs.SP-1] = regs.H;
-        specialRegs.SP -= 2;
     }
-
-    // Push AF - M:3 T:11
-    if( op == 0b11110101){
-        mem[specialRegs.SP-2] = regs.F;
-        mem[specialRegs.SP-1] = regs.A;
-        specialRegs.SP -= 2;
-    }
-
-    // Pop BC - M:3 T:10
-    if( op == 0b11000001 ){
-        regs.C = mem[specialRegs.SP];
-        regs.B = mem[specialRegs.SP+1];
-        specialRegs.SP +=2;
-    }
-
-    // Pop DE - M:3 T:10
-    if( op == 0b11010001 ){
-        regs.E = mem[specialRegs.SP];
-        regs.D = mem[specialRegs.SP+1];
-        specialRegs.SP +=2;
-    }
-
-    // Pop HL - M:3 T:10
-    if( op == 0b11100001 ){
-        regs.L = mem[specialRegs.SP];
-        regs.H = mem[specialRegs.SP+1];
-        specialRegs.SP +=2;
-    }
-
-    // Pop AF - M:3 T:10
-    if( op == 0b11110001 ){
-        regs.F = mem[specialRegs.SP];
-        regs.A = mem[specialRegs.SP+1];
-        specialRegs.SP +=2;
-    }
-
 };
 
 
@@ -463,31 +596,101 @@ bool CPU::has_parity( uint8_t x ){
 // generic methods
 // *******************************************************
 
-void CPU::loadRR( uint8_t dstReg , uint8_t srcReg ) {
-        if(srcReg == RegisterCode::HLPtr){
-            uint16_t srcMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
-            uint8_t data = mem[srcMemAddr]; // Get data from HL location
-            uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstReg;
-            *dstRegPtr = data;
-        } if(dstReg == RegisterCode::HLPtr){
-            uint16_t dstMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
-            uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcReg;
-            mem[dstMemAddr] = *srcRegPtr;
-        } else {
-            uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcReg;
-            uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstReg;
-            *dstRegPtr = *srcRegPtr;
-        }
+
+void CPU::add( uint8_t srcValue, bool carry ){
+
+    // Page 107 in z80 technical manual.
+
+    uint16_t result = regs.A + srcValue;
+    if ( carry && (regs.F & FlagBitmaskC) ) {
+        result++;
     }
 
+    setFlag(FlagBitmaskC,result > 0xff);
+    setFlag(FlagBitmaskZero, (result&0xff) == 0);
+    setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskSign, result & 0x80);
 
-void CPU::loadRN( uint8_t dstReg, uint8_t value){
-    if(dstReg == RegisterCode::HLPtr){
+    // TODO: test this!
+    // if like signs in numbers being added, and result sign is different, set overflow:
+    /*
+           ADDITION SIGN BITS
+    num1sign num2sign ADDsign
+   ---------------------------
+        0       0       0
+ *OVER* 0       0       1 (adding two positives should be positive)
+        0       1       0
+        0       1       1
+        1       0       0
+        1       0       1
+ *OVER* 1       1       0 (adding two negatives should be negative)
+        1       1       1
+        */
+    setFlag(FlagBitmaskPV, !((regs.A ^ srcValue) & 0x80) && ((result ^ regs.A) & 0x80) );
+
+    regs.A = result;
+}
+
+/**
+ * Subtracts a value from register A
+ * @param srcValue the value to subtract
+ * @param carry whether to subtract the carry flag
+ * @param onlySetFlagsForComparison Only set the flags for usage by the `cp` compare instruction and don't perform the actual subtraction
+ */
+void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
+    // TODO: finish this
+    uint16_t result = (0xff00 | regs.A) - srcValue;
+    if ( carry && (regs.F & FlagBitmaskC) ) {
+        result--;
+    }
+    setFlag(FlagBitmaskZero, (result&0xff) == 0);
+    setFlag(FlagBitmaskN,1);
+    setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
+    setFlag(FlagBitmaskHalfCarry, (0xfff0 & regs.A) < (result & 0xfff0) );
+    setFlag(FlagBitmaskSign, result & 0x80 );
+ /*
+
+  http://teaching.idallen.com/dat2343/11w/notes/040_overflow.txt
+
+      SUBTRACTION SIGN BITS
+    num1sign num2sign SUBsign
+   ---------------------------
+        0       0       0
+        0       0       1
+        0       1       0
+ *OVER* 0       1       1 (subtract negative is same as adding a positive)
+ *OVER* 1       0       0 (subtract positive is same as adding a negative)
+        1       0       1
+        1       1       0
+        1       1       1
+  */
+    bool isOperandsSignBitDifferent = (regs.A ^ srcValue) & 0x80;
+    bool didChangeSignInResult = (regs.A ^ result) & 0x80;
+    setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
+
+    if(!onlySetFlagsForComparison){
+        regs.A = result;
+    }
+};
+
+void CPU::ld_r_r(){
+    uint8_t dstRegCode = (currentOpcode >> 3) & 0b111;
+    uint8_t srcRegCode = currentOpcode & 0b111;
+
+    if(srcRegCode == RegisterCode::HLPtr){
+        uint16_t srcMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
+        uint8_t data = mem[srcMemAddr]; // Get data from HL location
+        uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstRegCode;
+        *dstRegPtr = data;
+    } if(dstRegCode == RegisterCode::HLPtr){
         uint16_t dstMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
-        mem[dstMemAddr] = value;
+        uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcRegCode;
+        mem[dstMemAddr] = *srcRegPtr;
     } else {
-        uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstReg;
-        *dstRegPtr = value;
+        uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcRegCode;
+        uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstRegCode;
+        *dstRegPtr = *srcRegPtr;
     }
 }
 
@@ -1143,7 +1346,7 @@ void CPU::add_hl_sp()
 {
     uint32_t result = regs.value_in_hl() + specialRegs.SP;
     setFlag(FlagBitmaskC,result & 0x100000000);
-    setFlag(FlagBitmaskH, (regs.value_in_hl() & 0xfff) > sum & 0xfff);
+    setFlag(FlagBitmaskHalfCarry, (regs.value_in_hl() & 0xfff) > (result & 0xfff));
     setFlag(FlagBitmaskN,0);
     regs.L = result;
     regs.H = result >> 8;
@@ -1191,6 +1394,402 @@ void CPU::ccf()
 {
     setFlag(FlagBitmaskHalfCarry, regs.F & FlagBitmaskC);
     setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskC,!(regs.F & FlagBitmaskC);
+    setFlag(FlagBitmaskC,!(regs.F & FlagBitmaskC));
 }
 
+void CPU::halt(){
+    // TODO: implement this
+}
+
+// ADD a,r
+// cycles: 4
+// flags: s z h pv n c
+void CPU::add_a_r(){
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+
+    add(srcRegValue,false);
+}
+
+// cycles: 7
+void CPU::add_a_n(){
+    uint8_t srcRegValue = fetch8BitValue();
+    add(srcRegValue,false);
+}
+
+void CPU::adc_a_r(){
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+
+    add(srcRegValue,true);
+}
+
+// ADC A,N
+// opcode: 0xce
+// cycles: 7
+void CPU::adc_a_n(){
+    add(fetch8BitValue(),true);
+}
+
+void CPU::sub_r(){
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+    sub(srcRegValue,false, false);
+}
+
+// SUB N
+// opcode: 0xd6
+// cycles: 7
+void CPU::sub_n(){
+    uint8_t srcRegValue = fetch8BitValue();
+    sub(srcRegValue,false, false);
+}
+
+void CPU::sbc_r(){
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+    sub(srcRegValue,true, false);
+}
+
+// SBC N
+// opcode: 0xde
+// cycles: 7
+void CPU::sbc_n(){
+    uint8_t srcRegValue = fetch8BitValue();
+    sub(srcRegValue,true, false);
+}
+
+
+// cycles: 4
+void CPU::and_r()
+{
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+
+    regs.A &= srcRegValue;
+
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,1);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskC,0);
+}
+
+void CPU::and_n()
+{
+    regs.A &= fetch8BitValue();
+
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,1);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskC,0);
+}
+
+// cycles:
+// xor r 4
+// xor n 7
+// xor (hl) 7
+// xor (IX+d) 19
+// xor (IY+d) 19
+void CPU::xor_r()
+{
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+
+    xor_a_with_value(srcRegValue);
+}
+
+// opcode: 0xee
+// cycles: 7
+void CPU::xor_n()
+{
+    xor_a_with_value(fetch8BitValue());
+}
+
+void CPU::xor_a_with_value( uint8_t value )
+{
+    regs.A ^= value;
+
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskC,0);
+}
+
+// cycles:
+// or r 4
+// or n 7
+// or (hl) 7
+// or (IX+d) 19
+// or (IY+d) 19
+void CPU::or_r()
+{
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+
+    or_a_with_value(srcRegValue);
+}
+
+// OR N
+// opcode: 0xf6
+// cycles: 7
+void CPU::or_n()
+{
+    or_a_with_value(fetch8BitValue());
+}
+
+void CPU::or_a_with_value(uint8_t value)
+{
+    regs.A |= value;
+
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskC,0);
+}
+
+void CPU::cp_r()
+{
+    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegValue = value_from_regcode(srcRegCode);
+    sub(srcRegValue,false, true);
+}
+
+// CP N
+// Compare A with N by internally doing a sub but only setting flags
+// opcode: 0xfe
+// cycles: 7
+void CPU::cp_n()
+{
+    sub(fetch8BitValue(),false, true);
+}
+
+// cycles: 11 (true) 5 (false)
+void CPU::ret_cc(){
+
+    uint8_t conditionCode = (currentOpcode & 0b00111000) >> 3;
+    bool conditionValue = false;
+
+    switch (conditionCode)
+    {
+        case 0: conditionValue = !(regs.F & FlagBitmaskZero); break; // Non zero
+        case 1: conditionValue = (regs.F & FlagBitmaskZero);  break; // zero
+        case 2: conditionValue = !(regs.F & FlagBitmaskC);  break; // non carry
+        case 3: conditionValue = (regs.F & FlagBitmaskC);  break; // carry
+        case 4: conditionValue = !(regs.F & FlagBitmaskPV);  break; // parity odd
+        case 5: conditionValue = (regs.F & FlagBitmaskPV);  break; // parity even
+        case 6: conditionValue = !(regs.F & FlagBitmaskSign);  break; // parity even
+        case 7: conditionValue = (regs.F & FlagBitmaskSign);  break; // parity even
+        default: break;
+    }
+
+    if(conditionValue){
+        uint8_t lobyte = mem[specialRegs.SP++];
+        uint8_t hibyte = mem[specialRegs.SP++];
+        specialRegs.PC = (hibyte<<8) + lobyte;
+    }
+}
+
+// cycles: 10
+void CPU::pop_qq()
+{
+    uint8_t regPairCode = (currentOpcode & 0b00110000) >> 4;
+    uint8_t lobyte = mem[specialRegs.SP++];
+    uint8_t hibyte = mem[specialRegs.SP++];
+
+    switch (regPairCode)
+    {
+        case 0:
+            regs.B = hibyte;
+            regs.C = lobyte;
+            break;
+        case 1:
+            regs.D = hibyte;
+            regs.E = lobyte;
+            break;
+        case 2:
+            regs.H = hibyte;
+            regs.L = lobyte;
+            break;
+    }
+};
+
+// cycles: 10
+void CPU::jp_cc_nn()
+{
+    uint8_t conditionCode = (currentOpcode & 0b00111000) >> 3;
+    uint16_t location = fetch16BitValue();
+
+    if(is_condition_true(conditionCode)){
+        specialRegs.PC = location;
+    }
+}
+
+// cycles: 10
+void CPU::jp_nn()
+{
+    specialRegs.PC = fetch16BitValue();
+}
+
+// JP HL
+// opcode: 0xe9
+// cycles: 4
+// flags: -
+void CPU::jp_ptr_hl(){
+    specialRegs.PC = regs.value_in_hl();
+}
+
+
+// cycles: 17 (true, 10 (false)
+void CPU::call_cc_nn()
+{
+    uint8_t conditionCode = (currentOpcode & 0b00111000) >> 3;
+    uint16_t location = fetch16BitValue();
+
+    if(is_condition_true(conditionCode)){
+        mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
+        mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+        specialRegs.PC = location;
+    }
+}
+
+// opcode: 0xCD
+// cycles: 17
+void CPU::call(){
+    uint16_t location = fetch16BitValue();
+    mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
+    mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+    specialRegs.PC = location;
+}
+
+// cyckes; 11
+void CPU::push_bc(){
+    mem[--specialRegs.SP] = regs.B;
+    mem[--specialRegs.SP] = regs.C;
+}
+
+// cyckes; 11
+void CPU::push_de(){
+    mem[--specialRegs.SP] = regs.D;
+    mem[--specialRegs.SP] = regs.E;
+}
+
+// cyckes; 11
+void CPU::push_hl(){
+    mem[--specialRegs.SP] = regs.H;
+    mem[--specialRegs.SP] = regs.L;
+}
+
+// cyckes; 11
+void CPU::push_af(){
+    mem[--specialRegs.SP] = regs.A;
+    mem[--specialRegs.SP] = regs.F;
+}
+
+// RST
+//
+// current PC is pushed onto stack, and PC is reset to an offset based t,
+// where t is contained in the opcode: (11 ttt 111).
+//
+// cycles: 11
+void CPU::rst()
+{
+    uint8_t location[] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38};
+    uint8_t locationCode = (currentOpcode & 0b00111000) >> 3;
+
+    mem[--specialRegs.SP] = specialRegs.PC >> 8;
+    mem[--specialRegs.SP] = specialRegs.PC;
+
+    specialRegs.PC = location[locationCode];
+}
+
+// RET
+// PC_l = (SP), PC_h = (SP+1)
+// cycles: 10
+void CPU::ret()
+{
+    uint8_t lobyte = mem[specialRegs.SP++];
+    uint8_t hibyte = mem[specialRegs.SP++];
+    specialRegs.PC = (hibyte<<8) + lobyte;
+}
+
+// OUT (N),A
+// opcode: 0xD3
+// cycles: 11
+void CPU::out_n_a(){
+    uint8_t portNumber = fetch8BitValue();
+    uint8_t value = regs.A;
+    // TODO: write value to port
+}
+
+// IN A,(N)
+// opcode: 0xDB
+// flags: -
+// cycles: 11
+void CPU::in_a_n(){
+    uint8_t portNumber = fetch8BitValue();
+    uint8_t value = 0; // TODO: read value from port instead
+    regs.A = value;
+}
+
+// EXX
+// exchange BC, DE, HL registers with aux versions
+// opcode: 0xd9
+// cycles: 4
+void CPU::exx()
+{
+    std::swap(regs.B,auxRegs.B);
+    std::swap(regs.C,auxRegs.C);
+
+    std::swap(regs.D,auxRegs.D);
+    std::swap(regs.E,auxRegs.E);
+
+    std::swap(regs.H,auxRegs.H);
+    std::swap(regs.L,auxRegs.L);
+}
+
+// EX (SP),HL
+// opcode: 0xe3
+// cycles: 19
+// flags: -
+void CPU::ex_ptr_sp_hl()
+{
+    std::swap( regs.L , mem[specialRegs.SP] );
+    std::swap( regs.H , mem[specialRegs.SP+1] );
+}
+
+// EX DE,HL
+// opcode: 0xEB
+// cycles: 4
+// flags: -
+void CPU::ex_de_hl()
+{
+    std::swap( regs.D, regs.H);
+    std::swap( regs.E, regs.L);
+}
+
+void CPU::disable_interrupts()
+{
+    // TODO: disable interrupts
+}
+
+void CPU::enable_interrupts()
+{
+    // TODO: enable interrupts
+}
+
+// LD SP,HL
+// opcode: 0xf9
+// flags: -
+// cycles: 6
+void CPU::ld_sp_hl()
+{
+    specialRegs.SP = regs.value_in_hl();
+}

@@ -132,6 +132,65 @@ class CPU {
     void ld_a_n();
     void ccf();
 
+    void ld_r_r();
+
+    void halt();
+
+    void add_a_r();
+    void add_a_n();
+    void adc_a_r();
+    void sub_r();
+    void sbc_r();
+
+
+    void and_r();
+
+    void xor_r();
+    void or_r();
+    void cp_r();
+
+    void ret_cc();
+
+    void pop_qq();
+
+    void jp_cc_nn();
+    void jp_nn();
+
+    void call_cc_nn();
+
+    void push_bc();
+    void push_de();
+    void push_hl();
+    void push_af();
+
+    void rst();
+
+    void ret();
+
+    void bit_instruction_group();
+
+    void call();
+
+    void adc_a_n();
+
+    void out_n_a();
+
+    void sub_n();
+
+    void exx();
+
+    void in_a_n();
+
+    void ix_instruction_group();
+
+    void sbc_n();
+
+    void ex_ptr_sp_hl();
+
+    void and_n();
+
+
+
     struct Instruction {
         std::string name;
         void (CPU::*code)(void) = nullptr;
@@ -188,7 +247,6 @@ class CPU {
         uint16_t value_in_bc() {
             return static_cast<uint16_t>((B<<8) + C);
         };
-
     };
 
     struct SpecialRegisters {
@@ -201,7 +259,8 @@ class CPU {
     } specialRegs;
 
     GeneralRegisters regs,auxRegs;
-    uint8_t regArray[9];
+
+    uint8_t currentOpcode;
 
     // Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
     inline uint8_t fetch8BitValue(){
@@ -215,9 +274,69 @@ class CPU {
         return (hibyte<<8) + lowbyte;
     };
 
-    void loadRR( uint8_t dstReg , uint8_t srcReg );
-    void loadRN( uint8_t dstReg, uint8_t value);
+    // returns the value contained in the register represented by the regCode
+    inline uint8_t value_from_regcode( uint8_t regCode ){
+
+        uint8_t regValue;
+
+        if(regCode == RegisterCode::HLPtr){
+            regValue = mem[regs.value_in_hl()];
+        } else {
+            uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + regCode;
+            regValue = *srcRegPtr;
+        }
+
+        return regValue;
+    }
+
+    inline bool is_condition_true( uint8_t conditionCode ){
+        switch (conditionCode)
+        {
+            case 0: return !(regs.F & FlagBitmaskZero); // Non zero
+            case 1: return (regs.F & FlagBitmaskZero); // zero
+            case 2: return !(regs.F & FlagBitmaskC); // non carry
+            case 3: return (regs.F & FlagBitmaskC); // carry
+            case 4: return !(regs.F & FlagBitmaskPV); // parity odd
+            case 5: return (regs.F & FlagBitmaskPV); // parity even
+            case 6: return !(regs.F & FlagBitmaskSign); // sign positive
+            case 7: return (regs.F & FlagBitmaskSign); // sign negative
+            default: return false;
+        }
+    }
+
+
 
     void step();
 
+
+
+private:
+
+    void add( uint8_t srcValue, bool carry );
+    void sub(uint8_t srcValue, bool carry, bool onlySetFlagsForComparison);
+
+
+    void jp_ptr_hl();
+
+    void ex_de_hl();
+
+    void extended_instruction_group();
+
+    void xor_n();
+
+    void xor_a_with_value(uint8_t value);
+
+    void disable_interrupts();
+
+    void or_n();
+
+    void or_a_with_value(uint8_t value);
+
+    void ld_sp_hl();
+
+    void enable_interrupts();
+
+    void iy_instruction_group();
+
+    void cp_n();
 };
