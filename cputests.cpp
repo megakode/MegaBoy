@@ -15,6 +15,29 @@ TEST(CPUTests, InitialRegisterStates)
 
 }
 
+TEST(CPUTests,RegCodes)
+{
+    CPU cpu;
+
+    cpu.regs.A = 1;
+    cpu.regs.B = 2;
+
+    auto reg_a = cpu.reg_from_regcode(RegisterCode::A);
+    GTEST_ASSERT_EQ(cpu.regs.A, 1);
+
+    auto reg_b = cpu.reg_from_regcode(RegisterCode::B);
+    GTEST_ASSERT_EQ(cpu.regs.B, 2);
+
+    reg_b = 3;
+
+    GTEST_ASSERT_EQ(reg_b, 3);
+
+    cpu.regs.H = 0;
+    cpu.regs.L = 10;
+    cpu.mem[10] = 0xaa;
+    GTEST_ASSERT_EQ(cpu.reg_from_regcode(RegisterCode::HLPtr), 0xaa);
+}
+
 TEST(CPUTests,LoadBCNN)
 {
     CPU cpu;

@@ -301,32 +301,453 @@ CPU::CPU() {
 }
 
 
-
+// opcode: 0xed
 void CPU::extended_instruction_group()
 {
     // TODO: implement group
-}
-// opcodes: 0xCB .........
-void CPU::bit_instruction_group()
-{
-    // TODO: implement group
+    uint8_t op2 = fetch8BitValue();
+    // Load A,I
+    if(op2 == 0x57){
+        regs.A = specialRegs.I;
+        regs.F &= 0b00000001;
+        // Bits affected:
+        // S: 1 if I-reg is negative. 0 otherwise.
+        // TODO: how is I negative? isn't it unsigned?
+        // Z: 1 if I is zero. 0 otherwise
+        if(specialRegs.I == 0){ regs.F |= FlagBitmaskZero; };
+        // H : 0
+        // P/V: contents of IFF2
+        if(IFF2){ regs.F |= FlagBitmaskPV; };
+        // N: 0
+        // C: not affected
+    } else
+
+        // Load A,R
+    if(op2 == 0x5f){
+        regs.A = specialRegs.R;
+        regs.F &= 0b00000001;
+        // Bits affected:
+        // S: 1 if I-reg is negative. 0 otherwise.
+        // TODO: how is I negative? isn't it unsigned?
+        // Z: 1 if I is zero. 0 otherwise
+        if(specialRegs.I == 0){ regs.F |= FlagBitmaskZero; };
+        // H : 0
+        // P/V: contents of IFF2
+        if(IFF2){ regs.F |= FlagBitmaskPV; };
+        // N: 0
+        // C: not affected
+    } else
+
+        // Load I,A
+    if(op2==0x47){
+        specialRegs.I = regs.A;
+    } else
+
+        // Load R,A
+    if(op2==0x4F){
+        specialRegs.R = regs.A;
+    } else
+
+        // Load BC,(nn) - M:6 T:20
+    if(op2==0b01001011){
+        uint16_t addr = fetch16BitValue();
+        regs.C = mem[addr];
+        regs.B = mem[addr+1];
+    } else
+
+        // Load DE,(nn) - M:6 T:20
+    if(op2==0b01011011){
+        uint16_t addr = fetch16BitValue();
+        regs.E = mem[addr];
+        regs.D = mem[addr+1];
+    } else
+
+        // Load HL,(nn) - M:6 T:20
+    if(op2==0b01101011){
+        uint16_t addr = fetch16BitValue();
+        regs.L = mem[addr];
+        regs.H = mem[addr+1];
+    } else
+
+        // Load SP,(nn) - M:6 T:20
+    if(op2==0b01111011){
+        uint16_t addr = fetch16BitValue();
+        uint8_t lowbyte = mem[addr];
+        uint16_t hibyte = mem[addr+1];
+        specialRegs.SP = (hibyte<<8) + lowbyte;
+    } else
+
+        // Load (nn),BC - M:6 T:20
+    if(op2==0b01000011){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = regs.C;
+        mem[(uint16_t)(addr+1)] = regs.B;
+    }else
+
+        // Load (nn),DE - M:6 T:20
+    if(op2==0b01010011){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = regs.E;
+        mem[(uint16_t)(addr+1)] = regs.D;
+    }else
+
+        // Load (nn),HL - M:6 T:20
+    if(op2==0b01100011){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = regs.L;
+        mem[(uint16_t)(addr+1)] = regs.H;
+    }
+
+    // Load (nn),SP - M:6 T:20
+    if(op2==0b01110011){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = (uint8_t)specialRegs.SP;
+        mem[(uint16_t)(addr+1)] = (specialRegs.SP>>8);
+    }
 }
 
-// opcodes: 0xdd .............
+// opcodes: 0xCB ..
+void CPU::bit_instruction_group()
+{
+    uint8_t op2 = fetch8BitValue(); // fetch next opcode
+
+    // RLC r
+    // opcode: 0x00 - 0x07
+    // cycles: 8
+    if( (op2 & 0b11111000) == 0 )
+    {
+        uint8_t &reg = reg_from_regcode(op2);
+        uint8_t carry = reg & 0x80;
+        reg = reg << 1;
+
+        setFlag( FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+
+        reg |= (carry ? 1 : 0);
+    } else
+
+    // RRC r
+    // opcode: 0x08 - 0x0f
+    // cycles:
+    // RRC r : 8
+    // RRC (HL) : 15
+    // RRC (IX+d): 23
+    // RRC (IY+d): 23
+    if( (op2 & 0b11111000) == 0b00001000)
+    {
+        uint8_t &reg = reg_from_regcode(op2);
+        uint8_t carry = reg & 0x01;
+        reg = reg >> 1;
+
+        setFlag( FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+
+        reg |= (carry ? 0x80 : 0);
+    } else
+
+    // RL r
+    // opcode: 0x10 - 0x17
+    // cycles:
+    // RL r: 8
+    // RL (hl): 15
+    // RL (ix+d): 23
+    // RL (iy+d): 23
+    // flags: S Z H PV N C
+    if( (op2 & 0b11111000) == 0b00010000)
+    {
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x80;
+
+        reg = reg << 1;
+        reg |= (regs.F & FlagBitmaskC) ? 1 : 0;
+
+        setFlag( FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+    // RR r
+    // opcode: 0x18 - 0x1f
+    // cycles:
+    // RR r: 8
+    // RR (hl): 15
+    // RR (ix+d): 23
+    // RR (iy+d): 23
+    // flags: S Z H PV N C
+    if( (op2 & 0b11111000) == 0b00011000)
+    {
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x01;
+
+        reg = reg >> 1;
+        reg |= (regs.F & FlagBitmaskC) ? 0x80 : 0;
+
+        setFlag(FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+    // SLA r
+    // opcode: 0x20 - 0x27
+    // cycles: r:8 (hl):15 (ix+d):23
+    if( (op2 & 0b11111000) == 0b00100000)
+    {
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x80;
+
+        reg = reg << 1;
+
+        setFlag(FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+    // SRA r
+    // opcode: 0x20 - 0x27
+    // cycles: r:8 (hl):15 (ix+d):23
+    if( (op2 & 0b11111000) == 0b00100000)
+    {
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x01;
+        int8_t signedValue = reg;
+        // TODO: page 210. Make sure this is an arithmetic shift that preserves bit 7
+        signedValue = signedValue >> 1;
+        reg = signedValue;
+
+        setFlag(FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+    // SLL r
+    // opcode: 0x30 - 0x37
+    if( op2 >= 0x30 && op2 <= 0x37 ){
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x80;
+
+        reg = reg << 1;
+        reg |= 1;
+
+        setFlag(FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+    // SRL r
+    // Shift right
+    if( op2 >= 0x38 && op2 <= 0x3f)
+    {
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t carry = reg & 0x01;
+
+        reg = reg >> 1;
+
+        setFlag(FlagBitmaskSign, reg & 0x80);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV, has_parity(reg));
+        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskC, carry);
+    } else
+
+
+    // BIT b,r
+    // Test bit b in register r and sets Z flag accordingly
+    // opcode: 0x40 - 0x7f
+    // flag: Z H N
+    if( op2 >= 0x40 && op2 <= 0x7f )
+    {
+        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
+        uint8_t regCode = op2 & 0b00000111;
+        uint8_t result = reg_from_regcode(regCode) & (1 << bitNumber);
+        setFlag(FlagBitmaskZero, result == 0);
+        setFlag(FlagBitmaskHalfCarry,1);
+        setFlag(FlagBitmaskN,0);
+    } else
+
+    // RES b,r
+    // Reset bit b in register r
+    // opcode: 0x80 - 0xbf (01 bbb rrr)
+    // flags: -
+    // cycles: 8
+    if( op2 >= 0x80 && op2 <= 0xbf )
+    {
+        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
+        uint8_t bitMask = ~(1 << bitNumber);
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        reg &= bitMask;
+    } else
+
+    // SET b,r
+    // Set bit b in register r
+    // opcode: 0xc0 - 0xff (01 bbb rrr)
+    // flags: -
+    // cycles: 8
+    if( op2 >= 0xc0 && op2 <= 0xff )
+    {
+        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
+        uint8_t bitMask = (1 << bitNumber);
+        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        reg |= bitMask;
+    }
+
+}
+
+// opcodes: 0xdd ..
 void CPU::ix_instruction_group()
 {
     // TODO: implement group
+
+    uint8_t op2 = fetch8BitValue();
+
+    // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
+    /*
+    if( (op2 & 0b11000111) == 0b01000101){
+        uint8_t reg = (op2 & 0b00111000) >> 3;
+        int8_t d = fetch8BitValue();
+        uint16_t addr = specialRegs.IX + d;
+        loadRN(reg,mem[addr]);
+    } else
+    */
+    // Load (IX+d), r (11011101,01110rrr,dddddddd )
+    if( (op2 & 0b11111000) == 0b01110000 ){
+        uint8_t reg = (op2 & 0b111);
+        int8_t d = fetch8BitValue();
+        uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
+        mem[specialRegs.IX + d] = *regPtr;
+    } else
+
+        // Load (IX + d),n (DD,36,d,n)
+    if(op2 == 0x36){
+        int8_t d = fetch8BitValue();
+        uint8_t value = fetch8BitValue();
+        mem[specialRegs.IX + d] = value;
+    } else
+
+        // Load IX,nn - M:4 T:14
+    if(op2 == 0x21){
+        specialRegs.IX = fetch16BitValue();
+    }
+
+    // Load IX,(nn) - M:6 T:20
+    if(op2 == 0x2a){
+        uint16_t addr = fetch16BitValue();
+        uint8_t lobyte = mem[addr];
+        uint8_t hibyte = mem[addr+1];
+        specialRegs.IX = (hibyte<<8) + lobyte;
+    }
+
+    // Load (nn),IX - (0xdd,0x22,n,n)- M:6 T:20
+    if(op2 == 0x22){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = (uint8_t)specialRegs.IX;
+        mem[(uint16_t)(addr+1)] = specialRegs.IX>>8;
+    }
+
+    // Load SP,IX - M:2 T:10
+    if(op2 == 0xF9){
+        specialRegs.SP = specialRegs.IX;
+    }
+
+
+    // Push IX - M:€ T:15
+    if( op2 == 0xE5){
+        mem[specialRegs.SP-2] = (uint8_t)specialRegs.IX;
+        mem[specialRegs.SP-1] = specialRegs.IX >> 8;
+        specialRegs.SP -= 2;
+    }
+
+    // POP IX - M:4 T:14
+    if( op2 == 0xE1 ){
+        specialRegs.IX = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
+        specialRegs.SP +=2;
+    }
 }
 
+// opcode: 0xfd ..
 void CPU::iy_instruction_group()
 {
+    // TODO: implement group
+    uint8_t op2 = fetch8BitValue();
+/*
+    // Load r,(IY + d) (11 111 101,01rrr110,dddddddd)
+    if( (op2 & 11000111) == 01000110 ){
+        uint8_t reg = (op2 & 0b0011100) >> 3;
+        uint8_t value = fetch8BitValue();
+        uint16_t addr = specialRegs.IY + (int8_t)regs.D;
+        loadRN(reg,mem[addr]);
+    } else
+*/
+    // Load (IY + d),r (11111101, 01110rrr, dddddddd)
+    if( (op2 & 0b11111000) == 0b01110000){
+        uint8_t reg = (op2 & 0b111);
+        int8_t d = fetch8BitValue();
+        uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
+        mem[specialRegs.IY + d] = *regPtr;
+    }else
+        // Load (IY + d),n (FD,36,d,n)
+    if(op2 == 0x36){
+        int8_t d = fetch8BitValue();
+        uint8_t value = fetch8BitValue();
+        mem[specialRegs.IY + d] = value;
+    }else
 
+        // Load IX,nn - M:4 T:14
+    if(op2 == 0x21){
+        specialRegs.IY = fetch16BitValue();
+    } else
+
+        // Load IY,(nn) - M:6 T:20
+    if(op2 == 0x2a){
+        uint16_t addr = fetch16BitValue();
+        uint8_t lobyte = mem[addr];
+        uint8_t hibyte = mem[addr+1];
+        specialRegs.IY = (hibyte<<8) + lobyte;
+    } else
+
+        // Load (nn),IY - (0xfd,0x22,n,n)- M:6 T:20
+    if(op2 == 0x22){
+        uint16_t addr = fetch16BitValue();
+        mem[addr] = (uint8_t)specialRegs.IY;
+        mem[addr+1] = specialRegs.IY>>8;
+    }else
+
+        // Load SP,IY - M:2 T:10
+    if(op2 == 0xF9){
+        specialRegs.SP = specialRegs.IY;
+    } else
+
+        // Push IY - M:4 T:15
+    if( op2 == 0xE5){
+        mem[specialRegs.SP-2] = (uint8_t)specialRegs.IY;
+        mem[specialRegs.SP-1] = specialRegs.IY >> 8;
+        specialRegs.SP -= 2;
+    } else
+
+        // POP IY - M:4 T:14
+    if( op2 == 0xE1 ){
+        specialRegs.IY = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
+        specialRegs.SP +=2;
+    }
 }
 
-void CPU::step() {
-
-    //assert(mem!=nullptr);
-    
+void CPU::step()
+{
     // M1: OP Code fetch
     currentOpcode = fetch8BitValue();
 
@@ -336,247 +757,11 @@ void CPU::step() {
         // (this->*lookup[opcode].addrmode)();
     }
 
-    if(currentOpcode == 0xDD ){
-        uint8_t op2 = fetch8BitValue();
-
-        // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
-        /*
-        if( (op2 & 0b11000111) == 0b01000101){
-            uint8_t reg = (op2 & 0b00111000) >> 3;
-            int8_t d = fetch8BitValue();
-            uint16_t addr = specialRegs.IX + d;
-            loadRN(reg,mem[addr]);
-        } else 
-*/
-        // Load (IX+d), r (11011101,01110rrr,dddddddd )
-        if( (op2 & 0b11111000) == 0b01110000 ){
-            uint8_t reg = (op2 & 0b111);
-            int8_t d = fetch8BitValue();
-            uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
-            mem[specialRegs.IX + d] = *regPtr;
-        } else
-        
-        // Load (IX + d),n (DD,36,d,n)
-        if(op2 == 0x36){
-            int8_t d = fetch8BitValue();
-            uint8_t value = fetch8BitValue();
-            mem[specialRegs.IX + d] = value;
-        } else 
-
-        // Load IX,nn - M:4 T:14
-        if(op2 == 0x21){
-            specialRegs.IX = fetch16BitValue();
-        }
-
-        // Load IX,(nn) - M:6 T:20
-        if(op2 == 0x2a){
-            uint16_t addr = fetch16BitValue();
-            uint8_t lobyte = mem[addr];
-            uint8_t hibyte = mem[addr+1];
-            specialRegs.IX = (hibyte<<8) + lobyte;
-        }
-
-        // Load (nn),IX - (0xdd,0x22,n,n)- M:6 T:20
-        if(op2 == 0x22){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = (uint8_t)specialRegs.IX;
-            mem[(uint16_t)(addr+1)] = specialRegs.IX>>8;
-        }
-
-        // Load SP,IX - M:2 T:10
-        if(op2 == 0xF9){
-            specialRegs.SP = specialRegs.IX;
-        }
-
-
-        // Push IX - M:€ T:15
-        if( op2 == 0xE5){
-            mem[specialRegs.SP-2] = (uint8_t)specialRegs.IX;
-            mem[specialRegs.SP-1] = specialRegs.IX >> 8;
-            specialRegs.SP -= 2;
-        }
-
-        // POP IX - M:4 T:14
-        if( op2 == 0xE1 ){
-            specialRegs.IX = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
-            specialRegs.SP +=2;
-        }
-
-    
-    } else 
-    
-    if (currentOpcode == 0xFD ){
-        uint8_t op2 = fetch8BitValue();
-/*
-        // Load r,(IY + d) (11 111 101,01rrr110,dddddddd)
-        if( (op2 & 11000111) == 01000110 ){
-            uint8_t reg = (op2 & 0b0011100) >> 3;
-            uint8_t value = fetch8BitValue();
-            uint16_t addr = specialRegs.IY + (int8_t)regs.D;
-            loadRN(reg,mem[addr]);
-        } else
-*/
-        // Load (IY + d),r (11111101, 01110rrr, dddddddd)
-        if( (op2 & 0b11111000) == 0b01110000){
-            uint8_t reg = (op2 & 0b111);
-            int8_t d = fetch8BitValue();
-            uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
-            mem[specialRegs.IY + d] = *regPtr;
-        }else
-        // Load (IY + d),n (FD,36,d,n)
-        if(op2 == 0x36){
-            int8_t d = fetch8BitValue();
-            uint8_t value = fetch8BitValue();
-            mem[specialRegs.IY + d] = value;
-        }else 
-        
-        // Load IX,nn - M:4 T:14
-        if(op2 == 0x21){
-            specialRegs.IY = fetch16BitValue();
-        } else
-
-        // Load IY,(nn) - M:6 T:20
-        if(op2 == 0x2a){
-            uint16_t addr = fetch16BitValue();
-            uint8_t lobyte = mem[addr];
-            uint8_t hibyte = mem[addr+1];
-            specialRegs.IY = (hibyte<<8) + lobyte;
-        } else
-
-        // Load (nn),IY - (0xfd,0x22,n,n)- M:6 T:20
-        if(op2 == 0x22){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = (uint8_t)specialRegs.IY;
-            mem[addr+1] = specialRegs.IY>>8;
-        }else 
-
-        // Load SP,IY - M:2 T:10
-        if(op2 == 0xF9){
-            specialRegs.SP = specialRegs.IY;
-        } else
-
-        // Push IY - M:4 T:15
-        if( op2 == 0xE5){
-            mem[specialRegs.SP-2] = (uint8_t)specialRegs.IY;
-            mem[specialRegs.SP-1] = specialRegs.IY >> 8;
-            specialRegs.SP -= 2;
-        } else 
-
-        // POP IY - M:4 T:14
-        if( op2 == 0xE1 ){
-            specialRegs.IY = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
-            specialRegs.SP +=2;
-        }
-
-
-    }else 
-
-    if(currentOpcode == 0xED)
-    {
-        uint8_t op2 = fetch8BitValue();
-        // Load A,I
-        if(op2 == 0x57){
-            regs.A = specialRegs.I;
-            regs.F &= 0b00000001;
-            // Bits affected:
-            // S: 1 if I-reg is negative. 0 otherwise.
-            // TODO: how is I negative? isn't it unsigned?
-            // Z: 1 if I is zero. 0 otherwise
-            if(specialRegs.I == 0){ regs.F |= FlagBitmaskZero; };
-            // H : 0
-            // P/V: contents of IFF2
-            if(IFF2){ regs.F |= FlagBitmaskPV; };
-            // N: 0
-            // C: not affected
-        } else 
-
-        // Load A,R
-        if(op2 == 0x5f){
-            regs.A = specialRegs.R;
-            regs.F &= 0b00000001;
-            // Bits affected:
-            // S: 1 if I-reg is negative. 0 otherwise.
-            // TODO: how is I negative? isn't it unsigned?
-            // Z: 1 if I is zero. 0 otherwise
-            if(specialRegs.I == 0){ regs.F |= FlagBitmaskZero; };
-            // H : 0
-            // P/V: contents of IFF2
-            if(IFF2){ regs.F |= FlagBitmaskPV; };
-            // N: 0
-            // C: not affected
-        } else 
-
-        // Load I,A
-        if(op2==0x47){
-            specialRegs.I = regs.A;
-        } else 
-
-        // Load R,A
-        if(op2==0x4F){
-            specialRegs.R = regs.A;
-        } else 
-
-        // Load BC,(nn) - M:6 T:20
-        if(op2==0b01001011){
-            uint16_t addr = fetch16BitValue();
-            regs.C = mem[addr];
-            regs.B = mem[addr+1];
-        } else 
-        
-        // Load DE,(nn) - M:6 T:20
-        if(op2==0b01011011){
-            uint16_t addr = fetch16BitValue();
-            regs.E = mem[addr];
-            regs.D = mem[addr+1];
-        } else
-
-        // Load HL,(nn) - M:6 T:20
-        if(op2==0b01101011){
-            uint16_t addr = fetch16BitValue();
-            regs.L = mem[addr];
-            regs.H = mem[addr+1];
-        } else 
-        
-        // Load SP,(nn) - M:6 T:20
-        if(op2==0b01111011){
-            uint16_t addr = fetch16BitValue();
-            uint8_t lowbyte = mem[addr];
-            uint16_t hibyte = mem[addr+1];
-            specialRegs.SP = (hibyte<<8) + lowbyte;
-        } else 
-
-        // Load (nn),BC - M:6 T:20
-        if(op2==0b01000011){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = regs.C;
-            mem[(uint16_t)(addr+1)] = regs.B;
-        }else 
-
-        // Load (nn),DE - M:6 T:20
-        if(op2==0b01010011){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = regs.E;
-            mem[(uint16_t)(addr+1)] = regs.D;
-        }else 
-
-        // Load (nn),HL - M:6 T:20
-        if(op2==0b01100011){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = regs.L;
-            mem[(uint16_t)(addr+1)] = regs.H;
-        }
-
-        // Load (nn),SP - M:6 T:20
-        if(op2==0b01110011){
-            uint16_t addr = fetch16BitValue();
-            mem[addr] = (uint8_t)specialRegs.SP;
-            mem[(uint16_t)(addr+1)] = (specialRegs.SP>>8);
-        }
-    }
 };
 
 
-bool CPU::has_parity( uint8_t x ){
+bool CPU::has_parity( uint8_t x )
+{
     /*
     x ^= x >> 4;
     x ^= x >> 2;
@@ -674,27 +859,36 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     }
 };
 
-void CPU::ld_r_r(){
+void CPU::ld_r_r()
+{
     uint8_t dstRegCode = (currentOpcode >> 3) & 0b111;
     uint8_t srcRegCode = currentOpcode & 0b111;
 
-    if(srcRegCode == RegisterCode::HLPtr){
+    if(srcRegCode == RegisterCode::HLPtr)
+    {
+        // LD R,(HL)
         uint16_t srcMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
         uint8_t data = mem[srcMemAddr]; // Get data from HL location
         uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstRegCode;
         *dstRegPtr = data;
-    } if(dstRegCode == RegisterCode::HLPtr){
+    }
+    if(dstRegCode == RegisterCode::HLPtr)
+    {
+        // LD (HL),R
         uint16_t dstMemAddr = regs.value_in_hl(); // Get memory address from HL register pair
         uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcRegCode;
         mem[dstMemAddr] = *srcRegPtr;
-    } else {
+    }
+    else
+    { // LD R,R
         uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcRegCode;
         uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstRegCode;
         *dstRegPtr = *srcRegPtr;
     }
 }
 
-void CPU::inc_r(uint8_t &reg){
+void CPU::inc_r(uint8_t &reg)
+{
     reg++;
     setFlag( FlagBitmaskSign, reg & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
     setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero
@@ -703,7 +897,8 @@ void CPU::inc_r(uint8_t &reg){
     setFlag( FlagBitmaskN, 0); // reset
 }
 
-void CPU::dec_r(uint8_t &reg){
+void CPU::dec_r(uint8_t &reg)
+{
     reg--;
     setFlag( FlagBitmaskSign, reg & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
     setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero

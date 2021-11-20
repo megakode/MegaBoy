@@ -164,30 +164,28 @@ class CPU {
     void push_af();
 
     void rst();
-
     void ret();
 
     void bit_instruction_group();
-
-    void call();
-
-    void adc_a_n();
-
-    void out_n_a();
-
-    void sub_n();
-
-    void exx();
-
-    void in_a_n();
-
     void ix_instruction_group();
 
+    void call();
+    void adc_a_n();
+    void out_n_a();
+    void sub_n();
+    void exx();
+    void in_a_n();
     void sbc_n();
-
     void ex_ptr_sp_hl();
-
     void and_n();
+    void jp_ptr_hl();
+    void ex_de_hl();
+    void xor_n();
+    void enable_interrupts();
+    void disable_interrupts();
+    void or_n();
+    void ld_sp_hl();
+    void cp_n();
 
 
 
@@ -289,6 +287,17 @@ class CPU {
         return regValue;
     }
 
+    inline uint8_t& reg_from_regcode( uint8_t regCode )
+    {
+        regCode &= 0b00000111; // remove excess bits just in case
+
+        if(regCode == RegisterCode::HLPtr){
+            return mem[regs.value_in_hl()];
+        } else {
+            return ((reinterpret_cast<uint8_t*>(&regs))[regCode]);
+        }
+    }
+
     inline bool is_condition_true( uint8_t conditionCode ){
         switch (conditionCode)
         {
@@ -314,29 +323,11 @@ private:
 
     void add( uint8_t srcValue, bool carry );
     void sub(uint8_t srcValue, bool carry, bool onlySetFlagsForComparison);
-
-
-    void jp_ptr_hl();
-
-    void ex_de_hl();
-
-    void extended_instruction_group();
-
-    void xor_n();
-
+    void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
 
-    void disable_interrupts();
-
-    void or_n();
-
-    void or_a_with_value(uint8_t value);
-
-    void ld_sp_hl();
-
-    void enable_interrupts();
-
+    void extended_instruction_group();
     void iy_instruction_group();
 
-    void cp_n();
+
 };
