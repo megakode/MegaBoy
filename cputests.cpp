@@ -1,6 +1,9 @@
 #include "gtest/gtest.h"
 #include "cpu.h"
 
+// TODO: check ZEXDOC - Z80 instruction set exerciser
+// https://github.com/anotherlin/z80emu/blob/master/testfiles/zexdoc.z80
+
 TEST(CPUTests, InitialRegisterStates)
 {
     CPU cpu;
@@ -12,6 +15,20 @@ TEST(CPUTests, InitialRegisterStates)
     GTEST_ASSERT_EQ(cpu.regs.H, 0);
     GTEST_ASSERT_EQ(cpu.regs.L, 0);
     GTEST_ASSERT_EQ(cpu.regs.F, 0);
+
+}
+
+TEST(CPUTests,ldi)
+{
+    CPU cpu;
+
+    cpu.regs.C = 3;
+    cpu.ldi(false,false);
+    GTEST_ASSERT_EQ(cpu.regs.C, 2);
+
+    cpu.regs.C = 3;
+    cpu.ldi(false,true);
+    GTEST_ASSERT_EQ(cpu.regs.C, 0);
 
 }
 
@@ -36,6 +53,17 @@ TEST(CPUTests,RegCodes)
     cpu.regs.L = 10;
     cpu.mem[10] = 0xaa;
     GTEST_ASSERT_EQ(cpu.reg_from_regcode(RegisterCode::HLPtr), 0xaa);
+}
+
+TEST(CPUTests,BitInstructionsIX){
+
+    CPU cpu;
+    cpu.regs.B = 0b00001111;
+    cpu.specialRegs.IX = 10;
+    cpu.mem[0] = 1;
+    cpu.do_bit_instruction( 0 , cpu.mem[0] , cpu.mem[0] );
+
+    GTEST_ASSERT_EQ(cpu.mem[0], cpu.regs.A);
 }
 
 TEST(CPUTests,LoadBCNN)

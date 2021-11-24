@@ -39,11 +39,158 @@ enum RegisterCode : uint8_t {
     A
 };
 
+
+/// Interrupt mode - see Z80 technical reference manual p.153
+enum class InterruptMode {
+    IM_0,
+    IM_1,
+    IM_2
+};
+
 class CPU {
 
     public:
     
     CPU();
+
+    struct Instruction {
+        std::string name;
+        void (CPU::*code)(void) = nullptr;
+    };
+
+    std::vector<Instruction> opCodeLookup;
+
+    std::vector<std::function<void(uint8_t)>> lookup_lambda;
+
+    struct Pins {
+        uint16_t addr;  // Address bus
+        uint8_t data;   // Data bus
+    } pins;
+
+    HostMemory mem;
+
+    // Interrupt enable Flip Flop #1 and #2 (see page 323 in Zilog Z80 Technical manual)
+    bool IFF = 0;
+    bool IFF2 = 0;
+
+    struct GeneralRegisters {
+
+        // Flags:
+        //
+        // [S | Z | . | H | . | P/V | N | C ]
+        //        
+        // S - Sign flag
+        // Z - Zero flag
+        // . - unused
+        // H - Half-carry
+        // . - unused
+        // P/V - Parity/overflow
+        // N Add/Subtract flag
+        // C - Carry 
+
+        uint8_t B = 0,C = 0;
+        uint8_t D = 0,E = 0;
+        uint8_t H = 0,L = 0;
+        uint8_t padding; // So register indexes in opcodes matches indexing into this struct
+        uint8_t A = 0; // Accumulator
+        uint8_t F = 0; 
+        
+        // Returns the Z80 address contained in the HL register pair
+        uint16_t value_in_hl() {
+            return static_cast<uint16_t>((H<<8) + L);
+        };
+
+        // Returns the Z80 address contained in the DE register pair
+        uint16_t value_in_de() {
+            return static_cast<uint16_t>((D<<8) + E);
+        };
+
+        // Returns the Z80 address contained in the BC register pair
+        uint16_t value_in_bc() {
+            return static_cast<uint16_t>((B<<8) + C);
+        };
+    };
+
+    struct SpecialRegisters {
+        uint8_t I = 0;      // Interrupt Page Address Register
+        uint8_t R = 0;      // Memory Refresh Register
+        uint16_t IX = 0;    // Index Register X
+        uint16_t IY = 0;    // Index Register Y
+        uint16_t SP = 0;    // Stack Pointer
+        uint16_t PC = 0;    // Program Counter
+    } specialRegs;
+
+    GeneralRegisters regs,auxRegs;
+
+    InterruptMode interrupt_mode = InterruptMode::IM_0;
+
+    uint8_t currentOpcode;
+
+    /// Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
+    inline uint8_t fetch8BitValue(){
+        return mem[specialRegs.PC++];
+    };
+
+    /// Fetch two instruction bytes from memory as a 16 bit address and increase Program Counter by +2 (PC)
+    inline uint16_t fetch16BitValue(){
+        uint8_t lowbyte = fetch8BitValue();
+        uint16_t hibyte = fetch8BitValue();
+        return (hibyte<<8) + lowbyte;
+    };
+
+    // returns the value contained in the register represented by the regCode
+    inline uint8_t value_from_regcode( uint8_t regCode ){
+
+        uint8_t regValue;
+
+        if(regCode == RegisterCode::HLPtr){
+            regValue = mem[regs.value_in_hl()];
+        } else {
+            uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + regCode;
+            regValue = *srcRegPtr;
+        }
+
+        return regValue;
+    }
+
+    /// Returns a reference to a register based on a 3bit register code, which is encoded in all opcodes which deals with registers.
+    /// \param regCode Register code
+    /// \return Reference to register
+    inline uint8_t& reg_from_regcode( uint8_t regCode , bool force_ix_ptr = false, bool force_iy_ptr = false )
+    {
+        regCode &= 0b00000111; // remove excess bits just in case
+
+        if(regCode == RegisterCode::HLPtr){
+            return mem[regs.value_in_hl()];
+        } else {
+            return ((reinterpret_cast<uint8_t*>(&regs))[regCode]);
+        }
+    }
+
+    /// Checks whether a condition is true, using a 3 bit condition code encoded in all jp and call instruction opcodes.
+    /// Each condition code reflects a flag and a state. E.g. Carry, non-carry, zero, non-zero, etc.
+    /// \param conditionCode The 3bit condition code from 0-7
+    /// \return Condition state.
+    inline bool is_condition_true( uint8_t conditionCode ){
+        switch (conditionCode)
+        {
+            case 0: return !(regs.F & FlagBitmaskZero); // Non zero
+            case 1: return (regs.F & FlagBitmaskZero); // zero
+            case 2: return !(regs.F & FlagBitmaskC); // non carry
+            case 3: return (regs.F & FlagBitmaskC); // carry
+            case 4: return !(regs.F & FlagBitmaskPV); // parity odd
+            case 5: return (regs.F & FlagBitmaskPV); // parity even
+            case 6: return !(regs.F & FlagBitmaskSign); // sign positive
+            case 7: return (regs.F & FlagBitmaskSign); // sign negative
+            default: return false;
+        }
+    }
+
+    void set_interrupt_mode( InterruptMode mode ) {
+        interrupt_mode = mode;
+    }
+
+    void step();
 
     inline void setFlag( FlagBitmask flag, bool value ){
         if(value){
@@ -58,6 +205,29 @@ class CPU {
     }
 
     bool has_parity( uint8_t x );
+
+    void add( uint8_t srcValue, bool carry );
+    void sub(uint8_t srcValue, bool carry, bool onlySetFlagsForComparison);
+    void or_a_with_value(uint8_t value);
+    void xor_a_with_value(uint8_t value);
+    void in( uint8_t& dstReg , uint8_t portNumber, bool only_set_flags = false);
+
+    void extended_instruction_group();
+    void iy_instruction_group();
+    void do_bit_instruction(uint8_t op2, uint8_t &reg, uint8_t &copyResultToReg);
+
+    void bit_instruction_group_ix();
+
+    void bit_instruction_group_iy();
+
+    uint8_t input_from_port(uint8_t port);
+    void output_to_port(uint8_t port, uint8_t value);
+
+    void inc_rr(uint8_t &hibyte, uint8_t &lobyte);
+
+    void dec_rr(uint8_t &hibyte, uint8_t &lobyte);
+
+public:
 
     // generic instructions
     void inc_r( uint8_t &reg );
@@ -186,148 +356,50 @@ class CPU {
     void or_n();
     void ld_sp_hl();
     void cp_n();
+    void out(uint8_t dstPort, uint8_t value);
+
+    void sbc_hl_nn(uint16_t value);
+
+    void ld_ptr_nn_n(uint16_t location, uint8_t value);
+
+    void neg();
+
+    void retn();
 
 
+    void adc_hl_nn(uint16_t value);
 
-    struct Instruction {
-        std::string name;
-        void (CPU::*code)(void) = nullptr;
-    };
+    void reti();
 
-    std::vector<Instruction> opCodeLookup;
+    void ld_ptr_nn_nn(uint16_t location, uint16_t value);
 
-    struct Pins {
-        uint16_t addr;  // Address bus
-        uint8_t data;   // Data bus
-    } pins;
+    void rrd();
 
-    public:
+    void rld();
 
-    HostMemory mem;
+    void invalid_opcode();
 
-    // Interrupt enable Flip Flop #1 and #2 (see page 323 in Zilog Z80 Technical manual)
-    bool IFF = 0;
-    bool IFF2 = 0;
-
-    struct GeneralRegisters {
-
-        // Flags:
-        //
-        // [S | Z | . | H | . | P/V | N | C ]
-        //        
-        // S - Sign flag
-        // Z - Zero flag
-        // . - unused
-        // H - Half-carry
-        // . - unused
-        // P/V - Parity/overflow
-        // N Add/Subtract flag
-        // C - Carry 
-
-        uint8_t B = 0,C = 0;
-        uint8_t D = 0,E = 0;
-        uint8_t H = 0,L = 0;
-        uint8_t padding; // So register indexes in opcodes matches indexing into this struct
-        uint8_t A = 0; // Accumulator
-        uint8_t F = 0; 
-        
-        // Returns the Z80 address contained in the HL register pair
-        uint16_t value_in_hl() {
-            return static_cast<uint16_t>((H<<8) + L);
-        };
-
-        // Returns the Z80 address contained in the DE register pair
-        uint16_t value_in_de() {
-            return static_cast<uint16_t>((D<<8) + E);
-        };
-
-        // Returns the Z80 address contained in the BC register pair
-        uint16_t value_in_bc() {
-            return static_cast<uint16_t>((B<<8) + C);
-        };
-    };
-
-    struct SpecialRegisters {
-        uint8_t I = 0;      // Interrupt Page Address Register
-        uint8_t R = 0;      // Memory Refresh Register
-        uint16_t IX = 0;    // Index Register X
-        uint16_t IY = 0;    // Index Register Y
-        uint16_t SP = 0;    // Stack Pointer
-        uint16_t PC = 0;    // Program Counter
-    } specialRegs;
-
-    GeneralRegisters regs,auxRegs;
-
-    uint8_t currentOpcode;
-
-    // Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
-    inline uint8_t fetch8BitValue(){
-        return mem[specialRegs.PC++];
-    };
-
-    // Fetch two instruction bytes from memory as a 16 bit address and increase Program Counter by +2 (PC)
-    inline uint16_t fetch16BitValue(){
-        uint8_t lowbyte = fetch8BitValue();
-        uint16_t hibyte = fetch8BitValue();
-        return (hibyte<<8) + lowbyte;
-    };
-
-    // returns the value contained in the register represented by the regCode
-    inline uint8_t value_from_regcode( uint8_t regCode ){
-
-        uint8_t regValue;
-
-        if(regCode == RegisterCode::HLPtr){
-            regValue = mem[regs.value_in_hl()];
-        } else {
-            uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + regCode;
-            regValue = *srcRegPtr;
-        }
-
-        return regValue;
-    }
-
-    inline uint8_t& reg_from_regcode( uint8_t regCode )
-    {
-        regCode &= 0b00000111; // remove excess bits just in case
-
-        if(regCode == RegisterCode::HLPtr){
-            return mem[regs.value_in_hl()];
-        } else {
-            return ((reinterpret_cast<uint8_t*>(&regs))[regCode]);
-        }
-    }
-
-    inline bool is_condition_true( uint8_t conditionCode ){
-        switch (conditionCode)
-        {
-            case 0: return !(regs.F & FlagBitmaskZero); // Non zero
-            case 1: return (regs.F & FlagBitmaskZero); // zero
-            case 2: return !(regs.F & FlagBitmaskC); // non carry
-            case 3: return (regs.F & FlagBitmaskC); // carry
-            case 4: return !(regs.F & FlagBitmaskPV); // parity odd
-            case 5: return (regs.F & FlagBitmaskPV); // parity even
-            case 6: return !(regs.F & FlagBitmaskSign); // sign positive
-            case 7: return (regs.F & FlagBitmaskSign); // sign negative
-            default: return false;
-        }
-    }
+    void ldi( bool decrease = false, bool repeat = false );
+    void ldir();
+    void ldd();
+    void lddr();
 
 
+    void cpi( bool decrease = false, bool repeat = false );
+    void cpir();
+    void cpd();
+    void cpdr();
 
-    void step();
+    void ini( bool decrease = false, bool repeat = false );
+    void inir();
+    void ind();
+    void indr();
 
+    void outi(bool decrease = false, bool repeat = false );
+    void otir();
+    void outd();
+    void otdr();
 
-
-private:
-
-    void add( uint8_t srcValue, bool carry );
-    void sub(uint8_t srcValue, bool carry, bool onlySetFlagsForComparison);
-    void or_a_with_value(uint8_t value);
-    void xor_a_with_value(uint8_t value);
-
-    void extended_instruction_group();
-    void iy_instruction_group();
 
 
 };

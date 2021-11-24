@@ -16,6 +16,142 @@ CPU::CPU() {
 
     // Based on tables from:
     // https://clrhome.org/table/
+    using OP = std::function<void()>;
+    std::vector<OP> extended_opcodes = {
+
+            // These opcodes do not exist, but to have the correct index position of the other opcodes in the lookup table, add empty ones here
+            // 0x00 - 0x0f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+            // 0x10 - 0x1f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+            // 0x20 - 0x2f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+            // 0x30 - 0x3f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+
+            // 0x40: in b,(c)
+            [&](){ in(regs.B,regs.C); },
+            // 0x41 out(c),b
+            [&](){ out_n_a(); },
+            // 0x42: sbc hl,bc
+            [&](){ sbc_hl_nn(regs.value_in_bc()); },
+            // 0x43: ld (**),bc
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.value_in_bc()); },
+            // 0x44: neg
+            [&](){ neg(); },
+            // 0x45: retn
+            [&](){ retn(); },
+            // 0x46: im 0
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },
+            // 0x47: LD I,A
+            [&](){ specialRegs.I = regs.A; },
+            // 0x48; IN C,(C)
+            [&](){ in(regs.C,regs.C); },
+            // 0x49: OUT (c),C
+            [&](){ out(regs.C,regs.C); },
+            // 0x4A: ADC HL,BC
+            [&](){ adc_hl_nn(regs.value_in_bc()); },
+            // 0x4B: LD BC,(NN)
+            [&](){ uint16_t addr = fetch16BitValue(); regs.C = mem[addr]; regs.B = mem[addr+1]; },
+            // 0x4C: neg
+            [&](){ neg(); },
+            // 0x4d:
+            [&](){ reti(); },
+            // 0x4e: set undefined IM0/1 mode
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },
+            // 0x4f: ld r,a
+            [&](){  specialRegs.R = regs.A; },
+
+            [&](){ in(regs.D,regs.C); }, // 0x50: in d,(c)
+            [&](){ out(regs.C,regs.D); }, // 0x51: out (c),d
+            [&](){ sbc_hl_nn(regs.value_in_de()); }, // 0x52: sbc hl,de
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.value_in_de()); }, // 0x53: ld (**),de
+            [&](){ neg(); }, // 0x54: neg
+            [&](){ retn(); }, // 0x55: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); }, // 0x56: im 1
+            [&](){ regs.A = specialRegs.I; }, // 0x57: ld a,i
+            [&](){ in(regs.E,regs.C); }, // 0x58: in e,(c)
+            [&](){ out(regs.C,regs.E); }, // 0x59: out (c),e
+            [&](){ adc_hl_nn(regs.value_in_de()); }, // 0x5a: adc hl,de
+            [&](){ uint16_t addr = fetch16BitValue(); regs.E = mem[addr]; regs.D = mem[addr+1]; }, // 0x5b: ld de,(**)
+            [&](){ neg(); }, // 0x5c: neg
+            [&](){ retn(); }, // 0x5d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); }, // 0x5e: im 2
+            [&](){ regs.A = specialRegs.R; }, // 0x5f: ld a,r
+
+            [&](){ in(regs.H,regs.C); }, // 0x60 in h,(c)
+            [&](){ out(regs.C,regs.H); }, // 0x61: out (c),h
+            [&](){ sbc_hl_nn(regs.value_in_hl()); }, // 0x62
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.value_in_hl()); }, // 0x63 ld (**),hl
+            [&](){ neg(); }, // 0x64 neg
+            [&](){ retn(); }, // 0x65: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); }, // 0x66: im 0
+            [&](){ rrd(); }, // 0x67: rrd
+            [&](){ in(regs.L,regs.C); }, // 0x68: in l,(c)
+            [&](){ out(regs.C,regs.L); }, // 0x69: out (c),l
+            [&](){ adc_hl_nn(regs.value_in_hl()); }, // 0x6a
+            [&](){ uint16_t addr = fetch16BitValue(); regs.L = mem[addr]; regs.H = mem[addr+1]; }, // 0x6b: ld hl,(**)
+            [&](){ neg(); }, // 0x6c: neg
+            [&](){ retn(); }, // 0x6d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); }, // 0x6e: im 0/1
+            [&](){ rld(); }, // 0x6f: rld
+
+            [&](){ in(regs.C,regs.C,true); }, // 0x70: in (c)
+            [&](){ out(regs.C,0); }, // 0x71: out
+            [&](){ sbc_hl_nn(specialRegs.SP); }, // 0x72: sbc hl,sp
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.SP); }, // 0x73: ld (**),hl
+            [&](){ neg(); }, // 0x74: neg
+            [&](){ retn(); }, // 0x75:
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); }, // 0x76: im 1
+            [&](){ invalid_opcode(); }, // 0x77
+            [&](){ in(regs.A,regs.C); }, // 0x78 in a,(c)
+            [&](){ out(regs.C,regs.A); }, // 0x79 out (c),a
+            [&](){ adc_hl_nn(specialRegs.SP); }, // 0x7a adc hl,sp
+            [&](){ uint16_t addr = fetch16BitValue(); specialRegs.SP = mem[addr]; }, // 0x7b ld sp,(**)
+            [&](){ neg(); }, // 0x7c neg
+            [&](){ retn(); }, // 0x7d retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); }, // 0x7e im2
+            [&](){ }, // 0x7f
+
+            // 0x80 - 0x8f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+            // 0x90 - 0x9f
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+
+            [&](){ ldi(); }, // 0xa0: ldi
+            [&](){ cpi(); }, // 0xa1:
+            [&](){ ini(); }, // 0xa2:
+            [&](){ outi(); }, // 0xa3:
+            [&](){ }, // 0xa4
+            [&](){ }, // 0xa5
+            [&](){ }, // 0xa6
+            [&](){ }, // 0xa7
+            [&](){ ldd(); }, // 0xa8
+            [&](){ cpd(); }, // 0xa9
+            [&](){ ind(); }, // 0xaa
+            [&](){ outd(); }, // 0xab
+            [&](){ }, // 0xac
+            [&](){ }, // 0xad
+            [&](){ }, // 0xae
+            [&](){ }, // 0xaf
+
+            [&](){ ldir(); }, // 0xb0
+            [&](){ cpir(); }, // 0xb1
+            [&](){ inir(); }, // 0xb2
+            [&](){ otir(); }, // 0xb3
+            [&](){ }, // 0xb4
+            [&](){ }, // 0xb5
+            [&](){ }, // 0xb6
+            [&](){ }, // 0xb7
+            [&](){ lddr(); }, // 0xb8
+            [&](){ cpdr(); }, // 0xb9
+            [&](){ indr(); }, // 0xba
+            [&](){ otdr(); }, // 0xbb
+            [&](){ }, // 0xbc
+            [&](){ }, // 0xbd
+            [&](){ }, // 0xbe
+            [&](){ }, // 0xbf
+    };
 
     opCodeLookup = { 
         {"INC",&CPU::NOP},                  // 0x00
@@ -306,20 +442,17 @@ void CPU::extended_instruction_group()
 {
     // TODO: implement group
     uint8_t op2 = fetch8BitValue();
+
     // Load A,I
     if(op2 == 0x57){
         regs.A = specialRegs.I;
         regs.F &= 0b00000001;
         // Bits affected:
-        // S: 1 if I-reg is negative. 0 otherwise.
-        // TODO: how is I negative? isn't it unsigned?
-        // Z: 1 if I is zero. 0 otherwise
-        if(specialRegs.I == 0){ regs.F |= FlagBitmaskZero; };
-        // H : 0
-        // P/V: contents of IFF2
-        if(IFF2){ regs.F |= FlagBitmaskPV; };
-        // N: 0
-        // C: not affected
+        setFlag(FlagBitmaskSign,specialRegs.I & 0x80);
+        setFlag(FlagBitmaskZero, specialRegs.I == 0);
+        setFlag(FlagBitmaskHalfCarry,0);
+        setFlag(FlagBitmaskPV,IFF2); // P/V: contents of IFF2
+        setFlag(FlagBitmaskN,0);
     } else
 
         // Load A,R
@@ -407,16 +540,42 @@ void CPU::extended_instruction_group()
 }
 
 // opcodes: 0xCB ..
+
 void CPU::bit_instruction_group()
 {
     uint8_t op2 = fetch8BitValue(); // fetch next opcode
+    uint8_t& reg = reg_from_regcode(op2 & 0b00000111);
+    do_bit_instruction(op2,reg, reg);
+}
 
+void CPU::bit_instruction_group_ix()
+{
+    int8_t offset = static_cast<int8_t>(fetch8BitValue());
+    uint8_t op2 = fetch8BitValue(); // fetch next opcode
+    uint8_t &reg = mem[specialRegs.IX + offset];
+    do_bit_instruction(op2,reg, reg_from_regcode(op2));
+}
+
+void CPU::bit_instruction_group_iy()
+{
+    int8_t offset = static_cast<int8_t>(fetch8BitValue());
+    uint8_t op2 = fetch8BitValue(); // fetch next opcode
+    uint8_t &reg = mem[specialRegs.IY + offset];
+    do_bit_instruction(op2,reg, reg_from_regcode(op2));
+}
+
+/// Perform a bit instruction from the "bit opcode group"
+/// \param op2 The opcode which contains the information about the operation
+/// \param reg The register to operate on
+/// \param copyResultReg Additionally copy the result to this register (used by the undocumente IX/IY bit opcodes). set to the same as reg to disable copying the result.
+
+void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToReg )
+{
     // RLC r
     // opcode: 0x00 - 0x07
     // cycles: 8
-    if( (op2 & 0b11111000) == 0 )
+    if( op2 >= 0 && op2 <= 0x07 )
     {
-        uint8_t &reg = reg_from_regcode(op2);
         uint8_t carry = reg & 0x80;
         reg = reg << 1;
 
@@ -438,7 +597,6 @@ void CPU::bit_instruction_group()
     // RRC (IY+d): 23
     if( (op2 & 0b11111000) == 0b00001000)
     {
-        uint8_t &reg = reg_from_regcode(op2);
         uint8_t carry = reg & 0x01;
         reg = reg >> 1;
 
@@ -461,7 +619,6 @@ void CPU::bit_instruction_group()
     // flags: S Z H PV N C
     if( (op2 & 0b11111000) == 0b00010000)
     {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         uint8_t carry = reg & 0x80;
 
         reg = reg << 1;
@@ -484,7 +641,6 @@ void CPU::bit_instruction_group()
     // flags: S Z H PV N C
     if( (op2 & 0b11111000) == 0b00011000)
     {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         uint8_t carry = reg & 0x01;
 
         reg = reg >> 1;
@@ -500,9 +656,8 @@ void CPU::bit_instruction_group()
     // SLA r
     // opcode: 0x20 - 0x27
     // cycles: r:8 (hl):15 (ix+d):23
-    if( (op2 & 0b11111000) == 0b00100000)
+    if( op2 >= 0x20 && op2 <= 0x27 )
     {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         uint8_t carry = reg & 0x80;
 
         reg = reg << 1;
@@ -515,9 +670,9 @@ void CPU::bit_instruction_group()
     } else
 
     // SRA r
-    // opcode: 0x20 - 0x27
+    // opcode: 0x28 - 0x2f
     // cycles: r:8 (hl):15 (ix+d):23
-    if( (op2 & 0b11111000) == 0b00100000)
+    if( op2 >= 0x28 && op2 <= 0x2f )
     {
         uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         uint8_t carry = reg & 0x01;
@@ -573,8 +728,7 @@ void CPU::bit_instruction_group()
     if( op2 >= 0x40 && op2 <= 0x7f )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
-        uint8_t regCode = op2 & 0b00000111;
-        uint8_t result = reg_from_regcode(regCode) & (1 << bitNumber);
+        uint8_t result = reg & (1 << bitNumber);
         setFlag(FlagBitmaskZero, result == 0);
         setFlag(FlagBitmaskHalfCarry,1);
         setFlag(FlagBitmaskN,0);
@@ -589,7 +743,6 @@ void CPU::bit_instruction_group()
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = ~(1 << bitNumber);
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         reg &= bitMask;
     } else
 
@@ -602,8 +755,13 @@ void CPU::bit_instruction_group()
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = (1 << bitNumber);
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
         reg |= bitMask;
+    }
+
+    // The undocumented IX and IY bit instructions also loads a copy of the result from (IX+d) or (IY+d)
+    // into the register encoded in the opcode
+    if( &reg != &copyResultToReg) {
+        copyResultToReg = reg;
     }
 
 }
@@ -614,6 +772,11 @@ void CPU::ix_instruction_group()
     // TODO: implement group
 
     uint8_t op2 = fetch8BitValue();
+
+    if( op2 == 0xCB ){
+        bit_instruction_group_ix();
+        return;
+    }
 
     // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
     /*
@@ -684,6 +847,11 @@ void CPU::iy_instruction_group()
 {
     // TODO: implement group
     uint8_t op2 = fetch8BitValue();
+
+    if( op2 == 0xCB ){
+        bit_instruction_group_iy();
+        return;
+    }
 /*
     // Load r,(IY + d) (11 111 101,01rrr110,dddddddd)
     if( (op2 & 11000111) == 01000110 ){
@@ -748,6 +916,7 @@ void CPU::iy_instruction_group()
 
 void CPU::step()
 {
+
     // M1: OP Code fetch
     currentOpcode = fetch8BitValue();
 
@@ -857,7 +1026,29 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     if(!onlySetFlagsForComparison){
         regs.A = result;
     }
-};
+}
+
+// SBC HL,nn
+// opcode: 0xed 01ss0010
+void CPU::sbc_hl_nn( uint16_t value ){
+    uint16_t hl = regs.value_in_hl();
+    uint32_t result = (0xffff0000 | hl) - value;
+    if ( regs.F & FlagBitmaskC ) {
+        result--;
+    }
+    setFlag(FlagBitmaskZero, (result&0xffff) == 0);
+    setFlag(FlagBitmaskN,1);
+    setFlag(FlagBitmaskC, ((result&0xffff0000) < 0xffff0000) );
+    setFlag(FlagBitmaskHalfCarry, (0xfffff000 & regs.A) < (result & 0xfffff000) );
+    setFlag(FlagBitmaskSign, result & 0x8000 );
+
+    bool isOperandsSignBitDifferent = (hl ^ value) & 0x80;
+    bool didChangeSignInResult = (hl ^ result) & 0x80;
+    setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
+
+    regs.H = hl >> 8;
+    regs.L = hl;
+}
 
 void CPU::ld_r_r()
 {
@@ -907,15 +1098,47 @@ void CPU::dec_r(uint8_t &reg)
     setFlag( FlagBitmaskN, 1); // set
 }
 
-// Helper method to get (ix + n)
-/*
-void::CPU getValuePointedToByIXPlusN(){
-    int8_t d = fetch8BitValue();
-    uint16_t addr = specialRegs.IX + d;
-    value = mem->data(addr);
-    return value;
+// Increase register pair value
+void CPU::inc_rr(uint8_t& hibyte, uint8_t& lobyte)
+{
+    lobyte++;
+    if(lobyte==0)hibyte++;
 }
-*/
+
+// Increase register pair value
+void CPU::dec_rr(uint8_t& hibyte, uint8_t& lobyte)
+{
+    lobyte--;
+    if(lobyte==0xff)hibyte--;
+}
+
+void CPU::out( uint8_t dstPort, uint8_t value )
+{
+    output_to_port(dstPort,value);
+}
+
+void CPU::in( uint8_t& dstReg , uint8_t portNumber, bool only_set_flags )
+{
+    uint8_t value = input_from_port(portNumber);
+    if(!only_set_flags){
+        dstReg = value;
+    }
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    setFlag(FlagBitmaskPV, has_parity(value));
+    setFlag(FlagBitmaskZero,value == 0);
+    setFlag(FlagBitmaskSign, value & 0x80);
+}
+
+void CPU::output_to_port( uint8_t port, uint8_t value)
+{
+    // TODO: write value to port
+}
+uint8_t CPU::input_from_port( uint8_t port )
+{
+    // TODO: read value from port instead
+    return 0;
+}
 
 // *******************************************************
 // Instruction methods
@@ -1129,7 +1352,10 @@ void CPU::rla(){
     // Set bit 0 to previous carry.
     uint8_t newcarry = regs.A & 0x80;
     regs.A <<= 1;
-    regs.A |= (newcarry>>7);
+    regs.A |= (regs.F&FlagBitmaskC);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskC,newcarry);
 }
 
 // jr n
@@ -1467,6 +1693,17 @@ void CPU::ld_sp_nn()
 void CPU::ld_ptr_nn_a()
 {
     mem[fetch16BitValue()] = regs.A;
+}
+
+void CPU::ld_ptr_nn_n( uint16_t location, uint8_t value )
+{
+    mem[location] = value;
+}
+
+void CPU::ld_ptr_nn_nn( uint16_t location, uint16_t value)
+{
+    mem[location] = value;
+    mem[location+1] = value >> 8;
 }
 
 // INC SP
@@ -1919,9 +2156,7 @@ void CPU::ret()
 // opcode: 0xD3
 // cycles: 11
 void CPU::out_n_a(){
-    uint8_t portNumber = fetch8BitValue();
-    uint8_t value = regs.A;
-    // TODO: write value to port
+    out(fetch8BitValue(),regs.A);
 }
 
 // IN A,(N)
@@ -1929,9 +2164,7 @@ void CPU::out_n_a(){
 // flags: -
 // cycles: 11
 void CPU::in_a_n(){
-    uint8_t portNumber = fetch8BitValue();
-    uint8_t value = 0; // TODO: read value from port instead
-    regs.A = value;
+    in(regs.A, fetch8BitValue());
 }
 
 // EXX
@@ -1987,4 +2220,271 @@ void CPU::enable_interrupts()
 void CPU::ld_sp_hl()
 {
     specialRegs.SP = regs.value_in_hl();
+}
+
+// NEG : A = 0-A
+// opcode: 0xed 0x44
+// flags S Z H PV N C
+// cycles: 8
+void CPU::neg()
+{
+    uint8_t result = 0-regs.A;
+    setFlag(FlagBitmaskPV,regs.A == 0x80);
+    setFlag(FlagBitmaskC,regs.A != 0);
+    setFlag(FlagBitmaskHalfCarry, (0xf0 & regs.A) < (result & 0xf0) );
+    setFlag(FlagBitmaskSign, result & 0x80);
+    setFlag(FlagBitmaskZero, result == 0);
+    regs.A = result;
+}
+
+// RETN - "used at the end of a non-maskable interrupt rountine (located at 0x0066)"
+// opcode: 0xed 0x45
+void CPU::retn()
+{
+    ret();
+    IFF = IFF2;
+
+}
+
+void CPU::reti()
+{
+    ret();
+}
+
+void CPU::adc_hl_nn(uint16_t value)
+{
+    uint16_t hl = regs.value_in_hl();
+    uint32_t result = hl + value;
+    if ( regs.F & FlagBitmaskC ) {
+        result++;
+    }
+
+    setFlag(FlagBitmaskC,result > 0xffff);
+    setFlag(FlagBitmaskZero, (result&0xffff) == 0);
+    setFlag(FlagBitmaskHalfCarry, (hl & 0x0fff) > (result & 0x0fff));
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskSign, result & 0x8000);
+    setFlag(FlagBitmaskPV, !((hl ^ value) & 0x8000) && ((result ^ hl) & 0x8000) );
+
+    regs.H = result >> 8;
+    regs.L = result;
+}
+
+// RRD - do some swapping of nibbles between A and (HL) (see details on p.219 z80 tech ref.)
+// opcode: 0xed 0x67
+// cycles: 18
+// flags: s z h pv n
+void CPU::rrd()
+{
+    uint8_t hl = regs.value_in_hl();
+    uint8_t data = mem[hl];
+    uint8_t old_data_lownib = data & 0xf;
+    data = data >> 4;
+    data |= (regs.A << 4);
+    regs.A &= 0xf0;
+    regs.A |= old_data_lownib;
+    mem[hl] = data;
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,false);
+}
+
+// RLD - do some swapping of nibbles between A and (HL) (see details on p.217 z80 tech ref.)
+// opcode: 0xed 0x6f
+// cycles: 18
+// flags: s z h pv n
+void CPU::rld()
+{
+    uint8_t hl = regs.value_in_hl();
+    uint8_t data = mem[hl];
+    uint8_t old_data_hinib = data & 0xf0;
+    data = data << 4;
+    data |= (regs.A & 0x0f);
+    regs.A &= 0xf0;
+    regs.A |= (old_data_hinib>>4);
+    mem[hl] = data;
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,false);
+}
+
+// LDI
+// opcode: 0xed 0xa0
+// cycles: 16
+// flags: H PV N
+void CPU::ldi( bool decrease, bool repeat )
+{
+    if(regs.value_in_bc() > 0)
+    {
+        do
+        {
+            mem[regs.value_in_de()] = mem[regs.value_in_hl()]; // (de) = (hl)
+
+            if (decrease)
+            {
+                dec_rr(regs.D, regs.E); // inc de
+                dec_rr(regs.H, regs.L); // inc hl
+            } else
+            {
+                inc_rr(regs.D, regs.E); // inc de
+                inc_rr(regs.H, regs.L); // inc hl
+            }
+
+            dec_rr(regs.B, regs.C); // dec bc
+
+        } while (repeat && regs.value_in_bc() > 0);
+    }
+
+    setFlag(FlagBitmaskHalfCarry, 0);
+    setFlag(FlagBitmaskN, 0);
+    setFlag(FlagBitmaskPV, regs.value_in_bc() != 0);
+}
+
+void CPU::ldir()
+{
+    ldi(false,true);
+}
+
+void CPU::ldd()
+{
+    ldi(true,false);
+}
+
+void CPU::lddr()
+{
+    ldi(true,true);
+}
+
+// CPI
+// opcode: 0xed 0xa1
+// cycles: 16
+void CPU::cpi( bool decrease, bool repeat )
+{
+    if( regs.value_in_bc() > 0)
+    {
+        do
+        {
+            uint8_t result = regs.A - mem[regs.value_in_hl()];
+
+            if(decrease){
+                dec_rr(regs.H,regs.L); // inc hl
+            } else {
+                inc_rr(regs.H,regs.L); // inc hl
+            }
+
+            dec_rr(regs.B,regs.C); // dec bc
+
+            setFlag(FlagBitmaskSign,result & 0x80);
+            setFlag(FlagBitmaskZero, result == 0);
+            setFlag(FlagBitmaskHalfCarry, (regs.A & 0xf0) < (result & 0xf0) );
+        }
+        while (repeat && regs.value_in_bc() > 0);
+    }
+
+    setFlag(FlagBitmaskPV,regs.value_in_bc() == 0);
+    setFlag(FlagBitmaskN,1);
+}
+
+void CPU::cpir()
+{
+    cpi(false,true);
+}
+
+void CPU::cpd()
+{
+    cpi(true,false);
+}
+
+void CPU::cpdr()
+{
+    cpi(true,true);
+}
+
+// INI
+// opcode: 0xed 0xa2
+// cycles: 16
+void CPU::ini( bool decrease , bool repeat )
+{
+    if( regs.B > 0)
+    {
+        do{
+            uint8_t value = input_from_port(regs.C);
+            mem[regs.value_in_hl()] = value;
+
+            regs.B--;
+
+            if(decrease){
+                dec_rr(regs.H,regs.L);
+            } else {
+                inc_rr(regs.H,regs.L);
+            }
+        } while ( repeat && regs.B > 0);
+    }
+
+    setFlag(FlagBitmaskZero,regs.B==0);
+    setFlag(FlagBitmaskN,true);
+};
+
+void CPU::inir()
+{
+    ini(false,true);
+}
+
+void CPU::ind()
+{
+    ini(true,false);
+}
+
+void CPU::indr()
+{
+    ini(true,true);
+}
+
+// OUTI
+// opcode: 0xed 0xa3
+// cycles: 16
+void CPU::outi( bool decrease, bool repeat )
+{
+    if( regs.B > 0)
+    {
+        do {
+            output_to_port(regs.C, mem[regs.value_in_hl()]);
+            regs.B--;
+            if(decrease){
+                dec_rr(regs.H, regs.L);
+            } else {
+                inc_rr(regs.H, regs.L);
+            }
+
+        } while (repeat && regs.B > 0);
+    }
+
+    setFlag(FlagBitmaskZero, regs.B==0 );
+    setFlag(FlagBitmaskN,true);
+}
+
+void CPU::otir()
+{
+    outi(false,true);
+}
+
+void CPU::outd()
+{
+    outi(true,false);
+}
+
+void CPU::otdr()
+{
+    outi(true,true);
+}
+
+
+
+void CPU::invalid_opcode()
+{
+    // TODO: maybe log this?
 }
