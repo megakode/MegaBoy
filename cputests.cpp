@@ -32,6 +32,16 @@ TEST(CPUTests,ldi)
 
 }
 
+TEST(CPUTests,add16)
+{
+    CPU cpu;
+
+    cpu.regsPair.BC = 30000;
+    cpu.regsPair.HL = 30000;
+    cpu.add(cpu.regsPair.BC,cpu.regsPair.HL);
+    GTEST_ASSERT_EQ(cpu.regsPair.BC,60000);
+}
+
 TEST(CPUTests,RegCodes)
 {
     CPU cpu;
@@ -59,7 +69,7 @@ TEST(CPUTests,BitInstructionsIX){
 
     CPU cpu;
     cpu.regs.B = 0b00001111;
-    cpu.specialRegs.IX = 10;
+    cpu.specialRegsPairs.IX = 10;
     cpu.mem[0] = 1;
     cpu.do_bit_instruction( 0 , cpu.mem[0] , cpu.mem[0] );
 

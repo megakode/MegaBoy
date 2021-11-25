@@ -55,17 +55,13 @@ class CPU {
 
     struct Instruction {
         std::string name;
-        void (CPU::*code)(void) = nullptr;
+         void (CPU::*code)(void) = nullptr;
+        //std::function<void()> code;
     };
 
-    std::vector<Instruction> opCodeLookup;
-
-    std::vector<std::function<void(uint8_t)>> lookup_lambda;
-
-    struct Pins {
-        uint16_t addr;  // Address bus
-        uint8_t data;   // Data bus
-    } pins;
+    std::vector<Instruction> instructions;
+    std::vector<std::function<void()>> extended_instructions;
+    std::vector<std::function<void()>> bit_instructions;
 
     HostMemory mem;
 
@@ -111,16 +107,50 @@ class CPU {
         };
     };
 
-    struct SpecialRegisters {
+    struct GeneralRegisterPairs {
+        uint16_t BC;
+        uint16_t DE;
+        uint16_t HL;
+        uint16_t padding; // So register indexes in opcodes matches indexing into this struct
+        uint16_t AF = 0;
+    };
+
+    struct SpecialRegisterPairs {
         uint8_t I = 0;      // Interrupt Page Address Register
         uint8_t R = 0;      // Memory Refresh Register
         uint16_t IX = 0;    // Index Register X
         uint16_t IY = 0;    // Index Register Y
         uint16_t SP = 0;    // Stack Pointer
         uint16_t PC = 0;    // Program Counter
-    } specialRegs;
+    };
 
-    GeneralRegisters regs,auxRegs;
+    struct SpecialRegisters {
+        uint8_t I = 0;      // Interrupt Page Address Register
+        uint8_t R = 0;      // Memory Refresh Register
+        uint8_t IXL = 0;    // Index Register X low nibble
+        uint8_t IXH = 0;    // Index Register X
+        uint8_t IYL = 0;    // Index Register Y
+        uint8_t IYH = 0;    // Index Register Y
+        uint8_t SPL = 0;    // Stack Pointer
+        uint8_t SPH = 0;    // Stack Pointer
+        uint16_t PC = 0;    // Program Counter
+    };
+
+    union {
+        SpecialRegisters specialRegs;
+        SpecialRegisterPairs specialRegsPairs;
+    };
+
+    union {
+        GeneralRegisters regs;
+        GeneralRegisterPairs regsPair;
+    };
+
+    union {
+        GeneralRegisters auxRegs;
+        GeneralRegisters auxRegsPair;
+    };
+
 
     InterruptMode interrupt_mode = InterruptMode::IM_0;
 
@@ -207,25 +237,25 @@ class CPU {
     bool has_parity( uint8_t x );
 
     void add( uint8_t srcValue, bool carry );
-    void sub(uint8_t srcValue, bool carry, bool onlySetFlagsForComparison);
+    void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
+    void sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison );
+    void sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry = false);
+
     void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
     void in( uint8_t& dstReg , uint8_t portNumber, bool only_set_flags = false);
 
-    void extended_instruction_group();
-    void iy_instruction_group();
+    void decode_extended_instruction();
+    void decode_iy_instruction();
     void do_bit_instruction(uint8_t op2, uint8_t &reg, uint8_t &copyResultToReg);
 
-    void bit_instruction_group_ix();
+    void decode_ix_bit_instruction();
 
-    void bit_instruction_group_iy();
+    void decode_iy_bit_instruction();
 
     uint8_t input_from_port(uint8_t port);
     void output_to_port(uint8_t port, uint8_t value);
 
-    void inc_rr(uint8_t &hibyte, uint8_t &lobyte);
-
-    void dec_rr(uint8_t &hibyte, uint8_t &lobyte);
 
 public:
 
@@ -336,8 +366,8 @@ public:
     void rst();
     void ret();
 
-    void bit_instruction_group();
-    void ix_instruction_group();
+    void decode_bit_instruction();
+    void decode_ix_instruction();
 
     void call();
     void adc_a_n();
@@ -401,5 +431,10 @@ public:
     void otdr();
 
 
+    void ld_rr_ptr_nn(uint16_t &regPair, uint16_t location);
 
+    void sub16(uint16_t &regPair, uint16_t value_to_sub);
+
+    void ld_a_r();
+    void ld_a_i();
 };
