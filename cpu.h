@@ -62,6 +62,8 @@ class CPU {
     std::vector<Instruction> instructions;
     std::vector<std::function<void()>> extended_instructions;
     std::vector<std::function<void()>> bit_instructions;
+    std::vector<std::function<void()>> ix_instructions;
+    std::vector<std::function<void()>> iy_instructions;
 
     HostMemory mem;
 
@@ -83,74 +85,55 @@ class CPU {
         // P/V - Parity/overflow
         // N Add/Subtract flag
         // C - Carry 
+        union {
+            uint16_t BC;
+            struct { uint8_t C,B; };
+        };
 
-        uint8_t B = 0,C = 0;
-        uint8_t D = 0,E = 0;
-        uint8_t H = 0,L = 0;
+        union {
+            uint16_t DE;
+            struct { uint8_t E,D; };
+        };
+
+        union {
+            uint16_t HL;
+            struct { uint8_t L,H; };
+        };
+
         uint8_t padding; // So register indexes in opcodes matches indexing into this struct
-        uint8_t A = 0; // Accumulator
-        uint8_t F = 0; 
-        
-        // Returns the Z80 address contained in the HL register pair
-        uint16_t value_in_hl() {
-            return static_cast<uint16_t>((H<<8) + L);
+
+        union {
+            uint16_t AF;
+            struct { uint8_t F,A; };
         };
-
-        // Returns the Z80 address contained in the DE register pair
-        uint16_t value_in_de() {
-            return static_cast<uint16_t>((D<<8) + E);
-        };
-
-        // Returns the Z80 address contained in the BC register pair
-        uint16_t value_in_bc() {
-            return static_cast<uint16_t>((B<<8) + C);
-        };
-    };
-
-    struct GeneralRegisterPairs {
-        uint16_t BC;
-        uint16_t DE;
-        uint16_t HL;
-        uint16_t padding; // So register indexes in opcodes matches indexing into this struct
-        uint16_t AF = 0;
-    };
-
-    struct SpecialRegisterPairs {
-        uint8_t I = 0;      // Interrupt Page Address Register
-        uint8_t R = 0;      // Memory Refresh Register
-        uint16_t IX = 0;    // Index Register X
-        uint16_t IY = 0;    // Index Register Y
-        uint16_t SP = 0;    // Stack Pointer
-        uint16_t PC = 0;    // Program Counter
     };
 
     struct SpecialRegisters {
-        uint8_t I = 0;      // Interrupt Page Address Register
-        uint8_t R = 0;      // Memory Refresh Register
-        uint8_t IXL = 0;    // Index Register X low nibble
-        uint8_t IXH = 0;    // Index Register X
-        uint8_t IYL = 0;    // Index Register Y
-        uint8_t IYH = 0;    // Index Register Y
-        uint8_t SPL = 0;    // Stack Pointer
-        uint8_t SPH = 0;    // Stack Pointer
-        uint16_t PC = 0;    // Program Counter
+        uint8_t I;      // Interrupt Page Address Register
+        uint8_t R;      // Memory Refresh Register
+        union
+        {
+            uint16_t IX;    // Index Register X
+            struct {
+                uint8_t IXL; uint8_t IXH;
+            };
+        };
+        union
+        {
+            uint16_t IY;    // Index Register Y
+            struct { uint8_t IYL; uint8_t IYH; };
+        };
+        union
+        {
+            uint16_t SP;    // Stack Pointer
+            struct { uint8_t SPL; uint8_t SPH; };
+        };
+        uint16_t PC;    // Program Counter
     };
 
-    union {
-        SpecialRegisters specialRegs;
-        SpecialRegisterPairs specialRegsPairs;
-    };
-
-    union {
-        GeneralRegisters regs;
-        GeneralRegisterPairs regsPair;
-    };
-
-    union {
-        GeneralRegisters auxRegs;
-        GeneralRegisters auxRegsPair;
-    };
-
+    SpecialRegisters specialRegs;
+    GeneralRegisters regs;
+    GeneralRegisters auxRegs;
 
     InterruptMode interrupt_mode = InterruptMode::IM_0;
 
@@ -174,7 +157,7 @@ class CPU {
         uint8_t regValue;
 
         if(regCode == RegisterCode::HLPtr){
-            regValue = mem[regs.value_in_hl()];
+            regValue = mem[regs.HL];
         } else {
             uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + regCode;
             regValue = *srcRegPtr;
@@ -191,7 +174,7 @@ class CPU {
         regCode &= 0b00000111; // remove excess bits just in case
 
         if(regCode == RegisterCode::HLPtr){
-            return mem[regs.value_in_hl()];
+            return mem[regs.HL];
         } else {
             return ((reinterpret_cast<uint8_t*>(&regs))[regCode]);
         }
@@ -236,7 +219,7 @@ class CPU {
 
     bool has_parity( uint8_t x );
 
-    void add( uint8_t srcValue, bool carry );
+    void add( uint8_t srcValue, bool carry = false);
     void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
     void sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison );
     void sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry = false);
@@ -376,7 +359,7 @@ public:
     void exx();
     void in_a_n();
     void sbc_n();
-    void ex_ptr_sp_hl();
+    void EX_pSP_HL();
     void and_n();
     void jp_ptr_hl();
     void ex_de_hl();
@@ -437,4 +420,42 @@ public:
 
     void ld_a_r();
     void ld_a_i();
+
+    void ld_ix_nn();
+
+    void ld_iy_nn();
+
+    void ld_ix_ptr_nn();
+
+    void ld_iy_ptr_nn();
+
+    void ld_ptr_nn_ix();
+
+    void inc_ix();
+
+    void dec_ix();
+
+    void inc_iy();
+
+    void dec_iy();
+
+    void ld_ixh_n(uint8_t value);
+    void ld_ixl_n(uint8_t value);
+
+    void ld_iyh_n(uint8_t value);
+    void ld_iyl_n(uint8_t value);
+
+    void INC_pIXn();
+
+    void dec_ptr_ix_n();
+
+    void ld_ptr_ix_n_n();
+
+    void ld_ptr_ix_n_r(uint8_t &reg);
+
+    void ld_r_r(uint8_t &dstReg, uint8_t value);
+
+    void LD_r_pIXn(uint8_t &dst_reg);
+
+    void LD_r_pIYn(uint8_t &dst_reg);
 };

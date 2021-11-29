@@ -3,6 +3,8 @@
 #include <iostream>
 #include "cpu.h"
 
+#include "bit_instructions.h"
+
 uint8_t& HostMemory::operator[] (int index)
 {
     if (index >= UINT16_MAX) {
@@ -265,7 +267,7 @@ CPU::CPU() {
         {"RET PO",&CPU::ret_cc},            // 0xe0
         {"POP HL",&CPU::pop_qq},            // 0xe1
         {"JP PO,NN",&CPU::jp_cc_nn},        // 0xe2
-        {"EX (SP),HL",&CPU::ex_ptr_sp_hl},  // 0xe3
+        {"EX (SP),HL", &CPU::EX_pSP_HL},  // 0xe3
         {"CALL PO,NN",&CPU::call_cc_nn},    // 0xe4
         {"PUSH HL",&CPU::push_hl},          // 0xe5
         {"AND N",&CPU::and_n},              // 0xe6
@@ -315,9 +317,9 @@ CPU::CPU() {
             // 0x41 out(c),b
             [&](){ out_n_a(); },
             // 0x42: sbc hl,bc
-            [&](){ sbc_hl_nn(regsPair.BC); },
+            [&](){ sbc_hl_nn(regs.BC); },
             // 0x43: ld (**),bc
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regsPair.BC); },
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.BC); },
             // 0x44: neg
             [&](){ neg(); },
             // 0x45: retn
@@ -331,9 +333,9 @@ CPU::CPU() {
             // 0x49: OUT (c),C
             [&](){ out(regs.C,regs.C); },
             // 0x4A: ADC HL,BC
-            [&](){ adc_hl_nn(regsPair.BC); },
+            [&](){ adc_hl_nn(regs.BC); },
             // 0x4B: LD BC,(NN)
-            [&](){ ld_rr_ptr_nn(regsPair.BC,fetch16BitValue()); },
+            [&](){ ld_rr_ptr_nn(regs.BC,fetch16BitValue()); },
             // 0x4C: neg
             [&](){ neg(); },
             // 0x4d:
@@ -345,33 +347,33 @@ CPU::CPU() {
 
             [&](){ in(regs.D,regs.C); },                                // 0x50: in d,(c)
             [&](){ out(regs.C,regs.D); },                               // 0x51: out (c),d
-            [&](){ sbc_hl_nn(regsPair.DE); },                           // 0x52: sbc hl,de
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regsPair.DE); },      // 0x53: ld (**),de
+            [&](){ sbc_hl_nn(regs.DE); },                           // 0x52: sbc hl,de
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.DE); },      // 0x53: ld (**),de
             [&](){ neg(); },                                            // 0x54: neg
             [&](){ retn(); },                                           // 0x55: retn
             [&](){ set_interrupt_mode(InterruptMode::IM_1); },          // 0x56: im 1
             [&](){ ld_a_i(); },                                         // 0x57: ld a,i
             [&](){ in(regs.E,regs.C); },                                // 0x58: in e,(c)
             [&](){ out(regs.C,regs.E); },                               // 0x59: out (c),e
-            [&](){ adc_hl_nn(regsPair.DE); },                           // 0x5a: adc hl,de
-            [&](){ ld_rr_ptr_nn(regsPair.DE,fetch16BitValue()); },      // 0x5b: ld de,(**)
+            [&](){ adc_hl_nn(regs.DE); },                           // 0x5a: adc hl,de
+            [&](){ ld_rr_ptr_nn(regs.DE,fetch16BitValue()); },      // 0x5b: ld de,(**)
             [&](){ neg(); },                                            // 0x5c: neg
             [&](){ retn(); },                                           // 0x5d: retn
             [&](){ set_interrupt_mode(InterruptMode::IM_2); },          // 0x5e: im 2
             [&](){ ld_a_r(); },                                         // 0x5f: ld a,r
 
-            [&](){ in(regs.H,regs.C); }, // 0x60 in h,(c)
-            [&](){ out(regs.C,regs.H); }, // 0x61: out (c),h
-            [&](){ sbc_hl_nn(regs.value_in_hl()); }, // 0x62
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regsPair.HL); }, // 0x63 ld (**),hl
-            [&](){ neg(); }, // 0x64 neg
-            [&](){ retn(); }, // 0x65: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); }, // 0x66: im 0
+            [&](){ in(regs.H,regs.C); },                                // 0x60 in h,(c)
+            [&](){ out(regs.C,regs.H); },                               // 0x61: out (c),h
+            [&](){ sbc_hl_nn(regs.HL); },                    // 0x62
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.HL); },      // 0x63 ld (**),hl
+            [&](){ neg(); },                                            // 0x64 neg
+            [&](){ retn(); },                                           // 0x65: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },          // 0x66: im 0
             [&](){ rrd(); }, // 0x67: rrd
             [&](){ in(regs.L,regs.C); }, // 0x68: in l,(c)
             [&](){ out(regs.C,regs.L); }, // 0x69: out (c),l
-            [&](){ adc_hl_nn(regs.value_in_hl()); }, // 0x6a
-            [&](){ ld_rr_ptr_nn(regsPair.HL,fetch16BitValue()); }, // 0x6b: ld hl,(**)
+            [&](){ adc_hl_nn(regs.HL); }, // 0x6a
+            [&](){ ld_rr_ptr_nn(regs.HL,fetch16BitValue()); }, // 0x6b: ld hl,(**)
             [&](){ neg(); }, // 0x6c: neg
             [&](){ retn(); }, // 0x6d: retn
             [&](){ set_interrupt_mode(InterruptMode::IM_0); }, // 0x6e: im 0/1
@@ -379,16 +381,16 @@ CPU::CPU() {
 
             [&](){ in(regs.C,regs.C,true); }, // 0x70: in (c)
             [&](){ out(regs.C,0); }, // 0x71: out
-            [&](){ sbc_hl_nn(specialRegsPairs.SP); }, // 0x72: sbc hl,sp
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegsPairs.SP); }, // 0x73: ld (**),hl
+            [&](){ sbc_hl_nn(specialRegs.SP); }, // 0x72: sbc hl,sp
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.SP); }, // 0x73: ld (**),hl
             [&](){ neg(); }, // 0x74: neg
             [&](){ retn(); }, // 0x75:
             [&](){ set_interrupt_mode(InterruptMode::IM_1); }, // 0x76: im 1
             [&](){ invalid_opcode(); }, // 0x77
             [&](){ in(regs.A,regs.C); }, // 0x78 in a,(c)
             [&](){ out(regs.C,regs.A); }, // 0x79 out (c),a
-            [&](){ adc_hl_nn(specialRegsPairs.SP); }, // 0x7a adc hl,sp
-            [&](){ ld_rr_ptr_nn(specialRegsPairs.SP,fetch16BitValue()); }, // 0x7b ld sp,(**)
+            [&](){ adc_hl_nn(specialRegs.SP); }, // 0x7a adc hl,sp
+            [&](){ ld_rr_ptr_nn(specialRegs.SP,fetch16BitValue()); }, // 0x7b ld sp,(**)
             [&](){ neg(); }, // 0x7c neg
             [&](){ retn(); }, // 0x7d retn
             [&](){ set_interrupt_mode(InterruptMode::IM_2); }, // 0x7e im2
@@ -434,6 +436,139 @@ CPU::CPU() {
             [&](){ }, // 0xbf
     };
 
+    ix_instructions = {
+
+        // 0x00 - 0x08
+        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+
+        [&](){ add16(specialRegs.IX,regs.BC); }, // 0x09: ADD IX,BC
+
+        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+
+        [&](){ add16(specialRegs.IX,regs.DE); }, // 0x19: ADD IX,DE
+
+        [&](){},[&](){},[&](){},[&](){},[&](){},[&](){},[&](){},
+
+        [&](){ ld_ix_nn(); }, // 0x21: LD IX,**
+        [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.IX); }, // 0x22: LD (**),IX
+        [&](){ inc_ix(); }, // 0x23 inc ix
+        [&](){ inc_r(specialRegs.IXH); }, // 0x24
+        [&](){ dec_r(specialRegs.IXL); }, // 0x25
+        [&](){ ld_ixh_n(fetch8BitValue()); }, // 0x26
+        [&](){}, // 0x27
+        [&](){}, // 0x28
+        [&](){ add16(specialRegs.IX,specialRegs.IX); }, // 0x29
+        [&](){ ld_ix_ptr_nn(); }, // 0x2a
+        [&](){ dec_ix(); }, // 0x2b
+        [&](){ inc_r(specialRegs.IXL); }, // 0x2c
+        [&](){ dec_r(specialRegs.IXL); }, // 0x2d
+        [&](){ ld_ixl_n(fetch8BitValue()); }, // 0x2e
+        [&](){}, // 0x2f
+
+        [&](){}, // 0x30
+        [&](){}, // 0x31
+        [&](){}, // 0x32
+        [&](){}, // 0x33
+        [&](){ INC_pIXn(); }, // 0x34
+        [&](){ dec_ptr_ix_n(); }, // 0x35
+        [&](){ ld_ptr_ix_n_n(); }, // 0x36
+        [&](){  }, // 0x37
+        [&](){  }, // 0x38
+        [&](){ add16(specialRegs.IX,specialRegs.SP,false); }, // 0x39
+        [&](){  }, // 0x3A
+        [&](){  }, // 0x3B
+        [&](){  }, // 0x3C
+        [&](){  }, // 0x3C
+        [&](){  }, // 0x3C
+        [&](){  }, // 0x3C
+
+        [&](){  }, // 0x40
+        [&](){  }, // 0x41
+        [&](){  }, // 0x42
+        [&](){  }, // 0x43
+
+        [&](){ ld_r_r(regs.B,specialRegs.IXH); }, // 0x44 ld B,IXh
+        [&](){ ld_r_r(regs.B,specialRegs.IXL); }, // 0x45
+        [&](){ LD_r_pIXn(regs.B); }, // 0x46
+
+        [&](){  }, // 0x47
+        [&](){  }, // 0x48
+        [&](){  }, // 0x49
+        [&](){  }, // 0x4a
+        [&](){  }, // 0x4b
+
+        [&](){ ld_r_r(regs.C, specialRegs.IXH); }, // 0x4c
+        [&](){ ld_r_r(regs.C, specialRegs.IXL); }, // 0x4d
+        [&](){ LD_r_pIXn(regs.C); }, // 0x4e
+        [&](){  }, // 0x4f
+
+        [&](){  }, // 0x50
+        [&](){  }, // 0x51
+        [&](){  }, // 0x52
+        [&](){  }, // 0x53
+        [&](){ ld_r_r(regs.D, specialRegs.IXH); }, // 0x54
+        [&](){ ld_r_r(regs.D, specialRegs.IXL); }, // 0x55
+        [&](){ LD_r_pIXn(regs.D); }, // 0x56 LD D,(ix+n)
+        [&](){  }, // 0x57
+        [&](){  }, // 0x58
+        [&](){  }, // 0x59
+        [&](){  }, // 0x5a
+        [&](){  }, // 0x5b
+        [&](){ ld_r_r(regs.E, specialRegs.IXH); }, // 0x5c
+        [&](){ ld_r_r(regs.E, specialRegs.IXL); }, // 0x5d
+        [&](){ LD_r_pIXn(regs.E); }, // 0x5e LD E,(ix+n)
+        [&](){  }, // 0x5f
+
+        [&](){ ld_r_r(specialRegs.IXH,regs.B); }, // 0x60
+        [&](){ ld_r_r(specialRegs.IXH,regs.C); }, // 0x61
+        [&](){ ld_r_r(specialRegs.IXH,regs.D); }, // 0x62
+        [&](){ ld_r_r(specialRegs.IXH,regs.E); }, // 0x63
+        [&](){ ld_r_r(specialRegs.IXH,specialRegs.IXH); }, // 0x64
+        [&](){ ld_r_r(specialRegs.IXH,specialRegs.IXL); }, // 0x65
+        [&](){ LD_r_pIXn(regs.H); }, // 0x66 LD E,(ix+n)
+        [&](){ ld_r_r(specialRegs.IXH,regs.A); }, // 0x67
+        [&](){ ld_r_r(specialRegs.IXL,regs.B); }, // 0x68
+        [&](){ ld_r_r(specialRegs.IXL,regs.C); }, // 0x69
+        [&](){ ld_r_r(specialRegs.IXL,regs.D); }, // 0x6a
+        [&](){ ld_r_r(specialRegs.IXL,regs.E); }, // 0x6b
+        [&](){ ld_r_r(specialRegs.IXL,specialRegs.IXH); }, // 0x6c
+        [&](){ ld_r_r(specialRegs.IXL,specialRegs.IXL); }, // 0x6d
+        [&](){ LD_r_pIXn(regs.L); }, // 0x6e LD E,(ix+n)
+        [&](){ ld_r_r(specialRegs.IXL,regs.A); }, // 0x6f
+
+        [&](){ ld_ptr_ix_n_r(regs.B); }, // 0x70
+        [&](){ ld_ptr_ix_n_r(regs.C); }, // 0x71
+        [&](){ ld_ptr_ix_n_r(regs.D); }, // 0x72
+        [&](){ ld_ptr_ix_n_r(regs.E); }, // 0x73
+        [&](){ ld_ptr_ix_n_r(regs.H); }, // 0x74
+        [&](){ ld_ptr_ix_n_r(regs.L); }, // 0x75
+        [&](){  }, // 0x76
+        [&](){ ld_ptr_ix_n_r(regs.B); }, // 0x77
+        [&](){  }, // 0x78
+        [&](){  }, // 0x79
+        [&](){  }, // 0x7a
+        [&](){  }, // 0x7b
+        [&](){ ld_r_r(regs.A,specialRegs.IXH); }, // 0x7c
+        [&](){ ld_r_r(regs.A,specialRegs.IXL); }, // 0x7d
+        [&](){ LD_r_pIXn(regs.A); }, // 0x7e
+        [&](){  }, // 0x7f
+
+        [&](){  }, // 0x80
+        [&](){  }, // 0x81
+        [&](){  }, // 0x82
+        [&](){  }, // 0x83
+        [&](){ add(specialRegs.IXH); }, // 0x84 add a,ixh
+        [&](){ add(specialRegs.IXL); }, // 0x85 add a,ixl
+
+
+        // TODO
+
+        // 15 cycles at læse fra (ix+n)
+        // 5 hvis ixl/ixh er involveret
+
+    };
+
+
 }
 
 
@@ -461,7 +596,7 @@ void CPU::decode_ix_bit_instruction()
 {
     int8_t offset = static_cast<int8_t>(fetch8BitValue());
     uint8_t op2 = fetch8BitValue(); // fetch next opcode
-    uint8_t &reg = mem[specialRegsPairs.IX + offset];
+    uint8_t &reg = mem[specialRegs.IX + offset];
     do_bit_instruction(op2,reg, reg_from_regcode(op2));
 }
 
@@ -469,211 +604,10 @@ void CPU::decode_iy_bit_instruction()
 {
     int8_t offset = static_cast<int8_t>(fetch8BitValue());
     uint8_t op2 = fetch8BitValue(); // fetch next opcode
-    uint8_t &reg = mem[specialRegsPairs.IY + offset];
+    uint8_t &reg = mem[specialRegs.IY + offset];
     do_bit_instruction(op2,reg, reg_from_regcode(op2));
 }
 
-/// Perform a bit instruction from the "bit opcode group"
-/// \param op2 The opcode which contains the information about the operation
-/// \param reg The register to operate on
-/// \param copyResultReg Additionally copy the result to this register (used by the undocumented IX/IY bit opcodes). set to the same as reg to disable copying the result.
-
-void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToReg )
-{
-    // RLC r
-    // opcode: 0x00 - 0x07
-    // cycles: 8
-    if( op2 >= 0 && op2 <= 0x07 )
-    {
-        uint8_t carry = reg & 0x80;
-        reg = reg << 1;
-
-        setFlag( FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-
-        reg |= (carry ? 1 : 0);
-    } else
-
-    // RRC r
-    // opcode: 0x08 - 0x0f
-    // cycles:
-    // RRC r : 8
-    // RRC (HL) : 15
-    // RRC (IX+d): 23
-    // RRC (IY+d): 23
-    if( (op2 & 0b11111000) == 0b00001000)
-    {
-        uint8_t carry = reg & 0x01;
-        reg = reg >> 1;
-
-        setFlag( FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-
-        reg |= (carry ? 0x80 : 0);
-    } else
-
-    // RL r
-    // opcode: 0x10 - 0x17
-    // cycles:
-    // RL r: 8
-    // RL (hl): 15
-    // RL (ix+d): 23
-    // RL (iy+d): 23
-    // flags: S Z H PV N C
-    if( (op2 & 0b11111000) == 0b00010000)
-    {
-        uint8_t carry = reg & 0x80;
-
-        reg = reg << 1;
-        reg |= (regs.F & FlagBitmaskC) ? 1 : 0;
-
-        setFlag( FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-    // RR r
-    // opcode: 0x18 - 0x1f
-    // cycles:
-    // RR r: 8
-    // RR (hl): 15
-    // RR (ix+d): 23
-    // RR (iy+d): 23
-    // flags: S Z H PV N C
-    if( (op2 & 0b11111000) == 0b00011000)
-    {
-        uint8_t carry = reg & 0x01;
-
-        reg = reg >> 1;
-        reg |= (regs.F & FlagBitmaskC) ? 0x80 : 0;
-
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-    // SLA r
-    // opcode: 0x20 - 0x27
-    // cycles: r:8 (hl):15 (ix+d):23
-    if( op2 >= 0x20 && op2 <= 0x27 )
-    {
-        uint8_t carry = reg & 0x80;
-
-        reg = reg << 1;
-
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-    // SRA r
-    // opcode: 0x28 - 0x2f
-    // cycles: r:8 (hl):15 (ix+d):23
-    if( op2 >= 0x28 && op2 <= 0x2f )
-    {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
-        uint8_t carry = reg & 0x01;
-        int8_t signedValue = reg;
-        // TODO: page 210. Make sure this is an arithmetic shift that preserves bit 7
-        signedValue = signedValue >> 1;
-        reg = signedValue;
-
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-    // SLL r
-    // opcode: 0x30 - 0x37
-    if( op2 >= 0x30 && op2 <= 0x37 ){
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
-        uint8_t carry = reg & 0x80;
-
-        reg = reg << 1;
-        reg |= 1;
-
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-    // SRL r
-    // Shift right
-    if( op2 >= 0x38 && op2 <= 0x3f)
-    {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
-        uint8_t carry = reg & 0x01;
-
-        reg = reg >> 1;
-
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
-    } else
-
-
-    // BIT b,r
-    // Test bit b in register r and sets Z flag accordingly
-    // opcode: 0x40 - 0x7f
-    // flag: Z H N
-    if( op2 >= 0x40 && op2 <= 0x7f )
-    {
-        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
-        uint8_t result = reg & (1 << bitNumber);
-        setFlag(FlagBitmaskZero, result == 0);
-        setFlag(FlagBitmaskHalfCarry,1);
-        setFlag(FlagBitmaskN,0);
-    } else
-
-    // RES b,r
-    // Reset bit b in register r
-    // opcode: 0x80 - 0xbf (01 bbb rrr)
-    // flags: -
-    // cycles: 8
-    if( op2 >= 0x80 && op2 <= 0xbf )
-    {
-        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
-        uint8_t bitMask = ~(1 << bitNumber);
-        reg &= bitMask;
-    } else
-
-    // SET b,r
-    // Set bit b in register r
-    // opcode: 0xc0 - 0xff (01 bbb rrr)
-    // flags: -
-    // cycles: 8
-    if( op2 >= 0xc0 && op2 <= 0xff )
-    {
-        uint8_t bitNumber = (op2 & 0b00111000) >> 3;
-        uint8_t bitMask = (1 << bitNumber);
-        reg |= bitMask;
-    }
-
-    // The undocumented IX and IY bit instructions also loads a copy of the result from (IX+d) or (IY+d)
-    // into the register encoded in the opcode
-    if( &reg != &copyResultToReg) {
-        copyResultToReg = reg;
-    }
-
-}
 
 // opcodes: 0xdd ..
 void CPU::decode_ix_instruction()
@@ -701,19 +635,19 @@ void CPU::decode_ix_instruction()
         uint8_t reg = (op2 & 0b111);
         int8_t d = fetch8BitValue();
         uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
-        mem[specialRegsPairs.IX + d] = *regPtr;
+        mem[specialRegs.IX + d] = *regPtr;
     } else
 
         // Load (IX + d),n (DD,36,d,n)
     if(op2 == 0x36){
         int8_t d = fetch8BitValue();
         uint8_t value = fetch8BitValue();
-        mem[specialRegsPairs.IX + d] = value;
+        mem[specialRegs.IX + d] = value;
     } else
 
         // Load IX,nn - M:4 T:14
     if(op2 == 0x21){
-        specialRegsPairs.IX = fetch16BitValue();
+        specialRegs.IX = fetch16BitValue();
     }
 
     // Load IX,(nn) - M:6 T:20
@@ -721,7 +655,7 @@ void CPU::decode_ix_instruction()
         uint16_t addr = fetch16BitValue();
         uint8_t lobyte = mem[addr];
         uint8_t hibyte = mem[addr+1];
-        specialRegsPairs.IX = (hibyte<<8) + lobyte;
+        specialRegs.IX = (hibyte<<8) + lobyte;
     }
 
     // Load (nn),IX - (0xdd,0x22,n,n)- M:6 T:20
@@ -734,22 +668,22 @@ void CPU::decode_ix_instruction()
     // Load SP,IX
     // cycles: 10
     if(op2 == 0xF9){
-        specialRegsPairs.SP = specialRegsPairs.IX;
+        specialRegs.SP = specialRegs.IX;
     }
 
 
     // Push IX -
     // cycles: 15
     if( op2 == 0xE5){
-        mem[specialRegsPairs.SP-2] = specialRegs.IXL;
-        mem[specialRegsPairs.SP-1] = specialRegs.IXH;
-        specialRegsPairs.SP -= 2;
+        mem[specialRegs.SP-2] = specialRegs.IXL;
+        mem[specialRegs.SP-1] = specialRegs.IXH;
+        specialRegs.SP -= 2;
     }
 
     // POP IX - M:4 T:14
     if( op2 == 0xE1 ){
-        specialRegsPairs.IX = (mem[specialRegsPairs.SP+1]<<8) + mem[specialRegsPairs.SP];
-        specialRegsPairs.SP +=2;
+        specialRegs.IX = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
+        specialRegs.SP +=2;
     }
 }
 
@@ -795,6 +729,12 @@ bool CPU::has_parity( uint8_t x )
         x &= x-1; // at each iteration, we set the least significant 1 to 0
     }
     return p;
+}
+
+// Add a number of cycles that the current operation has spent.
+// At the end of each `step`, the final number of cycles is used as a delay to wait before running the next `step`.
+void add_cycles(uint8_t cycles ){
+
 }
 
 // *******************************************************
@@ -868,7 +808,7 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
         result--;
     }
     setFlag(FlagBitmaskZero, (result&0xff) == 0);
-    setFlag(FlagBitmaskN,1);
+    setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
     setFlag(FlagBitmaskHalfCarry, (0xfff0 & regs.A) < (result & 0xfff0) );
     setFlag(FlagBitmaskSign, result & 0x80 );
@@ -899,27 +839,27 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
 
 void CPU::sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry )
 {
-    uint32_t result = (0xffff0000 | regsPair.HL) - value_to_sub;
+    uint32_t result = (0xffff0000 | regs.HL) - value_to_sub;
     if ( regs.F & FlagBitmaskC ) {
         result--;
     }
     setFlag(FlagBitmaskZero, (result&0xffff) == 0);
-    setFlag(FlagBitmaskN,1);
+    setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xffff0000) < 0xffff0000) );
-    setFlag(FlagBitmaskHalfCarry, (0xfffff000 & regsPair.HL) < (result & 0xfffff000) );
+    setFlag(FlagBitmaskHalfCarry, (0xfffff000 & regs.HL) < (result & 0xfffff000) );
     setFlag(FlagBitmaskSign, result & 0x8000 );
 
-    bool isOperandsSignBitDifferent = (regsPair.HL ^ value_to_sub) & 0x80;
-    bool didChangeSignInResult = (regsPair.HL ^ result) & 0x80;
+    bool isOperandsSignBitDifferent = (regs.HL ^ value_to_sub) & 0x80;
+    bool didChangeSignInResult = (regs.HL ^ result) & 0x80;
     setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
 
-    regsPair.HL = result;
+    regs.HL = result;
 }
 
 // SBC HL,nn
 // opcode: 0xed 01ss0010
 void CPU::sbc_hl_nn( uint16_t value ){
-    sub16(regsPair.HL,value,true);
+    sub16(regs.HL,value,true);
 }
 
 void CPU::ld_r_r()
@@ -931,13 +871,13 @@ void CPU::ld_r_r()
     {
         // LD R,(HL)
         uint8_t *dstRegPtr = reinterpret_cast<uint8_t*>(&regs) + dstRegCode;
-        *dstRegPtr = mem[regsPair.HL]; // Get data from HL location
+        *dstRegPtr = mem[regs.HL]; // Get data from HL location
     }
     if(dstRegCode == RegisterCode::HLPtr)
     {
         // LD (HL),R
         uint8_t *srcRegPtr = reinterpret_cast<uint8_t*>(&regs) + srcRegCode;
-        mem[regsPair.HL] = *srcRegPtr;
+        mem[regs.HL] = *srcRegPtr;
     }
     else
     { // LD R,R
@@ -947,6 +887,13 @@ void CPU::ld_r_r()
     }
 }
 
+// cycles: 4 (8 when src or dst is an index register: ixl,ixh,iyl,iyh
+void CPU::ld_r_r( uint8_t& dstReg, uint8_t value )
+{
+    dstReg = value;
+
+}
+
 void CPU::inc_r(uint8_t &reg)
 {
     reg++;
@@ -954,7 +901,7 @@ void CPU::inc_r(uint8_t &reg)
     setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero
     setFlag( FlagBitmaskPV, reg == 0x80 ); // Set if B was 0x7f before
     setFlag( FlagBitmaskHalfCarry, (reg & 0b00001111) == 0 ); // Set if carry over from bit 3
-    setFlag( FlagBitmaskN, 0); // reset
+    setFlag( FlagBitmaskN, false); // reset
 }
 
 void CPU::dec_r(uint8_t &reg)
@@ -964,7 +911,7 @@ void CPU::dec_r(uint8_t &reg)
     setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero
     setFlag( FlagBitmaskPV, reg == 0x7f ); // Set if B was 0x80 before
     setFlag( FlagBitmaskHalfCarry, (reg & 0b00001111) == 0b00001111 ); // Set if carry over from bit 3
-    setFlag( FlagBitmaskN, 1); // set
+    setFlag( FlagBitmaskN, true); // set
 }
 
 void CPU::out( uint8_t dstPort, uint8_t value )
@@ -1017,7 +964,7 @@ void CPU::load_bc_nn(){
 // Opcode: 02
 // Cycles: 7
 void CPU::load_bc_a(){
-    mem[regs.value_in_bc()] = regs.A;
+    mem[regs.BC] = regs.A;
 }
 
 // inc bc
@@ -1051,18 +998,7 @@ void CPU::load_b_n(){
     regs.B = fetch8BitValue();
 }
 
-// RLCA
-// opcode: 0x07
-// cycles: 4
-void CPU::rlca(){
-    bool carry = regs.A & 0b10000000;
-    setFlag(FlagBitmaskC,carry);
-    setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskN,0);
-    
-    regs.A <<= 1;
-    if(carry)regs.A |= 1;
-}
+
 
 // EX AF AF'
 // opcode: 0x08
@@ -1077,7 +1013,7 @@ void CPU::ex_af(){
 // cycles: 11
 // flags: H, N, C
 void CPU::add_hl_bc(){
-    add16(regsPair.HL,regsPair.BC);
+    add16(regs.HL,regs.BC);
 }
 
 // LD A,(BC)
@@ -1085,17 +1021,14 @@ void CPU::add_hl_bc(){
 // cycles: 7
 // flags: -
 void CPU::load_a_ptr_bc(){
-    regs.A = mem[regs.value_in_bc()];
+    regs.A = mem[regs.BC];
 }
 
 // DEC BC
 // opcode: 0x0b
 // cycles: 6
 void CPU::dec_bc(){
-    uint16_t result = regs.value_in_bc();
-    result--;
-    regs.B = result >> 8;
-    regs.C = result;
+    regs.BC--;
 }
 
 // INC C
@@ -1161,7 +1094,7 @@ void CPU::load_de_nn(){
 // opcode: 0x12
 // cycles: 7
 void CPU::load_ptr_de_a(){
-    mem[regs.value_in_de()] = regs.A;
+    mem[regs.DE] = regs.A;
 }
 
 // LD a,i - load the interrupt vector register I into A
@@ -1246,7 +1179,7 @@ void CPU::jr_n(){
 // cycleS: 11
 // flag: C N H
 void CPU::add_hl_de() {
-    add16(regsPair.HL,regsPair.DE);
+    add16(regs.HL,regs.DE);
 }
 
 // LD A,(DE)
@@ -1254,14 +1187,14 @@ void CPU::add_hl_de() {
 // cycles: 7
 // flags: -
 void CPU::load_a_ptr_de(){
-    regs.A = mem[regs.value_in_de()];
+    regs.A = mem[regs.DE];
 }
 
 // DEC DE
 // opcode: 0x1b
 // cycles: 6
 void CPU::dec_de(){
-    regsPair.DE--;
+    regs.DE--;
 }
 
 // INC E
@@ -1470,7 +1403,7 @@ void CPU::jr_z(){
 // cycles: 11
 // flags: C H N
 void CPU::add_hl_hl(){
-    add16(regsPair.HL,regsPair.HL);
+    add16(regs.HL,regs.HL);
 }
 
 // ld hl,(nn)
@@ -1488,10 +1421,7 @@ void CPU::ld_hl_ptr_nn(){
 // cycles: 6
 // flags: -
 void CPU::dec_hl(){
-    uint16_t result = regs.value_in_hl();
-    result--;
-    regs.D = result >> 8;
-    regs.E = result;
+    regs.HL--;
 }
 
 // inc l
@@ -1541,7 +1471,7 @@ void CPU::jr_nc()
 // flags: -
 void CPU::ld_sp_nn()
 {
-    specialRegsPairs.SP = fetch16BitValue();
+    specialRegs.SP = fetch16BitValue();
 }
 
 // LD (NN),A
@@ -1557,6 +1487,8 @@ void CPU::ld_ptr_nn_n( uint16_t location, uint8_t value )
     mem[location] = value;
 }
 
+// cycles: 20
+// flags: -
 void CPU::ld_ptr_nn_nn( uint16_t location, uint16_t value)
 {
     mem[location] = value;
@@ -1577,7 +1509,7 @@ void CPU::ld_rr_ptr_nn( uint16_t& regPair, uint16_t addr )
 // flags: -
 void CPU::inc_sp()
 {
-    specialRegsPairs.SP++;
+    specialRegs.SP++;
 
 }
 
@@ -1586,7 +1518,7 @@ void CPU::inc_sp()
 // N PV H S Z
 void CPU::inc_ptr_hl()
 {
-    uint8_t result = mem[regs.value_in_hl()]++;
+    uint8_t result = mem[regs.HL]++;
     setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00010000 );
@@ -1598,7 +1530,7 @@ void CPU::inc_ptr_hl()
 // opcode: 0x35
 void CPU::dec_ptr_hl()
 {
-    uint8_t result = mem[regs.value_in_hl()]--;
+    uint8_t result = mem[regs.HL]--;
     setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00001111 );
@@ -1610,7 +1542,7 @@ void CPU::dec_ptr_hl()
 // opcode: 0x36
 void CPU::ld_ptr_hl_n()
 {
-    mem[regs.value_in_hl()] = fetch8BitValue();
+    mem[regs.HL] = fetch8BitValue();
 }
 
 // SCF - Set carry flag
@@ -1642,7 +1574,7 @@ void CPU::jr_c()
 // flags: C N H
 void CPU::add_hl_sp()
 {
-    add16(regsPair.HL,specialRegsPairs.SP);
+    add16(regs.HL,specialRegs.SP);
 }
 
 // LD A,(NN)
@@ -1656,7 +1588,7 @@ void CPU::ld_a_ptr_nn()
 // opcode: 0x3b
 void CPU::dec_sp()
 {
-    specialRegsPairs.SP--;
+    specialRegs.SP--;
 }
 
 // opcode: 0x3c
@@ -1884,8 +1816,8 @@ void CPU::ret_cc(){
     }
 
     if(conditionValue){
-        uint8_t lobyte = mem[specialRegsPairs.SP++];
-        uint8_t hibyte = mem[specialRegsPairs.SP++];
+        uint8_t lobyte = mem[specialRegs.SP++];
+        uint8_t hibyte = mem[specialRegs.SP++];
         specialRegs.PC = (hibyte<<8) + lobyte;
     }
 }
@@ -1894,8 +1826,8 @@ void CPU::ret_cc(){
 void CPU::pop_qq()
 {
     uint8_t regPairCode = (currentOpcode & 0b00110000) >> 4;
-    uint8_t lobyte = mem[specialRegsPairs.SP++];
-    uint8_t hibyte = mem[specialRegsPairs.SP++];
+    uint8_t lobyte = mem[specialRegs.SP++];
+    uint8_t hibyte = mem[specialRegs.SP++];
 
     switch (regPairCode)
     {
@@ -1936,7 +1868,7 @@ void CPU::jp_nn()
 // cycles: 4
 // flags: -
 void CPU::jp_ptr_hl(){
-    specialRegs.PC = regs.value_in_hl();
+    specialRegs.PC = regs.HL;
 }
 
 
@@ -1947,8 +1879,8 @@ void CPU::call_cc_nn()
     uint16_t location = fetch16BitValue();
 
     if(is_condition_true(conditionCode)){
-        mem[--specialRegsPairs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
-        mem[--specialRegsPairs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+        mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
+        mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
         specialRegs.PC = location;
     }
 }
@@ -1957,33 +1889,33 @@ void CPU::call_cc_nn()
 // cycles: 17
 void CPU::call(){
     uint16_t location = fetch16BitValue();
-    mem[--specialRegsPairs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
-    mem[--specialRegsPairs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+    mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
+    mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
     specialRegs.PC = location;
 }
 
 // cyckes; 11
 void CPU::push_bc(){
-    mem[--specialRegsPairs.SP] = regs.B;
-    mem[--specialRegsPairs.SP] = regs.C;
+    mem[--specialRegs.SP] = regs.B;
+    mem[--specialRegs.SP] = regs.C;
 }
 
 // cyckes; 11
 void CPU::push_de(){
-    mem[--specialRegsPairs.SP] = regs.D;
-    mem[--specialRegsPairs.SP] = regs.E;
+    mem[--specialRegs.SP] = regs.D;
+    mem[--specialRegs.SP] = regs.E;
 }
 
 // cyckes; 11
 void CPU::push_hl(){
-    mem[--specialRegsPairs.SP] = regs.H;
-    mem[--specialRegsPairs.SP] = regs.L;
+    mem[--specialRegs.SP] = regs.H;
+    mem[--specialRegs.SP] = regs.L;
 }
 
 // cyckes; 11
 void CPU::push_af(){
-    mem[--specialRegsPairs.SP] = regs.A;
-    mem[--specialRegsPairs.SP] = regs.F;
+    mem[--specialRegs.SP] = regs.A;
+    mem[--specialRegs.SP] = regs.F;
 }
 
 // RST
@@ -1997,8 +1929,8 @@ void CPU::rst()
     uint8_t location[] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38};
     uint8_t locationCode = (currentOpcode & 0b00111000) >> 3;
 
-    mem[--specialRegsPairs.SP] = specialRegs.PC >> 8;
-    mem[--specialRegsPairs.SP] = specialRegs.PC;
+    mem[--specialRegs.SP] = specialRegs.PC >> 8;
+    mem[--specialRegs.SP] = specialRegs.PC;
 
     specialRegs.PC = location[locationCode];
 }
@@ -2008,8 +1940,8 @@ void CPU::rst()
 // cycles: 10
 void CPU::ret()
 {
-    uint8_t lobyte = mem[specialRegsPairs.SP++];
-    uint8_t hibyte = mem[specialRegsPairs.SP++];
+    uint8_t lobyte = mem[specialRegs.SP++];
+    uint8_t hibyte = mem[specialRegs.SP++];
     specialRegs.PC = (hibyte<<8) + lobyte;
 }
 
@@ -2048,10 +1980,10 @@ void CPU::exx()
 // opcode: 0xe3
 // cycles: 19
 // flags: -
-void CPU::ex_ptr_sp_hl()
+void CPU::EX_pSP_HL()
 {
-    std::swap( regs.L , mem[specialRegsPairs.SP] );
-    std::swap( regs.H , mem[specialRegsPairs.SP+1] );
+    std::swap( regs.L , mem[specialRegs.SP] );
+    std::swap( regs.H , mem[specialRegs.SP+1] );
 }
 
 // EX DE,HL
@@ -2080,7 +2012,7 @@ void CPU::enable_interrupts()
 // cycles: 6
 void CPU::ld_sp_hl()
 {
-    specialRegsPairs.SP = regsPair.HL;
+    specialRegs.SP = regs.HL;
 }
 
 // NEG : A = 0-A
@@ -2114,7 +2046,7 @@ void CPU::reti()
 
 void CPU::adc_hl_nn(uint16_t value)
 {
-    add16(regsPair.HL,value,true);
+    add16(regs.HL,value,true);
 }
 
 // RRD - do some swapping of nibbles between A and (HL) (see details on p.219 z80 tech ref.)
@@ -2123,7 +2055,7 @@ void CPU::adc_hl_nn(uint16_t value)
 // flags: s z h pv n
 void CPU::rrd()
 {
-    uint8_t hl = regs.value_in_hl();
+    uint8_t hl = regs.HL;
     uint8_t data = mem[hl];
     uint8_t old_data_lownib = data & 0xf;
     data = data >> 4;
@@ -2144,7 +2076,7 @@ void CPU::rrd()
 // flags: s z h pv n
 void CPU::rld()
 {
-    uint8_t hl = regs.value_in_hl();
+    uint8_t hl = regs.HL;
     uint8_t data = mem[hl];
     uint8_t old_data_hinib = data & 0xf0;
     data = data << 4;
@@ -2165,30 +2097,30 @@ void CPU::rld()
 // flags: H PV N
 void CPU::ldi( bool decrease, bool repeat )
 {
-    if(regs.value_in_bc() > 0)
+    if(regs.BC > 0)
     {
         do
         {
-            mem[regs.value_in_de()] = mem[regs.value_in_hl()]; // (de) = (hl)
+            mem[regs.DE] = mem[regs.HL]; // (de) = (hl)
 
             if (decrease)
             {
-                regsPair.DE--;
-                regsPair.HL--;
+                regs.DE--;
+                regs.HL--;
             } else
             {
-                regsPair.DE++;
-                regsPair.HL++;
+                regs.DE++;
+                regs.HL++;
             }
 
-            regsPair.BC--;
+            regs.BC--;
 
-        } while (repeat && regsPair.BC > 0);
+        } while (repeat && regs.BC > 0);
     }
 
     setFlag(FlagBitmaskHalfCarry, 0);
     setFlag(FlagBitmaskN, 0);
-    setFlag(FlagBitmaskPV, regsPair.BC != 0);
+    setFlag(FlagBitmaskPV, regs.BC != 0);
 }
 
 void CPU::ldir()
@@ -2211,28 +2143,28 @@ void CPU::lddr()
 // cycles: 16
 void CPU::cpi( bool decrease, bool repeat )
 {
-    if( regsPair.BC > 0)
+    if( regs.BC > 0)
     {
         do
         {
-            uint8_t result = regs.A - mem[regsPair.HL];
+            uint8_t result = regs.A - mem[regs.HL];
 
             if(decrease){
-                regsPair.HL--;
+                regs.HL--;
             } else {
-                regsPair.HL++;
+                regs.HL++;
             }
 
-            regsPair.BC--;
+            regs.BC--;
 
             setFlag(FlagBitmaskSign,result & 0x80);
             setFlag(FlagBitmaskZero, result == 0);
             setFlag(FlagBitmaskHalfCarry, (regs.A & 0xf0) < (result & 0xf0) );
         }
-        while (repeat && regsPair.BC > 0);
+        while (repeat && regs.BC > 0);
     }
 
-    setFlag(FlagBitmaskPV,regsPair.BC == 0);
+    setFlag(FlagBitmaskPV,regs.BC == 0);
     setFlag(FlagBitmaskN,1);
 }
 
@@ -2260,14 +2192,14 @@ void CPU::ini( bool decrease , bool repeat )
     {
         do{
             uint8_t value = input_from_port(regs.C);
-            mem[regsPair.HL] = value;
+            mem[regs.HL] = value;
 
             regs.B--;
 
             if(decrease){
-                regsPair.HL--;
+                regs.HL--;
             } else {
-                regsPair.HL++;
+                regs.HL++;
             }
         } while ( repeat && regs.B > 0);
     }
@@ -2299,12 +2231,12 @@ void CPU::outi( bool decrease, bool repeat )
     if( regs.B > 0)
     {
         do {
-            output_to_port(regs.C, mem[regs.value_in_hl()]);
+            output_to_port(regs.C, mem[regs.HL]);
             regs.B--;
             if(decrease){
-                regsPair.HL--;
+                regs.HL--;
             } else {
-                regsPair.HL++;
+                regs.HL++;
             }
 
         } while (repeat && regs.B > 0);
@@ -2329,6 +2261,161 @@ void CPU::otdr()
     outi(true,true);
 }
 
+// LD IX,nn
+// opcode: 0xdd 0x21
+// cycles: 14
+void CPU::ld_ix_nn()
+{
+    specialRegs.IX = fetch16BitValue();
+}
+
+// LD IX,nn
+// opcode: 0xfd 0x21
+// cycles: 14
+void CPU::ld_iy_nn()
+{
+    specialRegs.IY = fetch16BitValue();
+}
+
+// LD IX,(nn)
+// opcode: 0xdd 0x2a
+// cycles: 20
+// flags: -
+void CPU::ld_ix_ptr_nn()
+{
+    uint16_t addr = fetch16BitValue();
+    specialRegs.IXH = mem[addr+1];
+    specialRegs.IXL = mem[addr];
+}
+
+// LD IY,(nn)
+// opcode: 0xfd 0x2a
+// cycles: 20
+// flags: -
+void CPU::ld_iy_ptr_nn()
+{
+    uint16_t addr = fetch16BitValue();
+    specialRegs.IYH = mem[addr+1];
+    specialRegs.IYL = mem[addr];
+}
+
+// INC IX
+// cycles: 10
+void CPU::inc_ix()
+{
+    specialRegs.IX++;
+}
+
+// DEC IX
+// cycles: 10
+void CPU::dec_ix()
+{
+    specialRegs.IX--;
+}
+
+// INC IY
+// cycles: 10
+void CPU::inc_iy()
+{
+    specialRegs.IY++;
+}
+
+// DEC IY
+// cycles: 10
+void CPU::dec_iy()
+{
+    specialRegs.IY--;
+}
+
+// LD IXH,n
+// cycles: 8
+void CPU::ld_ixh_n( uint8_t value )
+{
+    specialRegs.IXH = value;
+}
+
+// LD IXL,n
+// cycles: 8
+void CPU::ld_ixl_n( uint8_t value )
+{
+    specialRegs.IXL = value;
+}
+
+// LD IYH,n
+// cycles: 8
+void CPU::ld_iyh_n( uint8_t value )
+{
+    specialRegs.IYH = value;
+}
+
+// LD IYL,n
+// cycles: 8
+void CPU::ld_iyl_n( uint8_t value )
+{
+    specialRegs.IYL = value;
+}
+
+// LD (IX+d),n
+// cycles: 19
+// flags: -
+void CPU::ld_ptr_ix_n_n()
+{
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    mem[specialRegs.IX + offset] = fetch8BitValue();
+}
+
+// LD (IX+d),n
+// cycles: 19
+// flags: -
+void CPU::ld_ptr_ix_n_r( uint8_t& reg )
+{
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    mem[specialRegs.IX + offset] = reg;
+}
+
+// LD r,(ix+n)
+// cycles: 19
+void CPU::LD_r_pIXn(uint8_t& dst_reg ){
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    dst_reg = mem[specialRegs.IX + offset];
+}
+
+// LD r,(iy+n)
+// cycles: 19
+void CPU::LD_r_pIYn( uint8_t& dst_reg ){
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    dst_reg = mem[specialRegs.IY + offset];
+}
+
+
+// INC (ix+n)
+// cycles: 23
+void CPU::INC_pIXn()
+{
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    uint8_t& location = mem[specialRegs.IX + offset];
+    setFlag(FlagBitmaskPV,location == 0x7f); // set if location was 0x7f before inc operation
+    location++;
+    setFlag(FlagBitmaskSign,location & 0x80);
+    setFlag(FlagBitmaskZero,location == 0);
+    setFlag(FlagBitmaskHalfCarry, (location & 0b00001111) == 0 ); // Set if carry over from bit 3
+    setFlag(FlagBitmaskN,false);
+}
+
+// DEC (ix+n)
+// cycles: 23
+void CPU::dec_ptr_ix_n()
+{
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    uint8_t& location = mem[specialRegs.IX + offset];
+    setFlag(FlagBitmaskPV,location == 0x80); // set if location was 0x80 before dec operation
+    uint8_t oldvalue = location;
+    location--;
+    setFlag(FlagBitmaskSign,location & 0x80);
+    setFlag(FlagBitmaskZero,location == 0);
+    setFlag(FlagBitmaskHalfCarry, (location & 0b00001111) == 0b00001111 ); // Set if carry over from bit 4
+    setFlag(FlagBitmaskN,true);
+}
 
 
 void CPU::invalid_opcode()

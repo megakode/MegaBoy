@@ -36,10 +36,10 @@ TEST(CPUTests,add16)
 {
     CPU cpu;
 
-    cpu.regsPair.BC = 30000;
-    cpu.regsPair.HL = 30000;
-    cpu.add(cpu.regsPair.BC,cpu.regsPair.HL);
-    GTEST_ASSERT_EQ(cpu.regsPair.BC,60000);
+    cpu.regs.BC = 30000;
+    cpu.regs.HL = 30000;
+    cpu.add(cpu.regs.BC,cpu.regs.HL);
+    GTEST_ASSERT_EQ(cpu.regs.BC,60000);
 }
 
 TEST(CPUTests,RegCodes)
@@ -69,7 +69,7 @@ TEST(CPUTests,BitInstructionsIX){
 
     CPU cpu;
     cpu.regs.B = 0b00001111;
-    cpu.specialRegsPairs.IX = 10;
+    cpu.specialRegs.IX = 10;
     cpu.mem[0] = 1;
     cpu.do_bit_instruction( 0 , cpu.mem[0] , cpu.mem[0] );
 
@@ -84,7 +84,7 @@ TEST(CPUTests,LoadBCNN)
     cpu.mem[1] = 0x34;
     cpu.mem[2] = 0x12;
     cpu.step();
-    GTEST_ASSERT_EQ(cpu.regs.value_in_bc(),0x1234);
+    GTEST_ASSERT_EQ(cpu.regs.BC,0x1234);
 }
 
 TEST(CPUTests,LoadBCA)
@@ -107,7 +107,7 @@ TEST(CPUTests,IncBC)
     cpu.regs.B = 1;
     cpu.regs.C = 0xff;
     cpu.step();
-    GTEST_ASSERT_EQ(cpu.regs.value_in_bc(),0x0200);
+    GTEST_ASSERT_EQ(cpu.regs.BC,0x0200);
 }
 
 TEST(CPUTests,IncB){
