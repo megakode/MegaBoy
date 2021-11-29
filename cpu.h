@@ -1,9 +1,13 @@
+namespace std {
 #include <cassert>
 #include <cstdint>
 #include <cstddef>
+};
 #include <string>
 #include <vector>
 #include <iostream>
+
+
 
 #pragma once
 
@@ -150,6 +154,19 @@ class CPU {
         uint16_t hibyte = fetch8BitValue();
         return (hibyte<<8) + lowbyte;
     };
+
+    /// Fetch a byte and return a (IX+n) pointer using that.
+    inline uint8_t& fetch_pIXn(){
+        auto offset = static_cast<int8_t>(fetch8BitValue());
+        return mem[specialRegs.IX+offset];
+    }
+
+    /// Fetch a byte and return a (IY+n) pointer using that.
+    inline uint8_t& fetch_pIXn(){
+        auto offset = static_cast<int8_t>(fetch8BitValue());
+        return mem[specialRegs.IY+offset];
+    }
+
 
     // returns the value contained in the register represented by the regCode
     inline uint8_t value_from_regcode( uint8_t regCode ){

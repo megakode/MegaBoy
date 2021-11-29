@@ -1,6 +1,8 @@
+namespace std {
 #include <cstdint>
 #include <vector>
 #include <iostream>
+};
 #include "cpu.h"
 
 #include "bit_instructions.h"
@@ -345,56 +347,56 @@ CPU::CPU() {
             // 0x4f: ld r,a
             [&](){ specialRegs.R = regs.A; },
 
-            [&](){ in(regs.D,regs.C); },                                // 0x50: in d,(c)
-            [&](){ out(regs.C,regs.D); },                               // 0x51: out (c),d
+            [&](){ in(regs.D,regs.C); },                            // 0x50: in d,(c)
+            [&](){ out(regs.C,regs.D); },                           // 0x51: out (c),d
             [&](){ sbc_hl_nn(regs.DE); },                           // 0x52: sbc hl,de
             [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.DE); },      // 0x53: ld (**),de
-            [&](){ neg(); },                                            // 0x54: neg
-            [&](){ retn(); },                                           // 0x55: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_1); },          // 0x56: im 1
-            [&](){ ld_a_i(); },                                         // 0x57: ld a,i
-            [&](){ in(regs.E,regs.C); },                                // 0x58: in e,(c)
-            [&](){ out(regs.C,regs.E); },                               // 0x59: out (c),e
+            [&](){ neg(); },                                        // 0x54: neg
+            [&](){ retn(); },                                       // 0x55: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); },      // 0x56: im 1
+            [&](){ ld_a_i(); },                                     // 0x57: ld a,i
+            [&](){ in(regs.E,regs.C); },                            // 0x58: in e,(c)
+            [&](){ out(regs.C,regs.E); },                           // 0x59: out (c),e
             [&](){ adc_hl_nn(regs.DE); },                           // 0x5a: adc hl,de
             [&](){ ld_rr_ptr_nn(regs.DE,fetch16BitValue()); },      // 0x5b: ld de,(**)
-            [&](){ neg(); },                                            // 0x5c: neg
-            [&](){ retn(); },                                           // 0x5d: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_2); },          // 0x5e: im 2
-            [&](){ ld_a_r(); },                                         // 0x5f: ld a,r
+            [&](){ neg(); },                                        // 0x5c: neg
+            [&](){ retn(); },                                       // 0x5d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); },      // 0x5e: im 2
+            [&](){ ld_a_r(); },                                     // 0x5f: ld a,r
 
-            [&](){ in(regs.H,regs.C); },                                // 0x60 in h,(c)
-            [&](){ out(regs.C,regs.H); },                               // 0x61: out (c),h
-            [&](){ sbc_hl_nn(regs.HL); },                    // 0x62
+            [&](){ in(regs.H,regs.C); },                            // 0x60 in h,(c)
+            [&](){ out(regs.C,regs.H); },                           // 0x61: out (c),h
+            [&](){ sbc_hl_nn(regs.HL); },                           // 0x62
             [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.HL); },      // 0x63 ld (**),hl
-            [&](){ neg(); },                                            // 0x64 neg
-            [&](){ retn(); },                                           // 0x65: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); },          // 0x66: im 0
-            [&](){ rrd(); }, // 0x67: rrd
-            [&](){ in(regs.L,regs.C); }, // 0x68: in l,(c)
-            [&](){ out(regs.C,regs.L); }, // 0x69: out (c),l
-            [&](){ adc_hl_nn(regs.HL); }, // 0x6a
-            [&](){ ld_rr_ptr_nn(regs.HL,fetch16BitValue()); }, // 0x6b: ld hl,(**)
-            [&](){ neg(); }, // 0x6c: neg
-            [&](){ retn(); }, // 0x6d: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); }, // 0x6e: im 0/1
-            [&](){ rld(); }, // 0x6f: rld
+            [&](){ neg(); },                                        // 0x64 neg
+            [&](){ retn(); },                                       // 0x65: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },      // 0x66: im 0
+            [&](){ rrd(); },                                        // 0x67: rrd
+            [&](){ in(regs.L,regs.C); },                            // 0x68: in l,(c)
+            [&](){ out(regs.C,regs.L); },                           // 0x69: out (c),l
+            [&](){ adc_hl_nn(regs.HL); },                           // 0x6a
+            [&](){ ld_rr_ptr_nn(regs.HL,fetch16BitValue()); },      // 0x6b: ld hl,(**)
+            [&](){ neg(); },                                        // 0x6c: neg
+            [&](){ retn(); },                                       // 0x6d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },      // 0x6e: im 0/1
+            [&](){ rld(); },                                        // 0x6f: rld
 
-            [&](){ in(regs.C,regs.C,true); }, // 0x70: in (c)
-            [&](){ out(regs.C,0); }, // 0x71: out
-            [&](){ sbc_hl_nn(specialRegs.SP); }, // 0x72: sbc hl,sp
+            [&](){ in(regs.C,regs.C,true); },                       // 0x70: in (c)
+            [&](){ out(regs.C,0); },                                // 0x71: out
+            [&](){ sbc_hl_nn(specialRegs.SP); },                    // 0x72: sbc hl,sp
             [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.SP); }, // 0x73: ld (**),hl
-            [&](){ neg(); }, // 0x74: neg
-            [&](){ retn(); }, // 0x75:
-            [&](){ set_interrupt_mode(InterruptMode::IM_1); }, // 0x76: im 1
-            [&](){ invalid_opcode(); }, // 0x77
-            [&](){ in(regs.A,regs.C); }, // 0x78 in a,(c)
-            [&](){ out(regs.C,regs.A); }, // 0x79 out (c),a
-            [&](){ adc_hl_nn(specialRegs.SP); }, // 0x7a adc hl,sp
+            [&](){ neg(); },                                        // 0x74: neg
+            [&](){ retn(); },                                       // 0x75:
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); },      // 0x76: im 1
+            [&](){ invalid_opcode(); },                             // 0x77
+            [&](){ in(regs.A,regs.C); },                            // 0x78 in a,(c)
+            [&](){ out(regs.C,regs.A); },                           // 0x79 out (c),a
+            [&](){ adc_hl_nn(specialRegs.SP); },                    // 0x7a adc hl,sp
             [&](){ ld_rr_ptr_nn(specialRegs.SP,fetch16BitValue()); }, // 0x7b ld sp,(**)
-            [&](){ neg(); }, // 0x7c neg
-            [&](){ retn(); }, // 0x7d retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_2); }, // 0x7e im2
-            [&](){ }, // 0x7f
+            [&](){ neg(); },                                        // 0x7c neg
+            [&](){ retn(); },                                       // 0x7d retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); },      // 0x7e im2
+            [&](){ },                                               // 0x7f
 
             // 0x80 - 0x8f
             [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
@@ -559,6 +561,7 @@ CPU::CPU() {
         [&](){  }, // 0x83
         [&](){ add(specialRegs.IXH); }, // 0x84 add a,ixh
         [&](){ add(specialRegs.IXL); }, // 0x85 add a,ixl
+        [&](){ add(); }, // 0x85 add a,ixl
 
 
         // TODO
@@ -595,17 +598,17 @@ void CPU::decode_bit_instruction()
 void CPU::decode_ix_bit_instruction()
 {
     int8_t offset = static_cast<int8_t>(fetch8BitValue());
-    uint8_t op2 = fetch8BitValue(); // fetch next opcode
+    uint8_t op3 = fetch8BitValue(); // fetch next opcode
     uint8_t &reg = mem[specialRegs.IX + offset];
-    do_bit_instruction(op2,reg, reg_from_regcode(op2));
+    do_bit_instruction(op2,reg, reg_from_regcode(op3));
 }
 
 void CPU::decode_iy_bit_instruction()
 {
     int8_t offset = static_cast<int8_t>(fetch8BitValue());
-    uint8_t op2 = fetch8BitValue(); // fetch next opcode
+    uint8_t op3 = fetch8BitValue(); // fetch next opcode
     uint8_t &reg = mem[specialRegs.IY + offset];
-    do_bit_instruction(op2,reg, reg_from_regcode(op2));
+    do_bit_instruction(op3,reg, reg_from_regcode(op3));
 }
 
 
@@ -613,77 +616,11 @@ void CPU::decode_iy_bit_instruction()
 void CPU::decode_ix_instruction()
 {
     // TODO: implement group
-
     uint8_t op2 = fetch8BitValue();
 
     if( op2 == 0xCB ){
         decode_ix_bit_instruction();
         return;
-    }
-
-    // Load r,(IX + d) (11 011 101,01rrr101,dddddddd)
-    /*
-    if( (op2 & 0b11000111) == 0b01000101){
-        uint8_t reg = (op2 & 0b00111000) >> 3;
-        int8_t d = fetch8BitValue();
-        uint16_t addr = specialRegs.IX + d;
-        loadRN(reg,mem[addr]);
-    } else
-    */
-    // Load (IX+d), r (11011101,01110rrr,dddddddd )
-    if( (op2 & 0b11111000) == 0b01110000 ){
-        uint8_t reg = (op2 & 0b111);
-        int8_t d = fetch8BitValue();
-        uint8_t *regPtr = reinterpret_cast<uint8_t*>(&regs) + reg;
-        mem[specialRegs.IX + d] = *regPtr;
-    } else
-
-        // Load (IX + d),n (DD,36,d,n)
-    if(op2 == 0x36){
-        int8_t d = fetch8BitValue();
-        uint8_t value = fetch8BitValue();
-        mem[specialRegs.IX + d] = value;
-    } else
-
-        // Load IX,nn - M:4 T:14
-    if(op2 == 0x21){
-        specialRegs.IX = fetch16BitValue();
-    }
-
-    // Load IX,(nn) - M:6 T:20
-    if(op2 == 0x2a){
-        uint16_t addr = fetch16BitValue();
-        uint8_t lobyte = mem[addr];
-        uint8_t hibyte = mem[addr+1];
-        specialRegs.IX = (hibyte<<8) + lobyte;
-    }
-
-    // Load (nn),IX - (0xdd,0x22,n,n)- M:6 T:20
-    if(op2 == 0x22){
-        uint16_t addr = fetch16BitValue();
-        mem[addr] = (uint8_t)specialRegs.IXL;
-        mem[(uint16_t)(addr+1)] = specialRegs.IXH;
-    }
-
-    // Load SP,IX
-    // cycles: 10
-    if(op2 == 0xF9){
-        specialRegs.SP = specialRegs.IX;
-    }
-
-
-    // Push IX -
-    // cycles: 15
-    if( op2 == 0xE5){
-        mem[specialRegs.SP-2] = specialRegs.IXL;
-        mem[specialRegs.SP-1] = specialRegs.IXH;
-        specialRegs.SP -= 2;
-    }
-
-    // POP IX - M:4 T:14
-    if( op2 == 0xE1 ){
-        specialRegs.IX = (mem[specialRegs.SP+1]<<8) + mem[specialRegs.SP];
-        specialRegs.SP +=2;
     }
 }
 
@@ -2369,15 +2306,15 @@ void CPU::ld_ptr_ix_n_n()
 // flags: -
 void CPU::ld_ptr_ix_n_r( uint8_t& reg )
 {
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    mem[specialRegs.IX + offset] = reg;
+    auto ptr = fetch_pIXn();
+    ptr = reg;
 }
 
 // LD r,(ix+n)
 // cycles: 19
 void CPU::LD_r_pIXn(uint8_t& dst_reg ){
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    dst_reg = mem[specialRegs.IX + offset];
+
+    dst_reg = fetch_pIXn();
 }
 
 // LD r,(iy+n)
@@ -2392,8 +2329,7 @@ void CPU::LD_r_pIYn( uint8_t& dst_reg ){
 // cycles: 23
 void CPU::INC_pIXn()
 {
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    uint8_t& location = mem[specialRegs.IX + offset];
+    uint8_t& location = fetch_pIXn();
     setFlag(FlagBitmaskPV,location == 0x7f); // set if location was 0x7f before inc operation
     location++;
     setFlag(FlagBitmaskSign,location & 0x80);
@@ -2406,8 +2342,7 @@ void CPU::INC_pIXn()
 // cycles: 23
 void CPU::dec_ptr_ix_n()
 {
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    uint8_t& location = mem[specialRegs.IX + offset];
+    uint8_t& location = fetch_pIXn();
     setFlag(FlagBitmaskPV,location == 0x80); // set if location was 0x80 before dec operation
     uint8_t oldvalue = location;
     location--;
