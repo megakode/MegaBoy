@@ -162,7 +162,7 @@ class CPU {
     }
 
     /// Fetch a byte and return a (IY+n) pointer using that.
-    inline uint8_t& fetch_pIXn(){
+    inline uint8_t& fetch_pIYn(){
         auto offset = static_cast<int8_t>(fetch8BitValue());
         return mem[specialRegs.IY+offset];
     }

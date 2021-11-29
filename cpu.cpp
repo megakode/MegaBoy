@@ -1,8 +1,7 @@
-namespace std {
 #include <cstdint>
 #include <vector>
 #include <iostream>
-};
+
 #include "cpu.h"
 
 #include "bit_instructions.h"
@@ -561,7 +560,7 @@ CPU::CPU() {
         [&](){  }, // 0x83
         [&](){ add(specialRegs.IXH); }, // 0x84 add a,ixh
         [&](){ add(specialRegs.IXL); }, // 0x85 add a,ixl
-        [&](){ add(); }, // 0x85 add a,ixl
+       // [&](){ add(); }, // 0x85 add a,ixl
 
 
         // TODO
@@ -600,7 +599,7 @@ void CPU::decode_ix_bit_instruction()
     int8_t offset = static_cast<int8_t>(fetch8BitValue());
     uint8_t op3 = fetch8BitValue(); // fetch next opcode
     uint8_t &reg = mem[specialRegs.IX + offset];
-    do_bit_instruction(op2,reg, reg_from_regcode(op3));
+    do_bit_instruction(op3,reg, reg_from_regcode(op3));
 }
 
 void CPU::decode_iy_bit_instruction()

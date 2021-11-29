@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "cpu.h"
 
+
 // TODO: check ZEXDOC - Z80 instruction set exerciser
 // https://github.com/anotherlin/z80emu/blob/master/testfiles/zexdoc.z80
 
@@ -116,13 +117,13 @@ TEST_CASE("IncB"){
     cpu.regs.F = 0;
     cpu.regs.B = 0;
     cpu.inc_b();
-    REQUIRE(cpu.regs.B,1);
-    REQUIRE(cpu.regs.F & FlagBitmaskSign == 0);
-    REQUIRE(cpu.regs.F & FlagBitmaskZero == 0);
-    REQUIRE(cpu.regs.F & FlagBitmaskHalfCarry ==0);
-    REQUIRE(cpu.regs.F & FlagBitmaskPV == 0);
-    REQUIRE(cpu.regs.F & FlagBitmaskN == 0);
-    REQUIRE(cpu.regs.F & FlagBitmaskC == 0);
+    REQUIRE(cpu.regs.B == 1);
+    REQUIRE((cpu.regs.F & FlagBitmaskSign) == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskZero) == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskHalfCarry) ==0);
+    REQUIRE((cpu.regs.F & FlagBitmaskPV) == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskN) == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskC) == 0);
     
     // Test Sign flag
     cpu.regs.F = 0;
