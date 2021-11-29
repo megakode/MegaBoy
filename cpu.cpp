@@ -710,7 +710,7 @@ void CPU::add( uint8_t srcValue, bool carry ){
         */
     setFlag(FlagBitmaskPV, !((regs.A ^ srcValue) & 0x80) && ((result ^ regs.A) & 0x80) );
 
-    regs.A = result;
+    regs.A = static_cast<uint8_t>(result);
 }
 
 //  add 16 bit register pair
@@ -769,7 +769,7 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
 
     if(!onlySetFlagsForComparison){
-        regs.A = result;
+        regs.A = static_cast<uint8_t>(result);
     }
 }
 
@@ -1991,14 +1991,13 @@ void CPU::adc_hl_nn(uint16_t value)
 // flags: s z h pv n
 void CPU::rrd()
 {
-    uint8_t hl = regs.HL;
-    uint8_t data = mem[hl];
+    uint8_t data = mem[regs.HL];
     uint8_t old_data_lownib = data & 0xf;
     data = data >> 4;
     data |= (regs.A << 4);
     regs.A &= 0xf0;
     regs.A |= old_data_lownib;
-    mem[hl] = data;
+    mem[regs.HL] = data;
     setFlag(FlagBitmaskSign, regs.A & 0x80);
     setFlag(FlagBitmaskZero, regs.A == 0);
     setFlag(FlagBitmaskHalfCarry,false);

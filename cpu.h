@@ -1,8 +1,9 @@
-namespace std {
+
 #include <cassert>
 #include <cstdint>
 #include <cstddef>
-};
+#include <functional>
+
 #include <string>
 #include <vector>
 #include <iostream>

@@ -39,7 +39,7 @@ TEST_CASE("add16")
 
     cpu.regs.BC = 30000;
     cpu.regs.HL = 30000;
-    cpu.add(cpu.regs.BC,cpu.regs.HL);
+    cpu.add16(cpu.regs.BC,cpu.regs.HL);
     REQUIRE(cpu.regs.BC == 60000);
 }
 
