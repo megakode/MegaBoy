@@ -239,7 +239,7 @@ class CPU {
 
     void add( uint8_t srcValue, bool carry = false);
     void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
-    void sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison );
+    void sub( uint8_t srcValue, bool carry = false, bool onlySetFlagsForComparison = false );
     void sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry = false);
 
     void or_a_with_value(uint8_t value);
@@ -469,11 +469,29 @@ public:
 
     void ld_ptr_ix_n_n();
 
-    void ld_ptr_ix_n_r(uint8_t &reg);
+    void LD_pIXn_r(uint8_t &reg);
 
     void ld_r_r(uint8_t &dstReg, uint8_t value);
 
     void LD_r_pIXn(uint8_t &dst_reg);
 
     void LD_r_pIYn(uint8_t &dst_reg);
+
+    void set_AND_operation_flags();
+
+    void and_a_with_value(uint8_t value);
+
+    void cp_a_with_value(uint8_t value);
+
+    void pop16(uint16_t &regPair);
+
+    void push_ix();
+
+    void push_iy();
+
+    void jp_IY();
+
+    void jp_IX();
+
+    void ld_rr_rr(uint16_t &dstReg, uint16_t &value);
 };

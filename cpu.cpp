@@ -439,17 +439,15 @@ CPU::CPU() {
 
     ix_instructions = {
 
-        // 0x00 - 0x08
-        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
-
+        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, // 0x00 - 0x08
         [&](){ add16(specialRegs.IX,regs.BC); }, // 0x09: ADD IX,BC
+        [&](){},[&](){},[&](){},[&](){},[&](){},[&](){},
 
-        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
-
+        [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
         [&](){ add16(specialRegs.IX,regs.DE); }, // 0x19: ADD IX,DE
+        [&](){},[&](){},[&](){},[&](){},[&](){},[&](){}, // 0x1a - 0x1f
 
-        [&](){},[&](){},[&](){},[&](){},[&](){},[&](){},[&](){},
-
+        [&](){}, // 0x20
         [&](){ ld_ix_nn(); }, // 0x21: LD IX,**
         [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.IX); }, // 0x22: LD (**),IX
         [&](){ inc_ix(); }, // 0x23 inc ix
@@ -479,25 +477,22 @@ CPU::CPU() {
         [&](){  }, // 0x3A
         [&](){  }, // 0x3B
         [&](){  }, // 0x3C
-        [&](){  }, // 0x3C
-        [&](){  }, // 0x3C
-        [&](){  }, // 0x3C
+        [&](){  }, // 0x3d
+        [&](){  }, // 0x3e
+        [&](){  }, // 0x3f
 
         [&](){  }, // 0x40
         [&](){  }, // 0x41
         [&](){  }, // 0x42
         [&](){  }, // 0x43
-
         [&](){ ld_r_r(regs.B,specialRegs.IXH); }, // 0x44 ld B,IXh
         [&](){ ld_r_r(regs.B,specialRegs.IXL); }, // 0x45
         [&](){ LD_r_pIXn(regs.B); }, // 0x46
-
         [&](){  }, // 0x47
         [&](){  }, // 0x48
         [&](){  }, // 0x49
         [&](){  }, // 0x4a
         [&](){  }, // 0x4b
-
         [&](){ ld_r_r(regs.C, specialRegs.IXH); }, // 0x4c
         [&](){ ld_r_r(regs.C, specialRegs.IXL); }, // 0x4d
         [&](){ LD_r_pIXn(regs.C); }, // 0x4e
@@ -537,14 +532,14 @@ CPU::CPU() {
         [&](){ LD_r_pIXn(regs.L); }, // 0x6e LD E,(ix+n)
         [&](){ ld_r_r(specialRegs.IXL,regs.A); }, // 0x6f
 
-        [&](){ ld_ptr_ix_n_r(regs.B); }, // 0x70
-        [&](){ ld_ptr_ix_n_r(regs.C); }, // 0x71
-        [&](){ ld_ptr_ix_n_r(regs.D); }, // 0x72
-        [&](){ ld_ptr_ix_n_r(regs.E); }, // 0x73
-        [&](){ ld_ptr_ix_n_r(regs.H); }, // 0x74
-        [&](){ ld_ptr_ix_n_r(regs.L); }, // 0x75
-        [&](){  }, // 0x76
-        [&](){ ld_ptr_ix_n_r(regs.B); }, // 0x77
+        [&](){ LD_pIXn_r(regs.B); }, // 0x70
+        [&](){ LD_pIXn_r(regs.C); }, // 0x71
+        [&](){ LD_pIXn_r(regs.D); }, // 0x72
+        [&](){ LD_pIXn_r(regs.E); }, // 0x73
+        [&](){ LD_pIXn_r(regs.H); }, // 0x74
+        [&](){ LD_pIXn_r(regs.L); }, // 0x75
+        [&](){  },                      // 0x76
+        [&](){ LD_pIXn_r(regs.B); }, // 0x77
         [&](){  }, // 0x78
         [&](){  }, // 0x79
         [&](){  }, // 0x7a
@@ -560,13 +555,91 @@ CPU::CPU() {
         [&](){  }, // 0x83
         [&](){ add(specialRegs.IXH); }, // 0x84 add a,ixh
         [&](){ add(specialRegs.IXL); }, // 0x85 add a,ixl
-       // [&](){ add(); }, // 0x85 add a,ixl
+        [&](){ add(fetch_pIXn()); }, // 0x86 add a,(ix+n)
+        [&](){  }, // 0x87
+        [&](){  }, // 0x88
+        [&](){  }, // 0x89
+        [&](){  }, // 0x8a
+        [&](){  }, // 0x8b
+        [&](){ ld_r_r(regs.A,specialRegs.IXH); }, // 0x8c
+        [&](){ ld_r_r(regs.A,specialRegs.IXL); }, // 0x8d
+        [&](){ ld_r_r(regs.A,fetch_pIXn()); }, // 0x8e LD a,(ix+n)
+        [&](){  }, // 0x8f
 
+        [&](){  }, // 0x90
+        [&](){  }, // 0x91
+        [&](){  }, // 0x92
+        [&](){  }, // 0x93
+        [&](){ sub(specialRegs.IXH); }, // 0x94
+        [&](){ sub(specialRegs.IXL); }, // 0x95
+        [&](){ sub(fetch_pIXn()); }, // 0x96
+        [&](){  }, // 0x97
+        [&](){  }, // 0x98
+        [&](){  }, // 0x99
+        [&](){  }, // 0x9a
+        [&](){  }, // 0x9b
+        [&](){ sub(specialRegs.IXH,true); }, // 0x9c
+        [&](){ sub(specialRegs.IXL,true); }, // 0x9d
+        [&](){ sub(fetch_pIXn(),true); }, // 0x9e
+        [&](){  }, // 0x9f
 
-        // TODO
+        [&](){  }, // 0xa0
+        [&](){  }, // 0xa1
+        [&](){  }, // 0xa2
+        [&](){  }, // 0xa3
+        [&](){ and_a_with_value(specialRegs.IXH); }, // 0xa4
+        [&](){ and_a_with_value(specialRegs.IXL); }, // 0xa5
+        [&](){ and_a_with_value(fetch_pIXn()); }, // 0xa6
+        [&](){ }, // 0xa7
+        [&](){ }, // 0xa8
+        [&](){ }, // 0xa9
+        [&](){ }, // 0xaa
+        [&](){ }, // 0xab
+        [&](){ xor_a_with_value(specialRegs.IXH); }, // 0xac
+        [&](){ xor_a_with_value(specialRegs.IXL); }, // 0xad
+        [&](){ xor_a_with_value(fetch_pIXn()); }, // 0xae
+        [&](){ }, // 0xaf
 
-        // 15 cycles at læse fra (ix+n)
-        // 5 hvis ixl/ixh er involveret
+        [&](){ }, // 0xb0
+        [&](){ }, // 0xb1
+        [&](){ }, // 0xb2
+        [&](){ }, // 0xb3
+        [&](){ or_a_with_value(specialRegs.IXH); }, // 0xb4
+        [&](){ or_a_with_value(specialRegs.IXL); }, // 0xb5
+        [&](){ or_a_with_value(fetch_pIXn()); }, // 0xb6
+        [&](){ }, // 0xb7
+        [&](){ }, // 0xb8
+        [&](){ }, // 0xb9
+        [&](){ }, // 0xba
+        [&](){ }, // 0xbb
+        [&](){ cp_a_with_value( specialRegs.IXH); }, // 0xbc
+        [&](){ cp_a_with_value( specialRegs.IXL); }, // 0xbd
+        [&](){ cp_a_with_value( fetch_pIXn()); }, // 0xbe
+        [&](){ }, // 0xbf
+
+         // 0xc0 - 0xca
+        [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+        [&](){ decode_ix_bit_instruction(); }, // 0xcb
+        [&](){ },[&](){ },[&](){ },[&](){ },
+
+        // 0xd0 - 0xdf
+        [&](){ }, [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+
+        [&](){ }, // 0xe0
+        [&](){ pop16(specialRegs.IX); }, // 0xe1
+        [&](){ }, // 0xe2
+        [&](){ }, // 0xe3 EX (SP),IX
+        [&](){ }, // 0xe4
+        [&](){ push_ix(); }, // 0xe5
+        [&](){ }, // 0xe6
+        [&](){ }, // 0xe7
+        [&](){ }, // 0xe8
+        [&](){ jp_IX(); }, // 0xe9
+        [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+
+        [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+        [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IX); }, // 0xf9
+        [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
 
     };
 
@@ -644,8 +717,7 @@ void CPU::step()
     if(currentOpcode < instructions.size()  ){
         (this->*instructions[currentOpcode].code)();
         //instructions[currentOpcode].code();
-        return;
-        // (this->*lookup[opcode].addrmode)();
+
     }
 
 };
@@ -670,7 +742,8 @@ bool CPU::has_parity( uint8_t x )
 // Add a number of cycles that the current operation has spent.
 // At the end of each `step`, the final number of cycles is used as a delay to wait before running the next `step`.
 void add_cycles(uint8_t cycles ){
-
+    // +15 cycles at læse fra (ix+n)
+    // +5 hvis ixl/ixh er involveret
 }
 
 // *******************************************************
@@ -723,7 +796,7 @@ void CPU::add16( uint16_t& regPair, uint16_t value_to_add , bool carry )
 
     setFlag(FlagBitmaskC,result > 0xffff);
     setFlag(FlagBitmaskZero, (result&0xffff) == 0);
-    setFlag(FlagBitmaskHalfCarry, (regPair & 0x0fff) > (result & 0x0fff));
+    setFlag(FlagBitmaskHalfCarry, (regPair & 0x0fffu) > (result & 0x0fffu));
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskSign, result & 0x8000);
     setFlag(FlagBitmaskPV, !((regPair ^ value_to_add) & 0x8000) && ((result ^ regPair) & 0x8000) );
@@ -827,7 +900,11 @@ void CPU::ld_r_r()
 void CPU::ld_r_r( uint8_t& dstReg, uint8_t value )
 {
     dstReg = value;
+}
 
+void CPU::ld_rr_rr( uint16_t& dstReg, uint16_t& value )
+{
+    dstReg = value;
 }
 
 void CPU::inc_r(uint8_t &reg)
@@ -876,6 +953,20 @@ uint8_t CPU::input_from_port( uint8_t port )
 {
     // TODO: read value from port instead
     return 0;
+}
+
+// *******************************************************
+// Flag helpers
+// *******************************************************
+
+void CPU::set_AND_operation_flags()
+{
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry, 1);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN, 0);
+    setFlag(FlagBitmaskC, 0);
 }
 
 // *******************************************************
@@ -1427,7 +1518,7 @@ void CPU::ld_ptr_nn_n( uint16_t location, uint8_t value )
 // flags: -
 void CPU::ld_ptr_nn_nn( uint16_t location, uint16_t value)
 {
-    mem[location] = value;
+    mem[location] = static_cast<uint8_t>(value);
     mem[location+1] = value >> 8;
 }
 
@@ -1621,32 +1712,25 @@ void CPU::sbc_n(){
 }
 
 
+void CPU::and_a_with_value(uint8_t value )
+{
+    regs.A &= value;
+    set_AND_operation_flags();
+}
+
 // cycles: 4
 void CPU::and_r()
 {
     uint8_t srcRegCode = currentOpcode & 0b111;
     uint8_t srcRegValue = value_from_regcode(srcRegCode);
-
     regs.A &= srcRegValue;
-
-    setFlag(FlagBitmaskSign, regs.A & 0x80);
-    setFlag(FlagBitmaskZero, regs.A == 0);
-    setFlag(FlagBitmaskHalfCarry,1);
-    setFlag(FlagBitmaskPV, has_parity(regs.A));
-    setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskC,0);
+    set_AND_operation_flags();
 }
 
 void CPU::and_n()
 {
     regs.A &= fetch8BitValue();
-
-    setFlag(FlagBitmaskSign, regs.A & 0x80);
-    setFlag(FlagBitmaskZero, regs.A == 0);
-    setFlag(FlagBitmaskHalfCarry,1);
-    setFlag(FlagBitmaskPV, has_parity(regs.A));
-    setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskC,0);
+    set_AND_operation_flags();
 }
 
 // cycles:
@@ -1716,6 +1800,11 @@ void CPU::or_a_with_value(uint8_t value)
     setFlag(FlagBitmaskC,0);
 }
 
+void CPU::cp_a_with_value( uint8_t value )
+{
+    sub(value,false, true);
+}
+
 void CPU::cp_r()
 {
     uint8_t srcRegCode = currentOpcode & 0b111;
@@ -1758,26 +1847,29 @@ void CPU::ret_cc(){
     }
 }
 
+/// Pop 2 bytes of the stack into a 16 bit register
+/// \param regPair The 16 bit register pair to pop the stack value into
+void CPU::pop16( uint16_t& regPair )
+{
+    uint8_t lobyte = mem[specialRegs.SP++];
+    uint8_t hibyte = mem[specialRegs.SP++];
+    regPair = (hibyte << 8) + lobyte;
+}
+
 // cycles: 10
 void CPU::pop_qq()
 {
     uint8_t regPairCode = (currentOpcode & 0b00110000) >> 4;
-    uint8_t lobyte = mem[specialRegs.SP++];
-    uint8_t hibyte = mem[specialRegs.SP++];
-
     switch (regPairCode)
     {
         case 0:
-            regs.B = hibyte;
-            regs.C = lobyte;
+            pop16(regs.BC);
             break;
         case 1:
-            regs.D = hibyte;
-            regs.E = lobyte;
+            pop16(regs.DE);
             break;
         case 2:
-            regs.H = hibyte;
-            regs.L = lobyte;
+            pop16(regs.HL);
             break;
     }
 };
@@ -1799,6 +1891,16 @@ void CPU::jp_nn()
     specialRegs.PC = fetch16BitValue();
 }
 
+void CPU::jp_IX()
+{
+    specialRegs.PC = specialRegs.IX;
+}
+
+void CPU::jp_IY()
+{
+    specialRegs.PC = specialRegs.IY;
+}
+
 // JP HL
 // opcode: 0xe9
 // cycles: 4
@@ -1816,7 +1918,7 @@ void CPU::call_cc_nn()
 
     if(is_condition_true(conditionCode)){
         mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
-        mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+        mem[--specialRegs.SP] = static_cast<uint8_t >(specialRegs.PC);      // (SP-2) = PC_h
         specialRegs.PC = location;
     }
 }
@@ -1826,7 +1928,7 @@ void CPU::call_cc_nn()
 void CPU::call(){
     uint16_t location = fetch16BitValue();
     mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
-    mem[--specialRegs.SP] = specialRegs.PC;      // (SP-2) = PC_h
+    mem[--specialRegs.SP] = static_cast<uint8_t>(specialRegs.PC);      // (SP-2) = PC_h
     specialRegs.PC = location;
 }
 
@@ -1854,6 +1956,18 @@ void CPU::push_af(){
     mem[--specialRegs.SP] = regs.F;
 }
 
+// cycles 15
+void CPU::push_ix(){
+    mem[--specialRegs.SP] = specialRegs.IXH;
+    mem[--specialRegs.SP] = specialRegs.IXL;
+}
+
+void CPU::push_iy(){
+    mem[--specialRegs.SP] = specialRegs.IYH;
+    mem[--specialRegs.SP] = specialRegs.IYL;
+}
+
+
 // RST
 //
 // current PC is pushed onto stack, and PC is reset to an offset based t,
@@ -1866,7 +1980,7 @@ void CPU::rst()
     uint8_t locationCode = (currentOpcode & 0b00111000) >> 3;
 
     mem[--specialRegs.SP] = specialRegs.PC >> 8;
-    mem[--specialRegs.SP] = specialRegs.PC;
+    mem[--specialRegs.SP] = static_cast<uint8_t>(specialRegs.PC);
 
     specialRegs.PC = location[locationCode];
 }
@@ -2011,7 +2125,7 @@ void CPU::rrd()
 // flags: s z h pv n
 void CPU::rld()
 {
-    uint8_t hl = regs.HL;
+    uint16_t hl = regs.HL;
     uint8_t data = mem[hl];
     uint8_t old_data_hinib = data & 0xf0;
     data = data << 4;
@@ -2302,7 +2416,7 @@ void CPU::ld_ptr_ix_n_n()
 // LD (IX+d),n
 // cycles: 19
 // flags: -
-void CPU::ld_ptr_ix_n_r( uint8_t& reg )
+void CPU::LD_pIXn_r(uint8_t& reg )
 {
     auto ptr = fetch_pIXn();
     ptr = reg;
@@ -2310,14 +2424,15 @@ void CPU::ld_ptr_ix_n_r( uint8_t& reg )
 
 // LD r,(ix+n)
 // cycles: 19
-void CPU::LD_r_pIXn(uint8_t& dst_reg ){
-
+void CPU::LD_r_pIXn(uint8_t& dst_reg )
+{
     dst_reg = fetch_pIXn();
 }
 
 // LD r,(iy+n)
 // cycles: 19
-void CPU::LD_r_pIYn( uint8_t& dst_reg ){
+void CPU::LD_r_pIYn( uint8_t& dst_reg )
+{
     auto offset = static_cast<int8_t>(fetch8BitValue());
     dst_reg = mem[specialRegs.IY + offset];
 }
