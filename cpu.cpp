@@ -47,37 +47,37 @@ CPU::CPU() {
         {"LD D,N",&CPU::load_d_n},          // 0x16
         {"RLA",&CPU::rla},                  // 0x17
         {"JR N",&CPU::jr_n},                // 0x18
-        {"ADD HL,DE",&CPU::add_hl_de},      // 0x19
-        {"LD A,(DE)",&CPU::load_a_ptr_de},  // 0x1a
-        {"DEC DE",&CPU::dec_de},            // 0x1b
-        {"INC E",&CPU::inc_e},              // 0x1c
-        {"DEC E",&CPU::dec_e},              // 0x1d
-        {"LD E,N",&CPU::ld_e_n},            // 0x1e
+        {"ADD HL,DE", &CPU::ADD_HL_DE},      // 0x19
+        {"LD A,(DE)", &CPU::LD_A_pDE},  // 0x1a
+        {"DEC DE", &CPU::DEC_DE},            // 0x1b
+        {"INC E", &CPU::INC_E},              // 0x1c
+        {"DEC E", &CPU::DEC_E},              // 0x1d
+        {"LD E,N", &CPU::LD_E_n},            // 0x1e
         {"RRA",&CPU::rra},                  // 0x1f
 
         {"JR NZ",&CPU::jr_nz},              // 0x20
-        {"LD HL,NN",&CPU::ld_hl_nn},        // 0x21
-        {"LD (NN),HL",&CPU::ld_ptr_nn_hl},  // 0x22
+        {"LD HL,NN", &CPU::LD_HL_nn},        // 0x21
+        {"LD (NN),HL", &CPU::LD_pnn_HL},  // 0x22
         {"INC HL",&CPU::inc_hl},            // 0x23
         {"INC H",&CPU::inc_h},              // 0x24
         {"DEC H",&CPU::dec_h},              // 0x25
-        {"LD H,N",&CPU::ld_h_n},            // 0x26
+        {"LD H,N", &CPU::LD_H_n},            // 0x26
         {"DAA",&CPU::daa},                  // 0x27
         {"JR Z",&CPU::jr_z},                // 0x28
-        {"ADD HL,HL",&CPU::add_hl_hl},      // 0x29
-        {"LD HL,(NN)",&CPU::ld_hl_ptr_nn},  // 0x2a
-        {"DEC HL",&CPU::dec_hl},            // 0x2b
-        {"INC L",&CPU::inc_l},              // 0x2c
-        {"DEC L",&CPU::dec_l},              // 0x2d
-        {"LD L,N",&CPU::ld_l_n},            // 0x2e
+        {"ADD HL,HL", &CPU::ADD_HL_HL},      // 0x29
+        {"LD HL,(NN)", &CPU::LD_HL_pnn},  // 0x2a
+        {"DEC HL", &CPU::DEC_HL},            // 0x2b
+        {"INC L", &CPU::INC_L},              // 0x2c
+        {"DEC L", &CPU::DEC_L},              // 0x2d
+        {"LD L,N", &CPU::LD_L_n},            // 0x2e
         {"CPL",&CPU::cpl},                  // 0x2f
 
         {"JR NC",&CPU::jr_nc},              // 0x30
-        {"LD SP,NN",&CPU::ld_sp_nn},        // 0x31
-        {"LD (NN),A",&CPU::ld_ptr_nn_a},    // 0x32
-        {"INC SP",&CPU::inc_sp},            // 0x33
-        {"INC (HL)",&CPU::inc_ptr_hl},      // 0x34
-        {"DEC (HL)",&CPU::dec_ptr_hl},      // 0x35
+        {"LD SP,NN", &CPU::LD_SP_nn},        // 0x31
+        {"LD (NN),A", &CPU::LD_pnn_A},    // 0x32
+        {"INC SP", &CPU::INC_SP},            // 0x33
+        {"INC (HL)", &CPU::INC_pHL},      // 0x34
+        {"DEC (HL)", &CPU::DEC_pHL},      // 0x35
         {"LD (HL),N",&CPU::ld_ptr_hl_n},    // 0x36
         {"SCF",&CPU::scf},                  // 0x37
         {"JR C,N",&CPU::jr_c},              // 0x38
@@ -89,8 +89,6 @@ CPU::CPU() {
         {"LD A,N",&CPU::ld_a_n},            // 0x3e
         {"CCF",&CPU::ccf},                  // 0x3f
 
-        // 0x40 - 0x7f instructions are all LD r,r which is caught in the step() function.
-        // excluding the (0x76) HALT instruction, which we explicitly add here.
         {"LD R,R",&CPU::ld_r_r},            // 0x40
         {"LD R,R",&CPU::ld_r_r},            // 0x41
         {"LD R,R",&CPU::ld_r_r},            // 0x42
@@ -313,111 +311,95 @@ CPU::CPU() {
             // 0x30 - 0x3f
             [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
 
-            // 0x40: in b,(c)
-            [&](){ in(regs.B,regs.C); },
-            // 0x41 out(c),b
-            [&](){ out_n_a(); },
-            // 0x42: sbc hl,bc
-            [&](){ sbc_hl_nn(regs.BC); },
-            // 0x43: ld (**),bc
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.BC); },
-            // 0x44: neg
-            [&](){ neg(); },
-            // 0x45: retn
-            [&](){ retn(); },
-            // 0x46: im 0
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); },
-            // 0x47: LD I,A
-            [&](){ specialRegs.I = regs.A; },
-            // 0x48; IN C,(C)
-            [&](){ in(regs.C,regs.C); },
-            // 0x49: OUT (c),C
-            [&](){ out(regs.C,regs.C); },
-            // 0x4A: ADC HL,BC
-            [&](){ adc_hl_nn(regs.BC); },
-            // 0x4B: LD BC,(NN)
-            [&](){ ld_rr_ptr_nn(regs.BC,fetch16BitValue()); },
-            // 0x4C: neg
-            [&](){ neg(); },
-            // 0x4d:
-            [&](){ reti(); },
-            // 0x4e: set undefined IM0/1 mode
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); },
-            // 0x4f: ld r,a
-            [&](){ specialRegs.R = regs.A; },
+            [&](){ in(regs.B,regs.C); },                        // 0x40: IN B,(C)
+            [&](){ out_n_a(); },                                // 0x41: OUT (C),B
+            [&](){ sbc_hl_nn(regs.BC); },                       // 0x42: SBC HL,BC
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.BC); },  // 0x43: LD (**),BC
+            [&](){ neg(); },                                    // 0x44: NEG
+            [&](){ retn(); },                                   // 0x45: RETN
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x46: im 0
+            [&](){ specialRegs.I = regs.A; },                   // 0x47: LD I,A
+            [&](){ in(regs.C,regs.C); },                        // 0x48; IN C,(C)
+            [&](){ out(regs.C,regs.C); },                       // 0x49: OUT (c),C
+            [&](){ adc_hl_nn(regs.BC); },                       // 0x4A: ADC HL,BC
+            [&](){ ld_rr_ptr_nn(regs.BC,fetch16BitValue()); },  // 0x4B: LD BC,(NN)
+            [&](){ neg(); },                                    // 0x4C: NEG
+            [&](){ reti(); },                                   // 0x4d: RETI
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x4e: Set undefined IM0/1 mode
+            [&](){ specialRegs.R = regs.A; },                   // 0x4f: LD R,A
 
-            [&](){ in(regs.D,regs.C); },                            // 0x50: in d,(c)
-            [&](){ out(regs.C,regs.D); },                           // 0x51: out (c),d
-            [&](){ sbc_hl_nn(regs.DE); },                           // 0x52: sbc hl,de
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.DE); },      // 0x53: ld (**),de
-            [&](){ neg(); },                                        // 0x54: neg
-            [&](){ retn(); },                                       // 0x55: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_1); },      // 0x56: im 1
-            [&](){ ld_a_i(); },                                     // 0x57: ld a,i
-            [&](){ in(regs.E,regs.C); },                            // 0x58: in e,(c)
-            [&](){ out(regs.C,regs.E); },                           // 0x59: out (c),e
-            [&](){ adc_hl_nn(regs.DE); },                           // 0x5a: adc hl,de
-            [&](){ ld_rr_ptr_nn(regs.DE,fetch16BitValue()); },      // 0x5b: ld de,(**)
-            [&](){ neg(); },                                        // 0x5c: neg
-            [&](){ retn(); },                                       // 0x5d: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_2); },      // 0x5e: im 2
-            [&](){ ld_a_r(); },                                     // 0x5f: ld a,r
+            [&](){ in(regs.D,regs.C); },                        // 0x50: in d,(c)
+            [&](){ out(regs.C,regs.D); },                       // 0x51: out (c),d
+            [&](){ sbc_hl_nn(regs.DE); },                       // 0x52: sbc hl,de
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.DE); },  // 0x53: ld (**),de
+            [&](){ neg(); },                                    // 0x54: neg
+            [&](){ retn(); },                                   // 0x55: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); },  // 0x56: im 1
+            [&](){ ld_a_i(); },                                 // 0x57: ld a,i
+            [&](){ in(regs.E,regs.C); },                        // 0x58: in e,(c)
+            [&](){ out(regs.C,regs.E); },                       // 0x59: out (c),e
+            [&](){ adc_hl_nn(regs.DE); },                       // 0x5a: adc hl,de
+            [&](){ ld_rr_ptr_nn(regs.DE,fetch16BitValue()); },  // 0x5b: ld de,(**)
+            [&](){ neg(); },                                    // 0x5c: neg
+            [&](){ retn(); },                                   // 0x5d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); },  // 0x5e: im 2
+            [&](){ ld_a_r(); },                                 // 0x5f: ld a,r
 
-            [&](){ in(regs.H,regs.C); },                            // 0x60 in h,(c)
-            [&](){ out(regs.C,regs.H); },                           // 0x61: out (c),h
-            [&](){ sbc_hl_nn(regs.HL); },                           // 0x62
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.HL); },      // 0x63 ld (**),hl
-            [&](){ neg(); },                                        // 0x64 neg
-            [&](){ retn(); },                                       // 0x65: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); },      // 0x66: im 0
-            [&](){ rrd(); },                                        // 0x67: rrd
-            [&](){ in(regs.L,regs.C); },                            // 0x68: in l,(c)
-            [&](){ out(regs.C,regs.L); },                           // 0x69: out (c),l
-            [&](){ adc_hl_nn(regs.HL); },                           // 0x6a
-            [&](){ ld_rr_ptr_nn(regs.HL,fetch16BitValue()); },      // 0x6b: ld hl,(**)
-            [&](){ neg(); },                                        // 0x6c: neg
-            [&](){ retn(); },                                       // 0x6d: retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_0); },      // 0x6e: im 0/1
-            [&](){ rld(); },                                        // 0x6f: rld
+            [&](){ in(regs.H,regs.C); },                        // 0x60: IN H,(C)
+            [&](){ out(regs.C,regs.H); },                       // 0x61: OUT (C),H
+            [&](){ sbc_hl_nn(regs.HL); },                       // 0x62: SBC HL,HL
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),regs.HL); },  // 0x63: ld (**),hl
+            [&](){ neg(); },                                    // 0x64: neg
+            [&](){ retn(); },                                   // 0x65: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x66: im 0
+            [&](){ rrd(); },                                    // 0x67: rrd
+            [&](){ in(regs.L,regs.C); },                        // 0x68: in l,(c)
+            [&](){ out(regs.C,regs.L); },                       // 0x69: out (c),l
+            [&](){ adc_hl_nn(regs.HL); },                       // 0x6a: ADC HL,HL
+            [&](){ ld_rr_ptr_nn(regs.HL,fetch16BitValue()); },  // 0x6b: ld hl,(**)
+            [&](){ neg(); },                                    // 0x6c: neg
+            [&](){ retn(); },                                   // 0x6d: retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x6e: im 0/1
+            [&](){ rld(); },                                    // 0x6f: rld
 
-            [&](){ in(regs.C,regs.C,true); },                       // 0x70: in (c)
-            [&](){ out(regs.C,0); },                                // 0x71: out
-            [&](){ sbc_hl_nn(specialRegs.SP); },                    // 0x72: sbc hl,sp
-            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.SP); }, // 0x73: ld (**),hl
-            [&](){ neg(); },                                        // 0x74: neg
-            [&](){ retn(); },                                       // 0x75:
-            [&](){ set_interrupt_mode(InterruptMode::IM_1); },      // 0x76: im 1
-            [&](){ invalid_opcode(); },                             // 0x77
-            [&](){ in(regs.A,regs.C); },                            // 0x78 in a,(c)
-            [&](){ out(regs.C,regs.A); },                           // 0x79 out (c),a
-            [&](){ adc_hl_nn(specialRegs.SP); },                    // 0x7a adc hl,sp
-            [&](){ ld_rr_ptr_nn(specialRegs.SP,fetch16BitValue()); }, // 0x7b ld sp,(**)
-            [&](){ neg(); },                                        // 0x7c neg
-            [&](){ retn(); },                                       // 0x7d retn
-            [&](){ set_interrupt_mode(InterruptMode::IM_2); },      // 0x7e im2
-            [&](){ },                                               // 0x7f
+            [&](){ in(regs.C,regs.C,true); },                        // 0x70: in (c)
+            [&](){ out(regs.C,0); },                                 // 0x71: out
+            [&](){ sbc_hl_nn(specialRegs.SP); },                     // 0x72: sbc hl,sp
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.SP); },// 0x73: ld (**),hl
+            [&](){ neg(); },                                         // 0x74: neg
+            [&](){ retn(); },                                        // 0x75:
+            [&](){ set_interrupt_mode(InterruptMode::IM_1); },       // 0x76: im 1
+            [&](){ invalid_opcode(); },                              // 0x77
+            [&](){ in(regs.A,regs.C); },                             // 0x78 in a,(c)
+            [&](){ out(regs.C,regs.A); },                            // 0x79 out (c),a
+            [&](){ adc_hl_nn(specialRegs.SP); },                     // 0x7a adc hl,sp
+            [&](){ ld_rr_ptr_nn(specialRegs.SP,fetch16BitValue()); },// 0x7b ld sp,(**)
+            [&](){ neg(); },                                         // 0x7c neg
+            [&](){ retn(); },                                        // 0x7d retn
+            [&](){ set_interrupt_mode(InterruptMode::IM_2); },       // 0x7e im2
+            [&](){ },                                                // 0x7f
 
             // 0x80 - 0x8f
             [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
             // 0x90 - 0x9f
             [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
 
-            [&](){ ldi(); }, // 0xa0: ldi
-            [&](){ cpi(); }, // 0xa1:
-            [&](){ ini(); }, // 0xa2:
-            [&](){ outi(); }, // 0xa3:
-            [&](){ }, // 0xa4
-            [&](){ }, // 0xa5
-            [&](){ }, // 0xa6
-            [&](){ }, // 0xa7
+            [&](){ ldi(); }, // 0xa0: LDI
+            [&](){ cpi(); }, // 0xa1: CPI
+            [&](){ ini(); }, // 0xa2: INI
+            [&](){ outi(); },// 0xa3: OUTI
+            [&](){ },        // 0xa4
+            [&](){ },        // 0xa5
+            [&](){ },        // 0xa6
+            [&](){ },        // 0xa7
             [&](){ ldd(); }, // 0xa8
             [&](){ cpd(); }, // 0xa9
             [&](){ ind(); }, // 0xaa
-            [&](){ outd(); }, // 0xab
-            [&](){ }, // 0xac
-            [&](){ }, // 0xad
-            [&](){ }, // 0xae
-            [&](){ }, // 0xaf
+            [&](){ outd(); },// 0xab
+            [&](){ },        // 0xac
+            [&](){ },        // 0xad
+            [&](){ },        // 0xae
+            [&](){ },        // 0xaf
 
             [&](){ ldir(); }, // 0xb0
             [&](){ cpir(); }, // 0xb1
@@ -447,30 +429,30 @@ CPU::CPU() {
         [&](){ add16(specialRegs.IX,regs.DE); }, // 0x19: ADD IX,DE
         [&](){},[&](){},[&](){},[&](){},[&](){},[&](){}, // 0x1a - 0x1f
 
-        [&](){}, // 0x20
-        [&](){ ld_ix_nn(); }, // 0x21: LD IX,**
-        [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.IX); }, // 0x22: LD (**),IX
-        [&](){ inc_ix(); }, // 0x23 inc ix
-        [&](){ inc_r(specialRegs.IXH); }, // 0x24
-        [&](){ dec_r(specialRegs.IXL); }, // 0x25
-        [&](){ ld_ixh_n(fetch8BitValue()); }, // 0x26
-        [&](){}, // 0x27
-        [&](){}, // 0x28
-        [&](){ add16(specialRegs.IX,specialRegs.IX); }, // 0x29
-        [&](){ ld_ix_ptr_nn(); }, // 0x2a
-        [&](){ dec_ix(); }, // 0x2b
-        [&](){ inc_r(specialRegs.IXL); }, // 0x2c
-        [&](){ dec_r(specialRegs.IXL); }, // 0x2d
-        [&](){ ld_ixl_n(fetch8BitValue()); }, // 0x2e
-        [&](){}, // 0x2f
+        [&](){},                                                    // 0x20
+        [&](){ ld_ix_nn(); },                                       // 0x21 LD IX,**
+        [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.IX); },   // 0x22 LD (**),IX
+        [&](){ inc_ix(); },                                         // 0x23 INC IX
+        [&](){ inc_r(specialRegs.IXH); },                           // 0x24 INC IXH
+        [&](){ dec_r(specialRegs.IXL); },                           // 0x25 INC IXL
+        [&](){ ld_ixh_n(fetch8BitValue()); },                       // 0x26 LD IXH,n
+        [&](){},                                                    // 0x27
+        [&](){},                                                    // 0x28
+        [&](){ add16(specialRegs.IX,specialRegs.IX); },             // 0x29 ADD IX,IX
+        [&](){ ld_ix_ptr_nn(); },                                   // 0x2a LD IX,(nn)
+        [&](){ dec_ix(); },                                         // 0x2b DEC IX
+        [&](){ inc_r(specialRegs.IXL); },                           // 0x2c INC IXL
+        [&](){ dec_r(specialRegs.IXL); },                           // 0x2d DEC IXL
+        [&](){ ld_ixl_n(fetch8BitValue()); },                       // 0x2e LD IXL,n
+        [&](){},                                                    // 0x2f
 
         [&](){}, // 0x30
         [&](){}, // 0x31
         [&](){}, // 0x32
         [&](){}, // 0x33
-        [&](){ INC_pIXn(); }, // 0x34
-        [&](){ dec_ptr_ix_n(); }, // 0x35
-        [&](){ ld_ptr_ix_n_n(); }, // 0x36
+        [&](){ INC_pIXn(); },       // 0x34
+        [&](){ DEC_pIXn(); },   // 0x35
+        [&](){ LD_pIXn_n(); },  // 0x36
         [&](){  }, // 0x37
         [&](){  }, // 0x38
         [&](){ add16(specialRegs.IX,specialRegs.SP,false); }, // 0x39
@@ -538,16 +520,16 @@ CPU::CPU() {
         [&](){ LD_pIXn_r(regs.E); }, // 0x73
         [&](){ LD_pIXn_r(regs.H); }, // 0x74
         [&](){ LD_pIXn_r(regs.L); }, // 0x75
-        [&](){  },                      // 0x76
+        [&](){  },                   // 0x76
         [&](){ LD_pIXn_r(regs.B); }, // 0x77
-        [&](){  }, // 0x78
-        [&](){  }, // 0x79
-        [&](){  }, // 0x7a
-        [&](){  }, // 0x7b
+        [&](){  },                   // 0x78
+        [&](){  },                   // 0x79
+        [&](){  },                   // 0x7a
+        [&](){  },                   // 0x7b
         [&](){ ld_r_r(regs.A,specialRegs.IXH); }, // 0x7c
         [&](){ ld_r_r(regs.A,specialRegs.IXL); }, // 0x7d
-        [&](){ LD_r_pIXn(regs.A); }, // 0x7e
-        [&](){  }, // 0x7f
+        [&](){ LD_r_pIXn(regs.A); },              // 0x7e
+        [&](){  },                                // 0x7f
 
         [&](){  }, // 0x80
         [&](){  }, // 0x81
@@ -561,86 +543,290 @@ CPU::CPU() {
         [&](){  }, // 0x89
         [&](){  }, // 0x8a
         [&](){  }, // 0x8b
-        [&](){ ld_r_r(regs.A,specialRegs.IXH); }, // 0x8c
-        [&](){ ld_r_r(regs.A,specialRegs.IXL); }, // 0x8d
-        [&](){ ld_r_r(regs.A,fetch_pIXn()); }, // 0x8e LD a,(ix+n)
+        [&](){ ld_r_r(regs.A,specialRegs.IXH); },   // 0x8c LD A,IXH
+        [&](){ ld_r_r(regs.A,specialRegs.IXL); },   // 0x8d LD A,IXL
+        [&](){ ld_r_r(regs.A,fetch_pIXn()); },      // 0x8e LD a,(ix+n)
         [&](){  }, // 0x8f
 
         [&](){  }, // 0x90
         [&](){  }, // 0x91
         [&](){  }, // 0x92
         [&](){  }, // 0x93
-        [&](){ sub(specialRegs.IXH); }, // 0x94
-        [&](){ sub(specialRegs.IXL); }, // 0x95
-        [&](){ sub(fetch_pIXn()); }, // 0x96
+        [&](){ sub(specialRegs.IXH); }, // 0x94 SUB IXH
+        [&](){ sub(specialRegs.IXL); }, // 0x95 SUB IXL
+        [&](){ sub(fetch_pIXn()); },    // 0x96 SUB (IX+n)
         [&](){  }, // 0x97
         [&](){  }, // 0x98
         [&](){  }, // 0x99
         [&](){  }, // 0x9a
         [&](){  }, // 0x9b
-        [&](){ sub(specialRegs.IXH,true); }, // 0x9c
-        [&](){ sub(specialRegs.IXL,true); }, // 0x9d
-        [&](){ sub(fetch_pIXn(),true); }, // 0x9e
+        [&](){ sub(specialRegs.IXH,true); }, // 0x9c SBC A,IXH
+        [&](){ sub(specialRegs.IXL,true); }, // 0x9d SBC A,IXL
+        [&](){ sub(fetch_pIXn(),true); },    // 0x9e SBC A,(IX+n)
         [&](){  }, // 0x9f
 
         [&](){  }, // 0xa0
         [&](){  }, // 0xa1
         [&](){  }, // 0xa2
         [&](){  }, // 0xa3
-        [&](){ and_a_with_value(specialRegs.IXH); }, // 0xa4
-        [&](){ and_a_with_value(specialRegs.IXL); }, // 0xa5
-        [&](){ and_a_with_value(fetch_pIXn()); }, // 0xa6
+        [&](){ and_a_with_value(specialRegs.IXH); }, // 0xa4 AND IXH
+        [&](){ and_a_with_value(specialRegs.IXL); }, // 0xa5 AND IXL
+        [&](){ and_a_with_value(fetch_pIXn()); },    // 0xa6 AND (IX+n)
         [&](){ }, // 0xa7
         [&](){ }, // 0xa8
         [&](){ }, // 0xa9
         [&](){ }, // 0xaa
         [&](){ }, // 0xab
-        [&](){ xor_a_with_value(specialRegs.IXH); }, // 0xac
-        [&](){ xor_a_with_value(specialRegs.IXL); }, // 0xad
-        [&](){ xor_a_with_value(fetch_pIXn()); }, // 0xae
+        [&](){ xor_a_with_value(specialRegs.IXH); }, // 0xac XOR IXH
+        [&](){ xor_a_with_value(specialRegs.IXL); }, // 0xad XOR IXL
+        [&](){ xor_a_with_value(fetch_pIXn()); },    // 0xae XOR (ix+n)
         [&](){ }, // 0xaf
 
         [&](){ }, // 0xb0
         [&](){ }, // 0xb1
         [&](){ }, // 0xb2
         [&](){ }, // 0xb3
-        [&](){ or_a_with_value(specialRegs.IXH); }, // 0xb4
-        [&](){ or_a_with_value(specialRegs.IXL); }, // 0xb5
-        [&](){ or_a_with_value(fetch_pIXn()); }, // 0xb6
+        [&](){ or_a_with_value(specialRegs.IXH); }, // 0xb4 OR IXH
+        [&](){ or_a_with_value(specialRegs.IXL); }, // 0xb5 OR IXL
+        [&](){ or_a_with_value(fetch_pIXn()); },    // 0xb6 OR (ix+n)
         [&](){ }, // 0xb7
         [&](){ }, // 0xb8
         [&](){ }, // 0xb9
         [&](){ }, // 0xba
         [&](){ }, // 0xbb
-        [&](){ cp_a_with_value( specialRegs.IXH); }, // 0xbc
-        [&](){ cp_a_with_value( specialRegs.IXL); }, // 0xbd
-        [&](){ cp_a_with_value( fetch_pIXn()); }, // 0xbe
+        [&](){ cp_a_with_value( specialRegs.IXH); }, // 0xbc CP IXH
+        [&](){ cp_a_with_value( specialRegs.IXL); }, // 0xbd CP IXL
+        [&](){ cp_a_with_value( fetch_pIXn()); },    // 0xbe CP (ix+n)
         [&](){ }, // 0xbf
 
          // 0xc0 - 0xca
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
-        [&](){ decode_ix_bit_instruction(); }, // 0xcb
+        [&](){ decode_ix_bit_instruction(); }, // 0xcb - IX Bit instruction group
         [&](){ },[&](){ },[&](){ },[&](){ },
 
         // 0xd0 - 0xdf
         [&](){ }, [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
 
-        [&](){ }, // 0xe0
-        [&](){ pop16(specialRegs.IX); }, // 0xe1
+        [&](){ },                           // 0xe0
+        [&](){ pop16(specialRegs.IX); }, // 0xe1 POP IX
         [&](){ }, // 0xe2
-        [&](){ }, // 0xe3 EX (SP),IX
+        [&](){ EX_pSP_IX(); }, // 0xe3 EX (SP),IX
         [&](){ }, // 0xe4
         [&](){ push_ix(); }, // 0xe5
         [&](){ }, // 0xe6
         [&](){ }, // 0xe7
         [&](){ }, // 0xe8
-        [&](){ jp_IX(); }, // 0xe9
+        [&](){ jp_IX(); }, // 0xe9 JP IX
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
 
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
-        [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IX); }, // 0xf9
+        [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IX); }, // 0xf9 LD SP,IX
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+    };
 
+    iy_instructions = {
+
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, // 0x00 - 0x08
+            [&](){ add16(specialRegs.IY,regs.BC); }, // 0x09: ADD IX,BC
+            [&](){},[&](){},[&](){},[&](){},[&](){},[&](){},
+
+            [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){}, [&](){},
+            [&](){ add16(specialRegs.IY,regs.DE); }, // 0x19: ADD IX,DE
+            [&](){},[&](){},[&](){},[&](){},[&](){},[&](){}, // 0x1a - 0x1f
+
+            [&](){},                                                    // 0x20
+            [&](){ ld_iy_nn(); },                                       // 0x21 LD IY,**
+            [&](){ ld_ptr_nn_nn(fetch16BitValue(),specialRegs.IY); },   // 0x22 LD (**),IY
+            [&](){ inc_iy(); },                                         // 0x23 INC IY
+            [&](){ inc_r(specialRegs.IYH); },                           // 0x24 INC IYH
+            [&](){ dec_r(specialRegs.IYL); },                           // 0x25 INC IYL
+            [&](){ ld_iyh_n(fetch8BitValue()); },                       // 0x26 LD IYH,n
+            [&](){},                                                    // 0x27
+            [&](){},                                                    // 0x28
+            [&](){ add16(specialRegs.IY,specialRegs.IY); },             // 0x29 ADD IY,IY
+            [&](){ ld_iy_ptr_nn(); },                                   // 0x2a LD IY,(nn)
+            [&](){ dec_iy(); },                                         // 0x2b DEC IY
+            [&](){ inc_r(specialRegs.IYL); },                           // 0x2c INC IYL
+            [&](){ dec_r(specialRegs.IYL); },                           // 0x2d DEC IYL
+            [&](){ ld_iyl_n(fetch8BitValue()); },                       // 0x2e LD IYL,n
+            [&](){},                                                    // 0x2f
+
+            [&](){}, // 0x30
+            [&](){}, // 0x31
+            [&](){}, // 0x32
+            [&](){}, // 0x33
+            [&](){ INC_pIYn(); },  // 0x34 INC (IY+n)
+            [&](){ DEC_pIYn(); },  // 0x35 DEC (IY+n)
+            [&](){ LD_pIYn_n(); }, // 0x36 LD (IY+n),n
+            [&](){  }, // 0x37
+            [&](){  }, // 0x38
+            [&](){ add16(specialRegs.IY,specialRegs.SP,false); }, // 0x39 ADD IY,SP
+            [&](){  }, // 0x3A
+            [&](){  }, // 0x3B
+            [&](){  }, // 0x3C
+            [&](){  }, // 0x3d
+            [&](){  }, // 0x3e
+            [&](){  }, // 0x3f
+
+            [&](){  }, // 0x40
+            [&](){  }, // 0x41
+            [&](){  }, // 0x42
+            [&](){  }, // 0x43
+            [&](){ ld_r_r(regs.B,specialRegs.IYH); }, // 0x44 ld B,IYh
+            [&](){ ld_r_r(regs.B,specialRegs.IYL); }, // 0x45
+            [&](){ LD_r_pIYn(regs.B); }, // 0x46
+            [&](){  }, // 0x47
+            [&](){  }, // 0x48
+            [&](){  }, // 0x49
+            [&](){  }, // 0x4a
+            [&](){  }, // 0x4b
+            [&](){ ld_r_r(regs.C, specialRegs.IYH); }, // 0x4c
+            [&](){ ld_r_r(regs.C, specialRegs.IYL); }, // 0x4d
+            [&](){ LD_r_pIYn(regs.C); }, // 0x4e
+            [&](){  }, // 0x4f
+
+            [&](){  }, // 0x50
+            [&](){  }, // 0x51
+            [&](){  }, // 0x52
+            [&](){  }, // 0x53
+            [&](){ ld_r_r(regs.D, specialRegs.IYH); }, // 0x54
+            [&](){ ld_r_r(regs.D, specialRegs.IYL); }, // 0x55
+            [&](){ LD_r_pIYn(regs.D); }, // 0x56 LD D,(iy+n)
+            [&](){  }, // 0x57
+            [&](){  }, // 0x58
+            [&](){  }, // 0x59
+            [&](){  }, // 0x5a
+            [&](){  }, // 0x5b
+            [&](){ ld_r_r(regs.E, specialRegs.IYH); }, // 0x5c
+            [&](){ ld_r_r(regs.E, specialRegs.IYL); }, // 0x5d
+            [&](){ LD_r_pIXn(regs.E); }, // 0x5e LD E,(ix+n)
+            [&](){  }, // 0x5f
+
+            [&](){ ld_r_r(specialRegs.IYH,regs.B); }, // 0x60
+            [&](){ ld_r_r(specialRegs.IYH,regs.C); }, // 0x61
+            [&](){ ld_r_r(specialRegs.IYH,regs.D); }, // 0x62
+            [&](){ ld_r_r(specialRegs.IYH,regs.E); }, // 0x63
+            [&](){ ld_r_r(specialRegs.IYH,specialRegs.IYH); }, // 0x64
+            [&](){ ld_r_r(specialRegs.IYH,specialRegs.IYL); }, // 0x65
+            [&](){ LD_r_pIYn(regs.H); }, // 0x66 LD E,(ix+n)
+            [&](){ ld_r_r(specialRegs.IYH,regs.A); }, // 0x67
+            [&](){ ld_r_r(specialRegs.IYL,regs.B); }, // 0x68
+            [&](){ ld_r_r(specialRegs.IYL,regs.C); }, // 0x69
+            [&](){ ld_r_r(specialRegs.IYL,regs.D); }, // 0x6a
+            [&](){ ld_r_r(specialRegs.IYL,regs.E); }, // 0x6b
+            [&](){ ld_r_r(specialRegs.IYL,specialRegs.IYH); }, // 0x6c
+            [&](){ ld_r_r(specialRegs.IYL,specialRegs.IYL); }, // 0x6d
+            [&](){ LD_r_pIYn(regs.L); }, // 0x6e LD E,(ix+n)
+            [&](){ ld_r_r(specialRegs.IYL,regs.A); }, // 0x6f
+
+            [&](){ LD_pIYn_r(regs.B); }, // 0x70
+            [&](){ LD_pIYn_r(regs.C); }, // 0x71
+            [&](){ LD_pIYn_r(regs.D); }, // 0x72
+            [&](){ LD_pIYn_r(regs.E); }, // 0x73
+            [&](){ LD_pIYn_r(regs.H); }, // 0x74
+            [&](){ LD_pIYn_r(regs.L); }, // 0x75
+            [&](){  },                   // 0x76
+            [&](){ LD_pIYn_r(regs.B); }, // 0x77
+            [&](){  },                   // 0x78
+            [&](){  },                   // 0x79
+            [&](){  },                   // 0x7a
+            [&](){  },                   // 0x7b
+            [&](){ ld_r_r(regs.A,specialRegs.IYH); }, // 0x7c
+            [&](){ ld_r_r(regs.A,specialRegs.IYL); }, // 0x7d
+            [&](){ LD_r_pIYn(regs.A); },              // 0x7e
+            [&](){  },                                // 0x7f
+
+            [&](){  }, // 0x80
+            [&](){  }, // 0x81
+            [&](){  }, // 0x82
+            [&](){  }, // 0x83
+            [&](){ add(specialRegs.IYH); }, // 0x84 add a,iyh
+            [&](){ add(specialRegs.IYL); }, // 0x85 add a,iyl
+            [&](){ add(fetch_pIYn()); }, // 0x86 add a,(iy+n)
+            [&](){  }, // 0x87
+            [&](){  }, // 0x88
+            [&](){  }, // 0x89
+            [&](){  }, // 0x8a
+            [&](){  }, // 0x8b
+            [&](){ ld_r_r(regs.A,specialRegs.IYH); },   // 0x8c LD A,IYH
+            [&](){ ld_r_r(regs.A,specialRegs.IYL); },   // 0x8d LD A,IYL
+            [&](){ ld_r_r(regs.A,fetch_pIYn()); },      // 0x8e LD a,(iy+n)
+            [&](){  }, // 0x8f
+
+            [&](){  }, // 0x90
+            [&](){  }, // 0x91
+            [&](){  }, // 0x92
+            [&](){  }, // 0x93
+            [&](){ sub(specialRegs.IYH); }, // 0x94 SUB IYH
+            [&](){ sub(specialRegs.IYL); }, // 0x95 SUB IYL
+            [&](){ sub(fetch_pIYn()); },    // 0x96 SUB (IY+n)
+            [&](){  }, // 0x97
+            [&](){  }, // 0x98
+            [&](){  }, // 0x99
+            [&](){  }, // 0x9a
+            [&](){  }, // 0x9b
+            [&](){ sub(specialRegs.IYH,true); }, // 0x9c SBC A,IYH
+            [&](){ sub(specialRegs.IYL,true); }, // 0x9d SBC A,IYL
+            [&](){ sub(fetch_pIYn(),true); },    // 0x9e SBC A,(IY+n)
+            [&](){  }, // 0x9f
+
+            [&](){  }, // 0xa0
+            [&](){  }, // 0xa1
+            [&](){  }, // 0xa2
+            [&](){  }, // 0xa3
+            [&](){ and_a_with_value(specialRegs.IYH); }, // 0xa4 AND IYH
+            [&](){ and_a_with_value(specialRegs.IYL); }, // 0xa5 AND IYL
+            [&](){ and_a_with_value(fetch_pIYn()); },    // 0xa6 AND (IY+n)
+            [&](){ }, // 0xa7
+            [&](){ }, // 0xa8
+            [&](){ }, // 0xa9
+            [&](){ }, // 0xaa
+            [&](){ }, // 0xab
+            [&](){ xor_a_with_value(specialRegs.IYH); }, // 0xac XOR IYH
+            [&](){ xor_a_with_value(specialRegs.IYL); }, // 0xad XOR IYL
+            [&](){ xor_a_with_value(fetch_pIYn()); },    // 0xae XOR (iy+n)
+            [&](){ }, // 0xaf
+
+            [&](){ }, // 0xb0
+            [&](){ }, // 0xb1
+            [&](){ }, // 0xb2
+            [&](){ }, // 0xb3
+            [&](){ or_a_with_value(specialRegs.IYH); }, // 0xb4 OR IYH
+            [&](){ or_a_with_value(specialRegs.IYL); }, // 0xb5 OR IYL
+            [&](){ or_a_with_value(fetch_pIYn()); },    // 0xb6 OR (iy+n)
+            [&](){ }, // 0xb7
+            [&](){ }, // 0xb8
+            [&](){ }, // 0xb9
+            [&](){ }, // 0xba
+            [&](){ }, // 0xbb
+            [&](){ cp_a_with_value( specialRegs.IYH); }, // 0xbc CP IYH
+            [&](){ cp_a_with_value( specialRegs.IYL); }, // 0xbd CP IYL
+            [&](){ cp_a_with_value( fetch_pIYn()); },    // 0xbe CP (iy+n)
+            [&](){ }, // 0xbf
+
+            // 0xc0 - 0xca
+            [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+            [&](){ decode_iy_bit_instruction(); }, // 0xcb - IX Bit instruction group
+            [&](){ },[&](){ },[&](){ },[&](){ },
+
+            // 0xd0 - 0xdf
+            [&](){ }, [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+
+            [&](){ },                           // 0xe0
+            [&](){ pop16(specialRegs.IY); }, // 0xe1 POP IY
+            [&](){ }, // 0xe2
+            [&](){ EX_pSP_IY(); }, // 0xe3 EX (SP),IX
+            [&](){ }, // 0xe4
+            [&](){ push_iy(); }, // 0xe5
+            [&](){ }, // 0xe6
+            [&](){ }, // 0xe7
+            [&](){ }, // 0xe8
+            [&](){ jp_IY(); }, // 0xe9 JP IY
+            [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+
+            [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
+            [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IY); }, // 0xf9 LD SP,IY
+            [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
     };
 
 
@@ -687,30 +873,29 @@ void CPU::decode_iy_bit_instruction()
 // opcodes: 0xdd ..
 void CPU::decode_ix_instruction()
 {
-    // TODO: implement group
     uint8_t op2 = fetch8BitValue();
 
-    if( op2 == 0xCB ){
-        decode_ix_bit_instruction();
-        return;
+    if(op2 < ix_instructions.size()){
+        ix_instructions[op2]();
+    } else {
+        // This should not be possible
     }
 }
 
 // opcode: 0xfd ..
 void CPU::decode_iy_instruction()
 {
-    // TODO: implement group
     uint8_t op2 = fetch8BitValue();
 
-    if( op2 == 0xCB ){
-        decode_iy_bit_instruction();
-        return;
+    if(op2 < iy_instructions.size()){
+        iy_instructions[op2]();
+    } else {
+        // This should not be possible
     }
 }
 
 void CPU::step()
 {
-
     // M1: OP Code fetch
     currentOpcode = fetch8BitValue();
 
@@ -910,21 +1095,13 @@ void CPU::ld_rr_rr( uint16_t& dstReg, uint16_t& value )
 void CPU::inc_r(uint8_t &reg)
 {
     reg++;
-    setFlag( FlagBitmaskSign, reg & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
-    setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero
-    setFlag( FlagBitmaskPV, reg == 0x80 ); // Set if B was 0x7f before
-    setFlag( FlagBitmaskHalfCarry, (reg & 0b00001111) == 0 ); // Set if carry over from bit 3
-    setFlag( FlagBitmaskN, false); // reset
+    set_INC_operation_flags(reg);
 }
 
 void CPU::dec_r(uint8_t &reg)
 {
     reg--;
-    setFlag( FlagBitmaskSign, reg & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
-    setFlag( FlagBitmaskZero, reg == 0 );   // Set if result is zero
-    setFlag( FlagBitmaskPV, reg == 0x7f ); // Set if B was 0x80 before
-    setFlag( FlagBitmaskHalfCarry, (reg & 0b00001111) == 0b00001111 ); // Set if carry over from bit 3
-    setFlag( FlagBitmaskN, true); // set
+    set_DEC_operation_flags(reg);
 }
 
 void CPU::out( uint8_t dstPort, uint8_t value )
@@ -967,6 +1144,23 @@ void CPU::set_AND_operation_flags()
     setFlag(FlagBitmaskPV, has_parity(regs.A));
     setFlag(FlagBitmaskN, 0);
     setFlag(FlagBitmaskC, 0);
+}
+
+void CPU::set_INC_operation_flags( uint8_t result )
+{
+    setFlag( FlagBitmaskSign, result & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
+    setFlag( FlagBitmaskZero, result == 0 );   // Set if result is zero
+    setFlag( FlagBitmaskPV, result == 0x80 ); // Set if B was 0x7f before
+    setFlag( FlagBitmaskHalfCarry, (result & 0b00001111) == 0 ); // Set if carry over from bit 3
+    setFlag( FlagBitmaskN, false); // reset
+}
+void CPU::set_DEC_operation_flags( uint8_t result )
+{
+    setFlag( FlagBitmaskSign, result & 0x80 ); // Set if result is negative (a.k.a. if sign bit is set)
+    setFlag( FlagBitmaskZero, result == 0 );   // Set if result is zero
+    setFlag( FlagBitmaskPV, result == 0x7f ); // Set if B was 0x80 before
+    setFlag( FlagBitmaskHalfCarry, (result & 0b00001111) == 0b00001111 ); // Set if carry over from bit 3
+    setFlag( FlagBitmaskN, true); // set
 }
 
 // *******************************************************
@@ -1205,7 +1399,7 @@ void CPU::jr_n(){
 // opcode: 0x19
 // cycleS: 11
 // flag: C N H
-void CPU::add_hl_de() {
+void CPU::ADD_HL_DE() {
     add16(regs.HL,regs.DE);
 }
 
@@ -1213,28 +1407,28 @@ void CPU::add_hl_de() {
 // opcode: 0x1a
 // cycles: 7
 // flags: -
-void CPU::load_a_ptr_de(){
+void CPU::LD_A_pDE(){
     regs.A = mem[regs.DE];
 }
 
 // DEC DE
 // opcode: 0x1b
 // cycles: 6
-void CPU::dec_de(){
+void CPU::DEC_DE(){
     regs.DE--;
 }
 
 // INC E
 // opcode: 0x1c
 // cycles 4
-void CPU::inc_e(){
+void CPU::INC_E(){
     inc_r(regs.E);
 }
 
 // DEC E
 // opcode: 0x1d
 // cycles: 4
-void CPU::dec_e(){
+void CPU::DEC_E(){
     dec_r(regs.E);
 }
 
@@ -1242,7 +1436,7 @@ void CPU::dec_e(){
 // opcode: 0x1e
 // cycles: 7
 // flags: -
-void CPU::ld_e_n(){
+void CPU::LD_E_n(){
     regs.E = fetch8BitValue();
 }
 
@@ -1279,7 +1473,7 @@ void CPU::jr_nz(){
 // opcode: 0x21
 // cycles: 10
 // flags: -
-void CPU::ld_hl_nn(){
+void CPU::LD_HL_nn(){
     regs.L = fetch8BitValue();
     regs.H = fetch8BitValue();
 }
@@ -1287,7 +1481,7 @@ void CPU::ld_hl_nn(){
 // LD (NN),HL
 // opcode: 0x22
 // flags: -
-void CPU::ld_ptr_nn_hl(){
+void CPU::LD_pnn_HL(){
     uint16_t addr = fetch16BitValue();
     mem[addr] = regs.L;
     mem[addr+1] = regs.H;
@@ -1314,7 +1508,7 @@ void  CPU::dec_h(){
     dec_r(regs.H);
 }
 
-void CPU::ld_h_n(){
+void CPU::LD_H_n(){
     regs.H = fetch8BitValue();
 }
 
@@ -1429,7 +1623,7 @@ void CPU::jr_z(){
 // opcode: 0x29
 // cycles: 11
 // flags: C H N
-void CPU::add_hl_hl(){
+void CPU::ADD_HL_HL(){
     add16(regs.HL,regs.HL);
 }
 
@@ -1437,7 +1631,7 @@ void CPU::add_hl_hl(){
 // opcode: 0x2a
 // cycles: 16
 // flags: -
-void CPU::ld_hl_ptr_nn(){
+void CPU::LD_HL_pnn(){
     uint16_t addr = fetch16BitValue();
     regs.L = mem[addr];
     regs.H = mem[addr+1];
@@ -1447,28 +1641,28 @@ void CPU::ld_hl_ptr_nn(){
 // opcode: 0x2b
 // cycles: 6
 // flags: -
-void CPU::dec_hl(){
+void CPU::DEC_HL(){
     regs.HL--;
 }
 
 // inc l
 // opcode: 0x2c
 // cycles: 4
-void CPU::inc_l(){
+void CPU::INC_L(){
     inc_r(regs.L);
 }
 
 // DEC L
 // opcode: 0x2d
 // cycles: 4
-void CPU::dec_l(){
+void CPU::DEC_L(){
     dec_r(regs.L);
 }
 
 // LD L,n
 // opcode: 0x2E
 // cycles: 7
-void CPU::ld_l_n(){
+void CPU::LD_L_n(){
     regs.L = fetch8BitValue();
 }
 
@@ -1496,7 +1690,7 @@ void CPU::jr_nc()
 // LD SP,NN
 // opcode: 0x31
 // flags: -
-void CPU::ld_sp_nn()
+void CPU::LD_SP_nn()
 {
     specialRegs.SP = fetch16BitValue();
 }
@@ -1504,14 +1698,9 @@ void CPU::ld_sp_nn()
 // LD (NN),A
 // opcode: 0x32
 // flags: -
-void CPU::ld_ptr_nn_a()
+void CPU::LD_pnn_A()
 {
     mem[fetch16BitValue()] = regs.A;
-}
-
-void CPU::ld_ptr_nn_n( uint16_t location, uint8_t value )
-{
-    mem[location] = value;
 }
 
 // cycles: 20
@@ -1534,7 +1723,7 @@ void CPU::ld_rr_ptr_nn( uint16_t& regPair, uint16_t addr )
 // INC SP
 // opcode: 0x33
 // flags: -
-void CPU::inc_sp()
+void CPU::INC_SP()
 {
     specialRegs.SP++;
 
@@ -1543,7 +1732,7 @@ void CPU::inc_sp()
 // INC (HL)
 // opcode: 0x34
 // N PV H S Z
-void CPU::inc_ptr_hl()
+void CPU::INC_pHL()
 {
     uint8_t result = mem[regs.HL]++;
     setFlag(FlagBitmaskSign, result & 0x80);
@@ -1555,7 +1744,7 @@ void CPU::inc_ptr_hl()
 
 // DEC (HL)
 // opcode: 0x35
-void CPU::dec_ptr_hl()
+void CPU::DEC_pHL()
 {
     uint8_t result = mem[regs.HL]--;
     setFlag(FlagBitmaskSign, result & 0x80);
@@ -2036,6 +2225,29 @@ void CPU::EX_pSP_HL()
     std::swap( regs.H , mem[specialRegs.SP+1] );
 }
 
+// EX (SP),IY
+// opcode: 0xFD 0xE3
+// cycles: 23
+// flags: -
+// Exchanges (SP) with IYL, and (SP+1) with IYH.
+void CPU::EX_pSP_IY()
+{
+    std::swap( specialRegs.IYL , mem[specialRegs.SP] );
+    std::swap( specialRegs.IYH , mem[specialRegs.SP+1] );
+}
+
+// EX (SP),IX
+// opcode: 0xDD 0xE3
+// cycles: 23
+// flags: -
+// Exchanges (SP) with IXL, and (SP+1) with IXH.
+void CPU::EX_pSP_IX()
+{
+    std::swap( specialRegs.IXL , mem[specialRegs.SP] );
+    std::swap( specialRegs.IXH , mem[specialRegs.SP+1] );
+}
+
+
 // EX DE,HL
 // opcode: 0xEB
 // cycles: 4
@@ -2407,10 +2619,19 @@ void CPU::ld_iyl_n( uint8_t value )
 // LD (IX+d),n
 // cycles: 19
 // flags: -
-void CPU::ld_ptr_ix_n_n()
+void CPU::LD_pIXn_n()
 {
     auto offset = static_cast<int8_t>(fetch8BitValue());
     mem[specialRegs.IX + offset] = fetch8BitValue();
+}
+
+// LD (IY+d),n
+// cycles: 19
+// flags: -
+void CPU::LD_pIYn_n()
+{
+    auto offset = static_cast<int8_t>(fetch8BitValue());
+    mem[specialRegs.IY + offset] = fetch8BitValue();
 }
 
 // LD (IX+d),n
@@ -2419,6 +2640,15 @@ void CPU::ld_ptr_ix_n_n()
 void CPU::LD_pIXn_r(uint8_t& reg )
 {
     auto ptr = fetch_pIXn();
+    ptr = reg;
+}
+
+// LD (IY+d),n
+// cycles: 19
+// flags: -
+void CPU::LD_pIYn_r( uint8_t& reg)
+{
+    auto ptr = fetch_pIYn();
     ptr = reg;
 }
 
@@ -2443,26 +2673,35 @@ void CPU::LD_r_pIYn( uint8_t& dst_reg )
 void CPU::INC_pIXn()
 {
     uint8_t& location = fetch_pIXn();
-    setFlag(FlagBitmaskPV,location == 0x7f); // set if location was 0x7f before inc operation
     location++;
-    setFlag(FlagBitmaskSign,location & 0x80);
-    setFlag(FlagBitmaskZero,location == 0);
-    setFlag(FlagBitmaskHalfCarry, (location & 0b00001111) == 0 ); // Set if carry over from bit 3
-    setFlag(FlagBitmaskN,false);
+    set_INC_operation_flags(location);
 }
 
 // DEC (ix+n)
 // cycles: 23
-void CPU::dec_ptr_ix_n()
+void CPU::DEC_pIXn()
 {
     uint8_t& location = fetch_pIXn();
-    setFlag(FlagBitmaskPV,location == 0x80); // set if location was 0x80 before dec operation
-    uint8_t oldvalue = location;
     location--;
-    setFlag(FlagBitmaskSign,location & 0x80);
-    setFlag(FlagBitmaskZero,location == 0);
-    setFlag(FlagBitmaskHalfCarry, (location & 0b00001111) == 0b00001111 ); // Set if carry over from bit 4
-    setFlag(FlagBitmaskN,true);
+    set_DEC_operation_flags(location);
+}
+
+// INC (iy+n)
+// cycles: 23
+void CPU::INC_pIYn()
+{
+    uint8_t& location = fetch_pIYn();
+    location++;
+    set_INC_operation_flags(location);
+}
+
+// DEC (iy+n)
+// cycles: 23
+void CPU::DEC_pIYn()
+{
+    uint8_t& location = fetch_pIYn();
+    location--;
+    set_DEC_operation_flags(location);
 }
 
 

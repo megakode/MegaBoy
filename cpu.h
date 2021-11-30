@@ -291,37 +291,37 @@ public:
     void load_d_n();
     void rla();
     void jr_n();
-    void add_hl_de();
-    void load_a_ptr_de();
-    void dec_de();
-    void inc_e();
-    void dec_e();
-    void ld_e_n();
+    void ADD_HL_DE();
+    void LD_A_pDE();
+    void DEC_DE();
+    void INC_E();
+    void DEC_E();
+    void LD_E_n();
     void rra();
 
     void jr_nz(); // 0x20
-    void ld_hl_nn();
-    void ld_ptr_nn_hl();
+    void LD_HL_nn();
+    void LD_pnn_HL();
     void inc_hl();
     void inc_h();
     void dec_h();
-    void ld_h_n();
+    void LD_H_n();
     void daa();
     void jr_z();
-    void add_hl_hl();
-    void ld_hl_ptr_nn();
-    void dec_hl();
-    void inc_l();
-    void dec_l();
-    void ld_l_n();
+    void ADD_HL_HL();
+    void LD_HL_pnn();
+    void DEC_HL();
+    void INC_L();
+    void DEC_L();
+    void LD_L_n();
     void cpl();
 
     void jr_nc(); // 0x30
-    void ld_sp_nn();
-    void ld_ptr_nn_a();
-    void inc_sp();
-    void inc_ptr_hl();
-    void dec_ptr_hl();
+    void LD_SP_nn();
+    void LD_pnn_A();
+    void INC_SP();
+    void INC_pHL();
+    void DEC_pHL();
     void ld_ptr_hl_n();
     void scf();
     void jr_c();
@@ -465,9 +465,9 @@ public:
 
     void INC_pIXn();
 
-    void dec_ptr_ix_n();
+    void DEC_pIXn();
 
-    void ld_ptr_ix_n_n();
+    void LD_pIXn_n();
 
     void LD_pIXn_r(uint8_t &reg);
 
@@ -494,4 +494,20 @@ public:
     void jp_IX();
 
     void ld_rr_rr(uint16_t &dstReg, uint16_t &value);
+
+    void EX_pSP_IY();
+
+    void EX_pSP_IX();
+
+    void set_INC_operation_flags(uint8_t result);
+
+    void set_DEC_operation_flags(uint8_t result);
+
+    void INC_pIYn();
+
+    void DEC_pIYn();
+
+    void LD_pIYn_r(uint8_t &reg);
+
+    void LD_pIYn_n();
 };

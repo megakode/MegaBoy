@@ -153,7 +153,7 @@ TEST_CASE("IncB"){
     cpu.regs.F = 0xff;
     cpu.regs.B = 0b011111111;
     cpu.inc_b();
-    REQUIRE(cpu.regs.F & FlagBitmaskN == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskN) == 0);
     
 }
 
@@ -164,12 +164,12 @@ TEST_CASE("DecB"){
     cpu.regs.B = 0x10;
     cpu.dec_b();
     REQUIRE(cpu.regs.B == 0x0f);
-    REQUIRE(cpu.regs.F & FlagBitmaskSign == 0);
-    REQUIRE(cpu.regs.F & FlagBitmaskZero == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskSign) == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskZero) == 0);
     REQUIRE(cpu.regs.F & FlagBitmaskHalfCarry);
-    REQUIRE(cpu.regs.F & FlagBitmaskPV == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskPV) == 0);
     REQUIRE(cpu.regs.F & FlagBitmaskN);
-    REQUIRE(cpu.regs.F & FlagBitmaskC == 0);
+    REQUIRE((cpu.regs.F & FlagBitmaskC) == 0);
 }
 
 TEST_CASE("Parity"){
