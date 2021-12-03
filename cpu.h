@@ -105,8 +105,6 @@ class CPU {
             struct { uint8_t L,H; };
         };
 
-        uint8_t padding; // So register indexes in opcodes matches indexing into this struct
-
         union {
             uint16_t AF;
             struct { uint8_t F,A; };
@@ -143,6 +141,15 @@ class CPU {
     InterruptMode interrupt_mode = InterruptMode::IM_0;
 
     uint8_t currentOpcode;
+    /// Current number of cycles spent by the currently executing opcode. Each instruction adds cycles to this variable during execution,
+    /// and the step method waits this number of cycles after a step, and resets it to 0 afterwards.
+    uint16_t currentCycles;
+
+    // *************************************************************************************
+    // Fetching instruction bytes
+    // *************************************************************************************
+
+    void step();
 
     /// Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
     inline uint8_t fetch8BitValue(){
@@ -168,8 +175,12 @@ class CPU {
         return mem[specialRegs.IY+offset];
     }
 
+    // *********************************************************************************
+    // Helper functions
+    // *********************************************************************************
 
     // returns the value contained in the register represented by the regCode
+    /*
     inline uint8_t value_from_regcode( uint8_t regCode ){
 
         uint8_t regValue;
@@ -183,7 +194,7 @@ class CPU {
 
         return regValue;
     }
-
+*/
     /// Returns a reference to a register based on a 3bit register code, which is encoded in all opcodes which deals with registers.
     /// \param regCode Register code
     /// \return Reference to register
@@ -191,10 +202,39 @@ class CPU {
     {
         regCode &= 0b00000111; // remove excess bits just in case
 
-        if(regCode == RegisterCode::HLPtr){
-            return mem[regs.HL];
-        } else {
-            return ((reinterpret_cast<uint8_t*>(&regs))[regCode]);
+        switch (regCode) {
+            case RegisterCode::HLPtr:
+                return mem[regs.HL];
+            case RegisterCode::A:
+                return regs.A;
+            case RegisterCode::B:
+                return regs.B;
+            case RegisterCode::C:
+                return regs.C;
+            case RegisterCode::D:
+                return regs.D;
+            case RegisterCode::E:
+                return regs.E;
+            case RegisterCode::L:
+                return regs.L;
+            case RegisterCode::H:
+                return regs.H;
+
+        }
+    }
+
+    static inline std::string reg_name_from_regcode( uint8_t regcode )
+    {
+        switch (regcode) {
+            case RegisterCode::A: return "A"; break;
+            case RegisterCode::B: return "B"; break;
+            case RegisterCode::C: return "C"; break;
+            case RegisterCode::D: return "D"; break;
+            case RegisterCode::E: return "E"; break;
+            case RegisterCode::H: return "H"; break;
+            case RegisterCode::L: return "L"; break;
+            case RegisterCode::HLPtr: return "(HL)"; break;
+            default: return "Regcode not found!"; break;
         }
     }
 
@@ -217,11 +257,46 @@ class CPU {
         }
     }
 
-    void set_interrupt_mode( InterruptMode mode ) {
-        interrupt_mode = mode;
+    /// Debug method to get the name of a condition code, encoded in jump instruction
+    inline std::string name_from_condition( uint8_t conditionCode )
+    {
+        switch (conditionCode)
+        {
+            case 0: return "NZ"; // Non zero
+            case 1: return "Z"; // zero
+            case 2: return "NC"; // non carry
+            case 3: return "C"; // carry
+            case 4: return "PO"; // parity odd
+            case 5: return "PE"; // parity even
+            case 6: return "P"; // sign positive
+            case 7: return "N"; // sign negative
+            default: return "Unknow condition code?!";
+        }
     }
 
-    void step();
+    static inline bool has_parity( uint8_t x )
+    {
+        /*
+        x ^= x >> 4;
+        x ^= x >> 2;
+        x ^= x >> 1;
+        return (~x) & 1;
+        */
+        uint8_t p = 1;
+        while (x)
+        {
+            p ^= 1;
+            x &= x-1; // at each iteration, we set the least significant 1 to 0
+        }
+        return p;
+    }
+
+    void set_interrupt_mode( InterruptMode mode ) {
+        interrupt_mode = mode;
+#ifdef DEBUG_LOG
+        std::cout << "IM " << (int)mode << std::endl;
+#endif
+    }
 
     inline void setFlag( FlagBitmask flag, bool value ){
         if(value){
@@ -234,8 +309,6 @@ class CPU {
     inline bool getFlag( FlagBitmask flag ){
         return regs.F & flag;
     }
-
-    bool has_parity( uint8_t x );
 
     void add( uint8_t srcValue, bool carry = false);
     void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
@@ -266,20 +339,20 @@ public:
 
     // instructions
     void NOP(); // 0x00
-    void load_bc_nn();
-    void load_bc_a();
+    void LD_BC_nn();
+    void LD_pBC_A();
     void inc_bc();
     void inc_b();
     void dec_b();
-    void load_b_n();
+    void LD_B_n();
     void rlca();
     void ex_af();
     void add_hl_bc();
-    void load_a_ptr_bc();
+    void LD_A_pBC();
     void dec_bc();
     void inc_c();
     void dec_c();
-    void load_c_n();
+    void LD_C_n();
     void rrca();
 
     void djnz_n(); // 0x10
@@ -288,7 +361,7 @@ public:
     void inc_de();
     void inc_d();
     void dec_d();
-    void load_d_n();
+    void LD_D_n();
     void rla();
     void jr_n();
     void ADD_HL_DE();
@@ -327,13 +400,32 @@ public:
     void jr_c();
     void add_hl_sp();
     void ld_a_ptr_nn();
-    void dec_sp();
-    void inc_a();
-    void dec_a();
+    void DEC_SP();
+    void INC_A();
+    void DEC_A();
     void ld_a_n();
     void ccf();
 
+    void LD_rr_pnn(uint16_t &regPair, uint16_t addr);
+    void LD_A_R();
+    void LD_A_I();
+    void ld_ix_nn();
+    void ld_iy_nn();
+    void ld_ix_ptr_nn();
+    void ld_iy_ptr_nn();
+    void ld_ixh_n(uint8_t value);
+    void ld_ixl_n(uint8_t value);
+    void ld_iyh_n(uint8_t value);
+    void ld_iyl_n(uint8_t value);
+    void LD_pIXn_n();
+    void LD_pIXn_r(uint8_t &reg);
+    void LD_r_r(uint8_t &dstReg, uint8_t value);
     void ld_r_r();
+    void LD_r_pIXn(uint8_t &dst_reg);
+    void LD_r_pIYn(uint8_t &dst_reg);
+    void ld_rr_rr(uint16_t &dstReg, uint16_t &value);
+    void LD_pnn_rr(uint16_t location, uint16_t value);
+
 
     void halt();
 
@@ -391,8 +483,6 @@ public:
 
     void sbc_hl_nn(uint16_t value);
 
-    void ld_ptr_nn_n(uint16_t location, uint8_t value);
-
     void neg();
 
     void retn();
@@ -402,7 +492,7 @@ public:
 
     void reti();
 
-    void ld_ptr_nn_nn(uint16_t location, uint16_t value);
+
 
     void rrd();
 
@@ -431,53 +521,16 @@ public:
     void outd();
     void otdr();
 
-
-    void ld_rr_ptr_nn(uint16_t &regPair, uint16_t location);
-
-    void sub16(uint16_t &regPair, uint16_t value_to_sub);
-
-    void ld_a_r();
-    void ld_a_i();
-
-    void ld_ix_nn();
-
-    void ld_iy_nn();
-
-    void ld_ix_ptr_nn();
-
-    void ld_iy_ptr_nn();
-
-    void ld_ptr_nn_ix();
-
-    void inc_ix();
-
-    void dec_ix();
-
-    void inc_iy();
-
-    void dec_iy();
-
-    void ld_ixh_n(uint8_t value);
-    void ld_ixl_n(uint8_t value);
-
-    void ld_iyh_n(uint8_t value);
-    void ld_iyl_n(uint8_t value);
-
+    void INC_IX();
+    void DEC_IX();
+    void INC_IY();
+    void DEC_IY();
     void INC_pIXn();
-
     void DEC_pIXn();
 
-    void LD_pIXn_n();
-
-    void LD_pIXn_r(uint8_t &reg);
-
-    void ld_r_r(uint8_t &dstReg, uint8_t value);
-
-    void LD_r_pIXn(uint8_t &dst_reg);
-
-    void LD_r_pIYn(uint8_t &dst_reg);
-
     void set_AND_operation_flags();
+    void set_INC_operation_flags(uint8_t result);
+    void set_DEC_operation_flags(uint8_t result);
 
     void and_a_with_value(uint8_t value);
 
@@ -493,15 +546,13 @@ public:
 
     void jp_IX();
 
-    void ld_rr_rr(uint16_t &dstReg, uint16_t &value);
+
 
     void EX_pSP_IY();
 
     void EX_pSP_IX();
 
-    void set_INC_operation_flags(uint8_t result);
 
-    void set_DEC_operation_flags(uint8_t result);
 
     void INC_pIYn();
 
@@ -510,4 +561,8 @@ public:
     void LD_pIYn_r(uint8_t &reg);
 
     void LD_pIYn_n();
+
+    void reset();
+
+    void add_cycles(uint8_t cycles);
 };

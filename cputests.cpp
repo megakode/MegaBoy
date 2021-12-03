@@ -1,22 +1,148 @@
 #include <catch2/catch_test_macros.hpp>
 #include "cpu.h"
-
-
+#include <fstream>
+#include <filesystem>
 // TODO: check ZEXDOC - Z80 instruction set exerciser
 // https://github.com/anotherlin/z80emu/blob/master/testfiles/zexdoc.z80
 
-TEST_CASE("InitialRegisterStates")
+TEST_CASE("z80 exerciser")
 {
     CPU cpu;
-    REQUIRE(cpu.regs.A == 0);
-    REQUIRE(cpu.regs.B == 0);
-    REQUIRE(cpu.regs.C == 0);
-    REQUIRE(cpu.regs.D == 0);
-    REQUIRE(cpu.regs.E == 0);
-    REQUIRE(cpu.regs.H == 0);
-    REQUIRE(cpu.regs.L == 0);
-    REQUIRE(cpu.regs.F == 0);
+    std::filesystem::path filename = "zexdoc.com";
+    auto path = std::filesystem::absolute(filename);
+    std::cout << "path: " << path << std::endl;
+    if(exists(path)){
+        std::cout << "file exists! :)";
+    } else {
+        std::cout << "file DOES NOT exist!";
+    }
+    std::ifstream z80file (path, std::ios::in | std::ios::binary);
+    if (!z80file) {
+        std::cout << "could not read zexdoc.com";
+    } else
+    {
+        std::cout << "Reading zexdoc.com";
+        z80file.read ((char*)&cpu.mem[0x100], 12000 );
+        z80file.close();
+    }
 
+    cpu.specialRegs.PC = 0x100;
+
+    while(1){
+        cpu.step();
+    }
+
+}
+
+TEST_CASE("RLCA")
+{
+    CPU cpu;
+
+    cpu.regs.A = 0b10001000;
+    cpu.rlca();
+    REQUIRE(cpu.getFlag(FlagBitmaskC));
+    REQUIRE(cpu.regs.A == 0b00010001);
+}
+
+TEST_CASE("reg_from_regcode")
+{
+    CPU cpu;
+
+    cpu.regs.A = 0;
+    uint8_t& reg_a = cpu.reg_from_regcode(RegisterCode::A);
+    reg_a = 0xaa;
+    REQUIRE(cpu.regs.A == 0xaa);
+
+    cpu.regs.B = 0;
+    uint8_t& reg_b = cpu.reg_from_regcode(RegisterCode::B);
+    reg_b = 0xbb;
+    REQUIRE(cpu.regs.B == 0xbb);
+
+    cpu.regs.HL = 0x100;
+    cpu.mem[0x100] = 0x34;
+    uint8_t& reg_phl = cpu.reg_from_regcode(RegisterCode::HLPtr);
+    REQUIRE(reg_phl == 0x34);
+}
+
+TEST_CASE("And"){
+    CPU cpu;
+
+    cpu.regs.A = 12;
+    cpu.and_a_with_value(12);
+    REQUIRE(!cpu.getFlag(FlagBitmaskZero));
+
+    cpu.regs.A = 1;
+    cpu.and_a_with_value(2);
+    REQUIRE(cpu.getFlag(FlagBitmaskZero));
+
+}
+
+TEST_CASE("Flags")
+{
+    CPU cpu;
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskZero,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskZero);
+    REQUIRE(cpu.getFlag(FlagBitmaskZero));
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskHalfCarry,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskHalfCarry);
+    REQUIRE(cpu.getFlag(FlagBitmaskHalfCarry));
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskN,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskN);
+    REQUIRE(cpu.getFlag(FlagBitmaskN));
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskC,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskC);
+    REQUIRE(cpu.getFlag(FlagBitmaskC));
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskPV,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskPV);
+    REQUIRE(cpu.getFlag(FlagBitmaskPV));
+
+    cpu.regs.F = 0;
+    cpu.setFlag(FlagBitmaskSign,true);
+    REQUIRE(cpu.regs.F & FlagBitmaskSign);
+    REQUIRE(cpu.getFlag(FlagBitmaskSign));
+}
+
+TEST_CASE("Compare")
+{
+    CPU cpu;
+
+    // CP 1 (subtract and only set flags for comparison)
+    cpu.regs.F  = 0;
+    cpu.regs.A = 0;
+    cpu.sub(1,false,true);
+    REQUIRE( !(cpu.regs.F & FlagBitmaskZero) );
+
+    cpu.regs.F  = 0;
+    cpu.regs.A = 1;
+    cpu.sub(1,false,true);
+    REQUIRE( (cpu.regs.F & FlagBitmaskZero) );
+}
+
+TEST_CASE("pushpop")
+{
+    CPU cpu;
+
+    cpu.regs.AF = 0x1234;
+    cpu.push_af();
+    cpu.regs.AF = 0;
+    cpu.pop16(cpu.regs.AF);
+    REQUIRE(cpu.regs.AF == 0x1234);
+
+    cpu.regs.BC = 0x1234;
+    cpu.push_bc();
+    cpu.regs.BC = 0;
+    cpu.pop16(cpu.regs.BC);
+    REQUIRE(cpu.regs.BC == 0x1234);
 }
 
 TEST_CASE("ldi")

@@ -14,12 +14,11 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG        v3.0.0-preview3
 )
-
+add_compile_definitions(DEBUG_LOG)
 FetchContent_MakeAvailable(Catch2)
 
 enable_testing()
-
-add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h)
+add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h ex_block_search_instruction.h)
 target_link_libraries(cputests PRIVATE Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -27,7 +26,7 @@ include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
-add_executable(MegaBoy main.cpp cpu.cpp)
+add_executable(MegaBoy main.cpp cpu.cpp jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h ex_block_search_instruction.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

@@ -218,4 +218,95 @@ void CPU::rlca(){
 
     regs.A <<= 1;
     if(carry)regs.A |= 1;
+
+#ifdef DEBUG_LOG
+    std::cout << "RLCA" << std::endl;
+#endif
+}
+
+
+// RRCA - Rotate right with carry A
+// opcode: 0x0f
+// cycles: 4
+// flags: C N H
+void CPU::rrca(){
+    uint8_t carry = regs.A & 1;
+    setFlag(FlagBitmaskC,carry);
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    regs.A >>= 1;
+    regs.A |= (carry<<7);
+}
+
+// opcode: 0x17
+// cycles: 4
+void CPU::rla(){
+    // rotate left and set carry
+    // Set bit 0 to previous carry.
+    uint8_t newcarry = regs.A & 0x80;
+    regs.A <<= 1;
+    regs.A |= (regs.F&FlagBitmaskC);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskC,newcarry);
+}
+
+// RRA
+//
+// contents of A is rotated one bit right
+// The contents of bit 0 are copied to the carry flag,
+// and the previous contents of the carry flag are copied to bit 7
+//
+// opcode: 0x1f
+// cycles: 4
+// flags: C N H
+void CPU::rra(){
+    uint8_t carry = regs.A & 1;
+    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry,0);
+    regs.A >>= 1;
+    regs.A |= (regs.F<<7); // Set bit 7 to previous carry flag
+    setFlag(FlagBitmaskC, carry); // Set new carry flag
+}
+
+
+// RRD - do some swapping of nibbles between A and (HL) (see details on p.219 z80 tech ref.)
+// opcode: 0xed 0x67
+// cycles: 18
+// flags: s z h pv n
+void CPU::rrd()
+{
+    uint8_t data = mem[regs.HL];
+    uint8_t old_data_lownib = data & 0xf;
+    data = data >> 4;
+    data |= (regs.A << 4);
+    regs.A &= 0xf0;
+    regs.A |= old_data_lownib;
+    mem[regs.HL] = data;
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,false);
+}
+
+// RLD - do some swapping of nibbles between A and (HL) (see details on p.217 z80 tech ref.)
+// opcode: 0xed 0x6f
+// cycles: 18
+// flags: s z h pv n
+void CPU::rld()
+{
+    uint16_t hl = regs.HL;
+    uint8_t data = mem[hl];
+    uint8_t old_data_hinib = data & 0xf0;
+    data = data << 4;
+    data |= (regs.A & 0x0f);
+    regs.A &= 0xf0;
+    regs.A |= (old_data_hinib>>4);
+    mem[hl] = data;
+    setFlag(FlagBitmaskSign, regs.A & 0x80);
+    setFlag(FlagBitmaskZero, regs.A == 0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskPV, has_parity(regs.A));
+    setFlag(FlagBitmaskN,false);
 }
