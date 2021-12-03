@@ -1,0 +1,8 @@
+//
+// Created by sbeam on 03/12/2021.
+//
+
+#ifndef MEGABOY_IN_OUT_INSTRUCTIONS_H
+#define MEGABOY_IN_OUT_INSTRUCTIONS_H
+
+#endif //MEGABOY_IN_OUT_INSTRUCTIONS_H
