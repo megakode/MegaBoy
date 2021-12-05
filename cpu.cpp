@@ -33,7 +33,7 @@ CPU::CPU() {
         {"INC BC",&CPU::inc_bc},            // 0x03
         {"INC B",&CPU::inc_b},              // 0x04
         {"DEC B",&CPU::dec_b},              // 0x05
-        {"LD B,N", &CPU::LD_B_n},          // 0x06
+        {"LD B,N", &CPU::LD_r_n},          // 0x06
         {"RLCA",&CPU::rlca},                // 0x07
         {"EXAF",&CPU::ex_af},               // 0x08
         {"ADD HL,BC",&CPU::add_hl_bc},      // 0x09
@@ -41,7 +41,7 @@ CPU::CPU() {
         {"DEC BC",&CPU::dec_bc},            // 0x0b
         {"INC C",&CPU::inc_c},              // 0x0c
         {"DEC C",&CPU::dec_c},              // 0x0d
-        {"LD C,N",&CPU::LD_C_n},            // 0x0e
+        {"LD C,N",&CPU::LD_r_n},            // 0x0e
         {"RRCA",&CPU::rrca},                // 0x0f
 
         {"DJNZ N",&CPU::djnz_n},            // 0x10
@@ -50,7 +50,7 @@ CPU::CPU() {
         {"INC DE",&CPU::inc_de},            // 0x13
         {"INC D",&CPU::inc_d},              // 0x14
         {"DEC D",&CPU::dec_d},              // 0x15
-        {"LD D,N", &CPU::LD_D_n},          // 0x16
+        {"LD D,N", &CPU::LD_r_n},          // 0x16
         {"RLA",&CPU::rla},                  // 0x17
         {"JR N",&CPU::jr_n},                // 0x18
         {"ADD HL,DE", &CPU::ADD_HL_DE},      // 0x19
@@ -58,41 +58,41 @@ CPU::CPU() {
         {"DEC DE", &CPU::DEC_DE},            // 0x1b
         {"INC E", &CPU::INC_E},              // 0x1c
         {"DEC E", &CPU::DEC_E},              // 0x1d
-        {"LD E,N", &CPU::LD_E_n},            // 0x1e
+        {"LD E,N", &CPU::LD_r_n},            // 0x1e
         {"RRA",&CPU::rra},                  // 0x1f
 
         {"JR NZ",&CPU::jr_nz},              // 0x20
-        {"LD HL,NN", &CPU::LD_HL_nn},        // 0x21
-        {"LD (NN),HL", &CPU::LD_pnn_HL},  // 0x22
+        {"LD HL,NN", &CPU::LD_HL_nn},       // 0x21
+        {"LD (NN),HL", &CPU::LD_pnn_HL},    // 0x22
         {"INC HL",&CPU::inc_hl},            // 0x23
         {"INC H",&CPU::inc_h},              // 0x24
         {"DEC H",&CPU::dec_h},              // 0x25
-        {"LD H,N", &CPU::LD_H_n},            // 0x26
+        {"LD H,N", &CPU::LD_r_n},           // 0x26
         {"DAA",&CPU::daa},                  // 0x27
         {"JR Z",&CPU::jr_z},                // 0x28
-        {"ADD HL,HL", &CPU::ADD_HL_HL},      // 0x29
-        {"LD HL,(NN)", &CPU::LD_HL_pnn},  // 0x2a
-        {"DEC HL", &CPU::DEC_HL},            // 0x2b
-        {"INC L", &CPU::INC_L},              // 0x2c
-        {"DEC L", &CPU::DEC_L},              // 0x2d
-        {"LD L,N", &CPU::LD_L_n},            // 0x2e
+        {"ADD HL,HL", &CPU::ADD_HL_HL},     // 0x29
+        {"LD HL,(NN)", &CPU::LD_HL_pnn},    // 0x2a
+        {"DEC HL", &CPU::DEC_HL},           // 0x2b
+        {"INC L", &CPU::INC_L},             // 0x2c
+        {"DEC L", &CPU::DEC_L},             // 0x2d
+        {"LD L,N", &CPU::LD_r_n},           // 0x2e
         {"CPL",&CPU::cpl},                  // 0x2f
 
         {"JR NC",&CPU::jr_nc},              // 0x30
-        {"LD SP,NN", &CPU::LD_SP_nn},        // 0x31
-        {"LD (NN),A", &CPU::LD_pnn_A},    // 0x32
-        {"INC SP", &CPU::INC_SP},            // 0x33
-        {"INC (HL)", &CPU::INC_pHL},      // 0x34
-        {"DEC (HL)", &CPU::DEC_pHL},      // 0x35
-        {"LD (HL),N",&CPU::ld_ptr_hl_n},    // 0x36
+        {"LD SP,NN", &CPU::LD_SP_nn},       // 0x31
+        {"LD (NN),A", &CPU::LD_pnn_A},      // 0x32
+        {"INC SP", &CPU::INC_SP},           // 0x33
+        {"INC (HL)", &CPU::INC_pHL},        // 0x34
+        {"DEC (HL)", &CPU::DEC_pHL},        // 0x35
+        {"LD (HL),N", &CPU::LD_pHL_n},      // 0x36
         {"SCF",&CPU::scf},                  // 0x37
         {"JR C,N",&CPU::jr_c},              // 0x38
         {"ADD HL,SP",&CPU::add_hl_sp},      // 0x39
         {"LD A,(NN)",&CPU::ld_a_ptr_nn},    // 0x3a
-        {"DEC SP", &CPU::DEC_SP},            // 0x3b
-        {"INC A", &CPU::INC_A},              // 0x3c
-        {"DEC A", &CPU::DEC_A},              // 0x3d
-        {"LD A,N",&CPU::ld_a_n},            // 0x3e
+        {"DEC SP", &CPU::DEC_SP},           // 0x3b
+        {"INC A", &CPU::INC_A},             // 0x3c
+        {"DEC A", &CPU::DEC_A},             // 0x3d
+        {"LD A,N",&CPU::LD_r_n},            // 0x3e
         {"CCF",&CPU::ccf},                  // 0x3f
 
         {"LD R,R",&CPU::ld_r_r},            // 0x40
@@ -473,16 +473,16 @@ CPU::CPU() {
         [&](){  }, // 0x41
         [&](){  }, // 0x42
         [&](){  }, // 0x43
-        [&](){ LD_r_r(regs.B, specialRegs.IXH); }, // 0x44 ld B,IXh
-        [&](){ LD_r_r(regs.B, specialRegs.IXL); }, // 0x45
+        [&](){ LD_r(regs.B, specialRegs.IXH); }, // 0x44 ld B,IXh
+        [&](){ LD_r(regs.B, specialRegs.IXL); }, // 0x45
         [&](){ LD_r_pIXn(regs.B); }, // 0x46
         [&](){  }, // 0x47
         [&](){  }, // 0x48
         [&](){  }, // 0x49
         [&](){  }, // 0x4a
         [&](){  }, // 0x4b
-        [&](){ LD_r_r(regs.C, specialRegs.IXH); }, // 0x4c
-        [&](){ LD_r_r(regs.C, specialRegs.IXL); }, // 0x4d
+        [&](){ LD_r(regs.C, specialRegs.IXH); }, // 0x4c
+        [&](){ LD_r(regs.C, specialRegs.IXL); }, // 0x4d
         [&](){ LD_r_pIXn(regs.C); }, // 0x4e
         [&](){  }, // 0x4f
 
@@ -490,35 +490,35 @@ CPU::CPU() {
         [&](){  }, // 0x51
         [&](){  }, // 0x52
         [&](){  }, // 0x53
-        [&](){ LD_r_r(regs.D, specialRegs.IXH); }, // 0x54
-        [&](){ LD_r_r(regs.D, specialRegs.IXL); }, // 0x55
+        [&](){ LD_r(regs.D, specialRegs.IXH); }, // 0x54
+        [&](){ LD_r(regs.D, specialRegs.IXL); }, // 0x55
         [&](){ LD_r_pIXn(regs.D); }, // 0x56 LD D,(ix+n)
         [&](){  }, // 0x57
         [&](){  }, // 0x58
         [&](){  }, // 0x59
         [&](){  }, // 0x5a
         [&](){  }, // 0x5b
-        [&](){ LD_r_r(regs.E, specialRegs.IXH); }, // 0x5c
-        [&](){ LD_r_r(regs.E, specialRegs.IXL); }, // 0x5d
+        [&](){ LD_r(regs.E, specialRegs.IXH); }, // 0x5c
+        [&](){ LD_r(regs.E, specialRegs.IXL); }, // 0x5d
         [&](){ LD_r_pIXn(regs.E); }, // 0x5e LD E,(ix+n)
         [&](){  }, // 0x5f
 
-        [&](){ LD_r_r(specialRegs.IXH, regs.B); }, // 0x60
-        [&](){ LD_r_r(specialRegs.IXH, regs.C); }, // 0x61
-        [&](){ LD_r_r(specialRegs.IXH, regs.D); }, // 0x62
-        [&](){ LD_r_r(specialRegs.IXH, regs.E); }, // 0x63
-        [&](){ LD_r_r(specialRegs.IXH, specialRegs.IXH); }, // 0x64
-        [&](){ LD_r_r(specialRegs.IXH, specialRegs.IXL); }, // 0x65
+        [&](){ LD_r(specialRegs.IXH, regs.B); }, // 0x60
+        [&](){ LD_r(specialRegs.IXH, regs.C); }, // 0x61
+        [&](){ LD_r(specialRegs.IXH, regs.D); }, // 0x62
+        [&](){ LD_r(specialRegs.IXH, regs.E); }, // 0x63
+        [&](){ LD_r(specialRegs.IXH, specialRegs.IXH); }, // 0x64
+        [&](){ LD_r(specialRegs.IXH, specialRegs.IXL); }, // 0x65
         [&](){ LD_r_pIXn(regs.H); }, // 0x66 LD E,(ix+n)
-        [&](){ LD_r_r(specialRegs.IXH, regs.A); }, // 0x67
-        [&](){ LD_r_r(specialRegs.IXL, regs.B); }, // 0x68
-        [&](){ LD_r_r(specialRegs.IXL, regs.C); }, // 0x69
-        [&](){ LD_r_r(specialRegs.IXL, regs.D); }, // 0x6a
-        [&](){ LD_r_r(specialRegs.IXL, regs.E); }, // 0x6b
-        [&](){ LD_r_r(specialRegs.IXL, specialRegs.IXH); }, // 0x6c
-        [&](){ LD_r_r(specialRegs.IXL, specialRegs.IXL); }, // 0x6d
+        [&](){ LD_r(specialRegs.IXH, regs.A); }, // 0x67
+        [&](){ LD_r(specialRegs.IXL, regs.B); }, // 0x68
+        [&](){ LD_r(specialRegs.IXL, regs.C); }, // 0x69
+        [&](){ LD_r(specialRegs.IXL, regs.D); }, // 0x6a
+        [&](){ LD_r(specialRegs.IXL, regs.E); }, // 0x6b
+        [&](){ LD_r(specialRegs.IXL, specialRegs.IXH); }, // 0x6c
+        [&](){ LD_r(specialRegs.IXL, specialRegs.IXL); }, // 0x6d
         [&](){ LD_r_pIXn(regs.L); }, // 0x6e LD E,(ix+n)
-        [&](){ LD_r_r(specialRegs.IXL, regs.A); }, // 0x6f
+        [&](){ LD_r(specialRegs.IXL, regs.A); }, // 0x6f
 
         [&](){ LD_pIXn_r(regs.B); }, // 0x70
         [&](){ LD_pIXn_r(regs.C); }, // 0x71
@@ -532,8 +532,8 @@ CPU::CPU() {
         [&](){  },                   // 0x79
         [&](){  },                   // 0x7a
         [&](){  },                   // 0x7b
-        [&](){ LD_r_r(regs.A, specialRegs.IXH); }, // 0x7c
-        [&](){ LD_r_r(regs.A, specialRegs.IXL); }, // 0x7d
+        [&](){ LD_r(regs.A, specialRegs.IXH); }, // 0x7c
+        [&](){ LD_r(regs.A, specialRegs.IXL); }, // 0x7d
         [&](){ LD_r_pIXn(regs.A); },              // 0x7e
         [&](){  },                                // 0x7f
 
@@ -549,9 +549,9 @@ CPU::CPU() {
         [&](){  }, // 0x89
         [&](){  }, // 0x8a
         [&](){  }, // 0x8b
-        [&](){ LD_r_r(regs.A, specialRegs.IXH); },   // 0x8c LD A,IXH
-        [&](){ LD_r_r(regs.A, specialRegs.IXL); },   // 0x8d LD A,IXL
-        [&](){ LD_r_r(regs.A, fetch_pIXn()); },      // 0x8e LD a,(ix+n)
+        [&](){ LD_r(regs.A, specialRegs.IXH); },   // 0x8c LD A,IXH
+        [&](){ LD_r(regs.A, specialRegs.IXL); },   // 0x8d LD A,IXL
+        [&](){ LD_r(regs.A, fetch_pIXn()); },      // 0x8e LD a,(ix+n)
         [&](){  }, // 0x8f
 
         [&](){  }, // 0x90
@@ -626,7 +626,7 @@ CPU::CPU() {
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
 
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
-        [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IX); }, // 0xf9 LD SP,IX
+        [&](){ LD_rr(specialRegs.SP, specialRegs.IX); }, // 0xf9 LD SP,IX
         [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
     };
 
@@ -678,16 +678,16 @@ CPU::CPU() {
             [&](){  }, // 0x41
             [&](){  }, // 0x42
             [&](){  }, // 0x43
-            [&](){ LD_r_r(regs.B, specialRegs.IYH); }, // 0x44 ld B,IYh
-            [&](){ LD_r_r(regs.B, specialRegs.IYL); }, // 0x45
+            [&](){ LD_r(regs.B, specialRegs.IYH); }, // 0x44 ld B,IYh
+            [&](){ LD_r(regs.B, specialRegs.IYL); }, // 0x45
             [&](){ LD_r_pIYn(regs.B); }, // 0x46
             [&](){  }, // 0x47
             [&](){  }, // 0x48
             [&](){  }, // 0x49
             [&](){  }, // 0x4a
             [&](){  }, // 0x4b
-            [&](){ LD_r_r(regs.C, specialRegs.IYH); }, // 0x4c
-            [&](){ LD_r_r(regs.C, specialRegs.IYL); }, // 0x4d
+            [&](){ LD_r(regs.C, specialRegs.IYH); }, // 0x4c
+            [&](){ LD_r(regs.C, specialRegs.IYL); }, // 0x4d
             [&](){ LD_r_pIYn(regs.C); }, // 0x4e
             [&](){  }, // 0x4f
 
@@ -695,35 +695,35 @@ CPU::CPU() {
             [&](){  }, // 0x51
             [&](){  }, // 0x52
             [&](){  }, // 0x53
-            [&](){ LD_r_r(regs.D, specialRegs.IYH); }, // 0x54
-            [&](){ LD_r_r(regs.D, specialRegs.IYL); }, // 0x55
+            [&](){ LD_r(regs.D, specialRegs.IYH); }, // 0x54
+            [&](){ LD_r(regs.D, specialRegs.IYL); }, // 0x55
             [&](){ LD_r_pIYn(regs.D); }, // 0x56 LD D,(iy+n)
             [&](){  }, // 0x57
             [&](){  }, // 0x58
             [&](){  }, // 0x59
             [&](){  }, // 0x5a
             [&](){  }, // 0x5b
-            [&](){ LD_r_r(regs.E, specialRegs.IYH); }, // 0x5c
-            [&](){ LD_r_r(regs.E, specialRegs.IYL); }, // 0x5d
+            [&](){ LD_r(regs.E, specialRegs.IYH); }, // 0x5c
+            [&](){ LD_r(regs.E, specialRegs.IYL); }, // 0x5d
             [&](){ LD_r_pIXn(regs.E); }, // 0x5e LD E,(ix+n)
             [&](){  }, // 0x5f
 
-            [&](){ LD_r_r(specialRegs.IYH, regs.B); }, // 0x60
-            [&](){ LD_r_r(specialRegs.IYH, regs.C); }, // 0x61
-            [&](){ LD_r_r(specialRegs.IYH, regs.D); }, // 0x62
-            [&](){ LD_r_r(specialRegs.IYH, regs.E); }, // 0x63
-            [&](){ LD_r_r(specialRegs.IYH, specialRegs.IYH); }, // 0x64
-            [&](){ LD_r_r(specialRegs.IYH, specialRegs.IYL); }, // 0x65
+            [&](){ LD_r(specialRegs.IYH, regs.B); }, // 0x60
+            [&](){ LD_r(specialRegs.IYH, regs.C); }, // 0x61
+            [&](){ LD_r(specialRegs.IYH, regs.D); }, // 0x62
+            [&](){ LD_r(specialRegs.IYH, regs.E); }, // 0x63
+            [&](){ LD_r(specialRegs.IYH, specialRegs.IYH); }, // 0x64
+            [&](){ LD_r(specialRegs.IYH, specialRegs.IYL); }, // 0x65
             [&](){ LD_r_pIYn(regs.H); }, // 0x66 LD E,(ix+n)
-            [&](){ LD_r_r(specialRegs.IYH, regs.A); }, // 0x67
-            [&](){ LD_r_r(specialRegs.IYL, regs.B); }, // 0x68
-            [&](){ LD_r_r(specialRegs.IYL, regs.C); }, // 0x69
-            [&](){ LD_r_r(specialRegs.IYL, regs.D); }, // 0x6a
-            [&](){ LD_r_r(specialRegs.IYL, regs.E); }, // 0x6b
-            [&](){ LD_r_r(specialRegs.IYL, specialRegs.IYH); }, // 0x6c
-            [&](){ LD_r_r(specialRegs.IYL, specialRegs.IYL); }, // 0x6d
+            [&](){ LD_r(specialRegs.IYH, regs.A); }, // 0x67
+            [&](){ LD_r(specialRegs.IYL, regs.B); }, // 0x68
+            [&](){ LD_r(specialRegs.IYL, regs.C); }, // 0x69
+            [&](){ LD_r(specialRegs.IYL, regs.D); }, // 0x6a
+            [&](){ LD_r(specialRegs.IYL, regs.E); }, // 0x6b
+            [&](){ LD_r(specialRegs.IYL, specialRegs.IYH); }, // 0x6c
+            [&](){ LD_r(specialRegs.IYL, specialRegs.IYL); }, // 0x6d
             [&](){ LD_r_pIYn(regs.L); }, // 0x6e LD E,(ix+n)
-            [&](){ LD_r_r(specialRegs.IYL, regs.A); }, // 0x6f
+            [&](){ LD_r(specialRegs.IYL, regs.A); }, // 0x6f
 
             [&](){ LD_pIYn_r(regs.B); }, // 0x70
             [&](){ LD_pIYn_r(regs.C); }, // 0x71
@@ -737,8 +737,8 @@ CPU::CPU() {
             [&](){  },                   // 0x79
             [&](){  },                   // 0x7a
             [&](){  },                   // 0x7b
-            [&](){ LD_r_r(regs.A, specialRegs.IYH); }, // 0x7c
-            [&](){ LD_r_r(regs.A, specialRegs.IYL); }, // 0x7d
+            [&](){ LD_r(regs.A, specialRegs.IYH); }, // 0x7c
+            [&](){ LD_r(regs.A, specialRegs.IYL); }, // 0x7d
             [&](){ LD_r_pIYn(regs.A); },              // 0x7e
             [&](){  },                                // 0x7f
 
@@ -754,9 +754,9 @@ CPU::CPU() {
             [&](){  }, // 0x89
             [&](){  }, // 0x8a
             [&](){  }, // 0x8b
-            [&](){ LD_r_r(regs.A, specialRegs.IYH); },   // 0x8c LD A,IYH
-            [&](){ LD_r_r(regs.A, specialRegs.IYL); },   // 0x8d LD A,IYL
-            [&](){ LD_r_r(regs.A, fetch_pIYn()); },      // 0x8e LD a,(iy+n)
+            [&](){ LD_r(regs.A, specialRegs.IYH); },   // 0x8c LD A,IYH
+            [&](){ LD_r(regs.A, specialRegs.IYL); },   // 0x8d LD A,IYL
+            [&](){ LD_r(regs.A, fetch_pIYn()); },      // 0x8e LD a,(iy+n)
             [&](){  }, // 0x8f
 
             [&](){  }, // 0x90
@@ -831,7 +831,7 @@ CPU::CPU() {
             [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
 
             [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
-            [&](){ ld_rr_rr(specialRegs.SP,specialRegs.IY); }, // 0xf9 LD SP,IY
+            [&](){ LD_rr(specialRegs.SP, specialRegs.IY); }, // 0xf9 LD SP,IY
             [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
     };
 
@@ -909,6 +909,17 @@ void CPU::reset()
     specialRegs.R = 0;
     regs.AF = 0xFFFF;
 
+    // Not guarenteed
+    regs.BC = 0;
+    regs.DE = 0;
+    regs.HL = 0;
+
+}
+
+void CPU::AddDebugLog(const std::string& text)
+{
+    // TODO: also add opcodes
+    debug_log_entries.push_back({current_pc, {current_opcode,0,0,0}, text});
 }
 
 
@@ -925,15 +936,16 @@ uint8_t CPU::input_from_port( uint8_t port )
 void CPU::step()
 {
     // M1: OP Code fetch
-    currentOpcode = fetch8BitValue();
+    current_pc = specialRegs.PC;
+    current_opcode = fetch8BitValue();
 
-    if(currentOpcode < instructions.size()  )
+
+    if(current_opcode < instructions.size()  )
     {
 #ifdef DEBUG_LOG
-        //std::cout << "step opcode=" << currentOpcode << std::endl;
-        std::cout << std::nouppercase << std::showbase  << std::hex << specialRegs.PC-1 << "[" << static_cast<int>(currentOpcode) << "] ";
+        std::cout << std::nouppercase << std::showbase << std::hex << specialRegs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
 #endif
-        (this->*instructions[currentOpcode].code)();
+        (this->*instructions[current_opcode].code)();
 
         // TODO: wait `currentCycles` number of cycles
         currentCycles = 0;
@@ -944,7 +956,7 @@ void CPU::step()
 
 /// Add a number of cycles that the current operation has spent.
 /// At the end of each `step`, the final number of cycles is used as a delay to wait before running the next `step`.
-void CPU::add_cycles( uint8_t cycles ){
+void CPU::AddCurrentCycles(uint8_t cycles ){
     // +15 cycles at læse fra (ix+n)
     // +5 hvis ixl/ixh er involveret
 }
@@ -987,6 +999,6 @@ void CPU::set_DEC_operation_flags( uint8_t result )
 void CPU::invalid_opcode()
 {
 #ifdef DEBUG_LOG
-    std::cout << "INVALID OPCODE: " << currentOpcode << std::endl;
+    std::cout << "INVALID OPCODE: " << current_opcode << std::endl;
 #endif
 }

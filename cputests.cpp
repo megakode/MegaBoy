@@ -4,6 +4,7 @@
 #include <filesystem>
 // TODO: check ZEXDOC - Z80 instruction set exerciser
 // https://github.com/anotherlin/z80emu/blob/master/testfiles/zexdoc.z80
+#include "jump_tests.h"
 
 TEST_CASE("z80 exerciser")
 {

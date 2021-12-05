@@ -206,7 +206,7 @@ void CPU::cp_a_with_value( uint8_t value )
 
 void CPU::cp_r()
 {
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     sub(srcRegValue,false, true);
 }
@@ -275,7 +275,7 @@ void CPU::add_hl_sp()
 // cycles: 4
 // flags: s z h pv n c
 void CPU::add_a_r(){
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     add(srcRegValue,false);
@@ -288,7 +288,7 @@ void CPU::add_a_n(){
 }
 
 void CPU::adc_a_r(){
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     add(srcRegValue,true);
@@ -333,7 +333,7 @@ void CPU::sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry )
 
 
 void CPU::sub_r(){
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     sub(srcRegValue,false, false);
 }
@@ -347,7 +347,7 @@ void CPU::sub_n(){
 }
 
 void CPU::sbc_r(){
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     sub(srcRegValue,true, false);
 }
@@ -374,7 +374,7 @@ void CPU::and_a_with_value( uint8_t value )
 // cycles: 4
 void CPU::and_r()
 {
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     and_a_with_value(srcRegValue);
 
@@ -401,7 +401,7 @@ void CPU::and_n()
 // xor (IY+d) 19
 void CPU::xor_r()
 {
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     xor_a_with_value(srcRegValue);
@@ -438,7 +438,7 @@ void CPU::xor_a_with_value( uint8_t value )
 // or (IY+d) 19
 void CPU::or_r()
 {
-    uint8_t srcRegCode = currentOpcode & 0b111;
+    uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     or_a_with_value(srcRegValue);

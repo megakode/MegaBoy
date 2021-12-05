@@ -9,7 +9,7 @@
 // Cycles: 4
 void CPU::NOP(){
 #ifdef DEBUG_LOG
-    std::cout << "NOP" << std::endl;
+    AddDebugLog("NOP");
 #endif
 };
 
@@ -18,7 +18,7 @@ void CPU::disable_interrupts()
 {
     // TODO: disable interrupts
 #ifdef DEBUG_LOG
-    std::cout << "DI" << std::endl;
+    AddDebugLog("DI");
 #endif
 }
 
@@ -26,12 +26,15 @@ void CPU::enable_interrupts()
 {
     // TODO: enable interrupts
 #ifdef DEBUG_LOG
-    std::cout << "EI" << std::endl;
+    AddDebugLog("EI");
 #endif
 }
 
 void CPU::halt(){
     // TODO: implement this
+#ifdef DEBUG_LOG
+    AddDebugLog("HALT");
+#endif
 }
 
 // DAA
@@ -126,6 +129,9 @@ void CPU::daa(){
     setFlag( FlagBitmaskPV, has_parity(regs.A) );
     // TODO: tech.manual says "See instruction" for H flag, but it doesn't say anything else?!
     // Parity: if number of 1s id odd p=0, if number is even p=1
+#ifdef DEBUG_LOG
+    AddDebugLog("DAA");
+#endif
 }
 
 // CPL
@@ -137,6 +143,9 @@ void CPU::cpl(){
     regs.A = ~regs.A;
     setFlag(FlagBitmaskHalfCarry,true);
     setFlag(FlagBitmaskN,true);
+#ifdef DEBUG_LOG
+    AddDebugLog("CPL");
+#endif
 }
 
 // NEG : A = 0-A
@@ -152,6 +161,9 @@ void CPU::neg()
     setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     regs.A = result;
+#ifdef DEBUG_LOG
+    AddDebugLog("NEG");
+#endif
 }
 
 // SCF - Set carry flag
@@ -163,6 +175,9 @@ void CPU::scf()
     setFlag(FlagBitmaskC,true);
     setFlag(FlagBitmaskHalfCarry,0);
     setFlag(FlagBitmaskN,0);
+#ifdef DEBUG_LOG
+    AddDebugLog("SCF");
+#endif
 }
 
 // CCF - invert carry flag
@@ -174,4 +189,7 @@ void CPU::ccf()
     setFlag(FlagBitmaskHalfCarry, regs.F & FlagBitmaskC);
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskC,!(regs.F & FlagBitmaskC));
+#ifdef DEBUG_LOG
+    AddDebugLog("CCF");
+#endif
 }

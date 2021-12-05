@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
-
+#include <format>
 
 
 #pragma once
@@ -44,6 +44,12 @@ enum RegisterCode : uint8_t {
     A
 };
 
+struct DebugLogEntry {
+    uint16_t PC = 0;
+    uint8_t opcodes[4] = {0,0,0,0};
+    std::string text;
+};
+
 
 /// Interrupt mode - see Z80 technical reference manual p.153
 enum class InterruptMode {
@@ -69,6 +75,8 @@ class CPU {
     std::vector<std::function<void()>> bit_instructions;
     std::vector<std::function<void()>> ix_instructions;
     std::vector<std::function<void()>> iy_instructions;
+
+    std::list<DebugLogEntry> debug_log_entries;
 
     HostMemory mem;
 
@@ -140,7 +148,12 @@ class CPU {
 
     InterruptMode interrupt_mode = InterruptMode::IM_0;
 
-    uint8_t currentOpcode;
+    /// The address of the opcode currently being decoded.
+    /// Contrary to the program counter (PC) which increases throughout decoding of a multi-byte instruction,
+    /// this address stays the same until a new CPU step is executed.
+    uint16_t current_pc;
+    /// The first opcode of the instruction currently being executed
+    uint8_t current_opcode;
     /// Current number of cycles spent by the currently executing opcode. Each instruction adds cycles to this variable during execution,
     /// and the step method waits this number of cycles after a step, and resets it to 0 afterwards.
     uint16_t currentCycles;
@@ -294,7 +307,7 @@ class CPU {
     void set_interrupt_mode( InterruptMode mode ) {
         interrupt_mode = mode;
 #ifdef DEBUG_LOG
-        std::cout << "IM " << (int)mode << std::endl;
+        AddDebugLog(std::format("IM {:#06x}",static_cast<int>(mode)));
 #endif
     }
 
@@ -329,6 +342,10 @@ class CPU {
 
     uint8_t input_from_port(uint8_t port);
     void output_to_port(uint8_t port, uint8_t value);
+
+    void AddCurrentCycles(uint8_t cycles);
+
+    void AddDebugLog(const std::string &text);
 
 
 public:
@@ -395,7 +412,7 @@ public:
     void INC_SP();
     void INC_pHL();
     void DEC_pHL();
-    void ld_ptr_hl_n();
+    void LD_pHL_n();
     void scf();
     void jr_c();
     void add_hl_sp();
@@ -419,11 +436,11 @@ public:
     void ld_iyl_n(uint8_t value);
     void LD_pIXn_n();
     void LD_pIXn_r(uint8_t &reg);
-    void LD_r_r(uint8_t &dstReg, uint8_t value);
+    void LD_r(uint8_t &dstReg, uint8_t value);
     void ld_r_r();
     void LD_r_pIXn(uint8_t &dst_reg);
     void LD_r_pIYn(uint8_t &dst_reg);
-    void ld_rr_rr(uint16_t &dstReg, uint16_t &value);
+    void LD_rr(uint16_t &dstReg, uint16_t &value);
     void LD_pnn_rr(uint16_t location, uint16_t value);
 
 
@@ -564,5 +581,5 @@ public:
 
     void reset();
 
-    void add_cycles(uint8_t cycles);
+    void LD_r_n();
 };
