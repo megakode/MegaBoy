@@ -82,6 +82,12 @@ void CPU::LD_pnn_A()
 #endif
 }
 
+// LD (**),BC
+// LD (**),DE
+// LD (**),HL
+// LD (**),SP
+// LD (**),IX
+// LD (**),IY
 // cycles: 20
 // flags: -
 void CPU::LD_pnn_rr(uint16_t location, uint16_t value)
@@ -91,6 +97,14 @@ void CPU::LD_pnn_rr(uint16_t location, uint16_t value)
 }
 
 // LD rr,(nn)
+//
+// LD BC,(**)
+// LD DE,(**)
+// LD HL,(**)
+// LD SP,(**)
+// LD IX,(**)
+// LD IY,(**)
+//
 // cycles: 20
 // flags: -
 void CPU::LD_rr_pnn(uint16_t& regPair, uint16_t addr )
@@ -140,7 +154,7 @@ void CPU::LD_pHL_n()
 // LD IX,nn
 // opcode: 0xdd 0x21
 // cycles: 14
-void CPU::ld_ix_nn()
+void CPU::LD_IX_nn()
 {
     specialRegs.IX = fetch16BitValue();
 
@@ -165,7 +179,7 @@ void CPU::ld_iy_nn()
 // opcode: 0xdd 0x2a
 // cycles: 20
 // flags: -
-void CPU::ld_ix_ptr_nn()
+void CPU::LD_IX_pnn()
 {
     uint16_t addr = fetch16BitValue();
     specialRegs.IXH = mem[addr+1];
@@ -324,7 +338,7 @@ void CPU::ld_a_ptr_nn()
 
 // LD IXH,n
 // cycles: 8
-void CPU::ld_ixh_n( uint8_t value )
+void CPU::LD_IXH_n(uint8_t value )
 {
     specialRegs.IXH = value;
 
@@ -335,7 +349,7 @@ void CPU::ld_ixh_n( uint8_t value )
 
 // LD IXL,n
 // cycles: 8
-void CPU::ld_ixl_n( uint8_t value )
+void CPU::LD_IXL_n(uint8_t value )
 {
     specialRegs.IXL = value;
 

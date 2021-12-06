@@ -351,8 +351,8 @@ class CPU {
 public:
 
     // generic instructions
-    void inc_r( uint8_t &reg );
-    void dec_r( uint8_t &reg );
+    void INC_r(uint8_t &reg );
+    void DEC_r(uint8_t &reg );
 
     // instructions
     void NOP(); // 0x00
@@ -426,12 +426,12 @@ public:
     void LD_rr_pnn(uint16_t &regPair, uint16_t addr);
     void LD_A_R();
     void LD_A_I();
-    void ld_ix_nn();
+    void LD_IX_nn();
     void ld_iy_nn();
-    void ld_ix_ptr_nn();
+    void LD_IX_pnn();
     void ld_iy_ptr_nn();
-    void ld_ixh_n(uint8_t value);
-    void ld_ixl_n(uint8_t value);
+    void LD_IXH_n(uint8_t value);
+    void LD_IXL_n(uint8_t value);
     void ld_iyh_n(uint8_t value);
     void ld_iyl_n(uint8_t value);
     void LD_pIXn_n();

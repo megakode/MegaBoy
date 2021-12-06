@@ -100,13 +100,13 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
 }
 
 
-void CPU::inc_r(uint8_t &reg)
+void CPU::INC_r(uint8_t &reg)
 {
     reg++;
     set_INC_operation_flags(reg);
 }
 
-void CPU::dec_r(uint8_t &reg)
+void CPU::DEC_r(uint8_t &reg)
 {
     reg--;
     set_DEC_operation_flags(reg);
@@ -481,13 +481,13 @@ void CPU::DEC_SP()
 // flags: -
 void CPU::INC_A()
 {
-    inc_r(regs.A);
+    INC_r(regs.A);
 }
 
 // opcode: 0x3d
 void CPU::DEC_A()
 {
-    dec_r(regs.A);
+    DEC_r(regs.A);
 }
 
 
@@ -503,14 +503,14 @@ void CPU::DEC_HL(){
 // opcode: 0x2c
 // cycles: 4
 void CPU::INC_L(){
-    inc_r(regs.L);
+    INC_r(regs.L);
 }
 
 // DEC L
 // opcode: 0x2d
 // cycles: 4
 void CPU::DEC_L(){
-    dec_r(regs.L);
+    DEC_r(regs.L);
 }
 
 
@@ -565,14 +565,14 @@ void CPU::inc_bc(){
 // cycles: 4
 // flags: S Z HC PV N
 void CPU::inc_b(){
-    inc_r(regs.B);
+    INC_r(regs.B);
 }
 
 // dec b
 // opcode: 0x05
 // cycles: 4
 void CPU::dec_b(){
-    dec_r(regs.B);
+    DEC_r(regs.B);
 }
 
 
@@ -587,14 +587,14 @@ void CPU::dec_bc(){
 // opcode: 0x0c
 // cycles: 4
 void CPU::inc_c(){
-    inc_r(regs.C);
+    INC_r(regs.C);
 }
 
 // DEC C
 // opcode: 0x0d
 // cycles: 4
 void CPU::dec_c(){
-    dec_r(regs.C);
+    DEC_r(regs.C);
 }
 
 // inc de
@@ -609,13 +609,13 @@ void CPU::inc_de(){
 // inc d
 // opcode: 0x14
 void CPU::inc_d(){
-    inc_r(regs.D);
+    INC_r(regs.D);
 }
 
 // dec d
 // opcode: 0x15
 void CPU::dec_d(){
-    dec_r(regs.D);
+    DEC_r(regs.D);
 }
 
 // INC HL
@@ -630,13 +630,13 @@ void CPU::inc_hl(){
 // INC H
 // opcodE: 0x24
 void  CPU::inc_h(){
-    inc_r(regs.H);
+    INC_r(regs.H);
 }
 
 // DEC H
 // opcode: 0x25
 void  CPU::dec_h(){
-    dec_r(regs.H);
+    DEC_r(regs.H);
 }
 
 // DEC DE
@@ -650,12 +650,12 @@ void CPU::DEC_DE(){
 // opcode: 0x1c
 // cycles 4
 void CPU::INC_E(){
-    inc_r(regs.E);
+    INC_r(regs.E);
 }
 
 // DEC E
 // opcode: 0x1d
 // cycles: 4
 void CPU::DEC_E(){
-    dec_r(regs.E);
+    DEC_r(regs.E);
 }

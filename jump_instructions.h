@@ -42,7 +42,7 @@ void CPU::djnz_n(){
     }
 
     #ifdef DEBUG_LOG
-    AddDebugLog(std::format("DJNZ {}", jumpOffset));
+    AddDebugLog(std::format("DJNZ {:+#04d}", jumpOffset));
     #endif
 }
 
@@ -56,7 +56,7 @@ void CPU::jr_nc()
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR NC,{}",offset));
+    AddDebugLog(std::format("JR NC,{:+#04d}",offset));
 #endif
 }
 
@@ -71,7 +71,7 @@ void CPU::jr_c()
         specialRegs.PC += offset;
     }
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR C,{}",offset));
+    AddDebugLog(std::format("JR C,{:+#04d}",offset));
 #endif
 }
 
@@ -87,7 +87,7 @@ void CPU::jr_z(){
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR Z,{}",offset));
+    AddDebugLog(std::format("JR Z,{:+#04d}",offset));
 #endif
 }
 
@@ -101,7 +101,7 @@ void CPU::jr_nz(){
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR NZ,{}",offset));
+    AddDebugLog(std::format("JR NZ,{:+#04d}",offset));
 #endif
 }
 
@@ -110,9 +110,13 @@ void CPU::jr_nz(){
 /// opcode: 0x18
 /// cycles: 12
 void CPU::jr_n(){
-    int8_t jumpOffset =  static_cast<int8_t>(fetch8BitValue());
+    int8_t offset =  static_cast<int8_t>(fetch8BitValue());
     specialRegs.PC -= 2; // start calculation from beginning of this instruction
-    specialRegs.PC += jumpOffset;
+    specialRegs.PC += offset;
+
+#ifdef DEBUG_LOG
+    AddDebugLog(std::format("JR {:+#04d}",offset));
+#endif
 }
 
 // JP nn - Jump absolute
@@ -123,7 +127,7 @@ void CPU::jp_nn()
     specialRegs.PC = fetch16BitValue();
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JP {}",specialRegs.PC));
+    AddDebugLog(std::format("JP  {:#06x}",specialRegs.PC));
 #endif
 }
 
@@ -134,6 +138,9 @@ void CPU::jp_nn()
 void CPU::jp_IX()
 {
     specialRegs.PC = specialRegs.IX;
+#ifdef DEBUG_LOG
+    AddDebugLog("JP IX");
+#endif
 }
 
 // JP IY
@@ -143,6 +150,9 @@ void CPU::jp_IX()
 void CPU::jp_IY()
 {
     specialRegs.PC = specialRegs.IY;
+#ifdef DEBUG_LOG
+    AddDebugLog("JP IY");
+#endif
 }
 
 // JP HL
@@ -151,6 +161,9 @@ void CPU::jp_IY()
 // flags: -
 void CPU::jp_ptr_hl(){
     specialRegs.PC = regs.HL;
+#ifdef DEBUG_LOG
+    AddDebugLog("JP HL");
+#endif
 }
 
 // CALL cc,nn
@@ -162,11 +175,16 @@ void CPU::call_cc_nn()
     uint8_t conditionCode = (current_opcode & 0b00111000) >> 3;
     uint16_t location = fetch16BitValue();
 
+
     if(is_condition_true(conditionCode)){
         mem[--specialRegs.SP] = specialRegs.PC >> 8; // (SP-1) = PC_h
         mem[--specialRegs.SP] = static_cast<uint8_t >(specialRegs.PC);      // (SP-2) = PC_h
         specialRegs.PC = location;
     }
+#ifdef DEBUG_LOG
+    std::string conditionName = name_from_condition(conditionCode);
+    AddDebugLog(std::format("CALL {},{:#06x}",conditionName,specialRegs.PC));
+#endif
 }
 
 // CALL
@@ -179,7 +197,7 @@ void CPU::call(){
     specialRegs.PC = location;
 
 #ifdef DEBUG_LOG
-    std::cout << "CALL " << location << std::endl;
+    AddDebugLog(std::format("CALL {:#06x}",location));
 #endif
 }
 
@@ -194,7 +212,7 @@ void CPU::ret()
     uint8_t hibyte = mem[specialRegs.SP++];
     specialRegs.PC = (hibyte<<8) + lobyte;
 #ifdef DEBUG_LOG
-    std::cout << "RET [PC=" << specialRegs.PC << "]" << std::endl;
+    AddDebugLog("RET");
 #endif
 }
 
@@ -206,7 +224,9 @@ void CPU::retn()
 {
     ret();
     IFF = IFF2;
-
+#ifdef DEBUG_LOG
+    AddDebugLog("RETN");
+#endif
 }
 
 // RETI
@@ -216,6 +236,9 @@ void CPU::retn()
 void CPU::reti()
 {
     ret();
+#ifdef DEBUG_LOG
+    AddDebugLog("RETI");
+#endif
 }
 
 
@@ -245,6 +268,11 @@ void CPU::ret_cc(){
         uint8_t hibyte = mem[specialRegs.SP++];
         specialRegs.PC = (hibyte<<8) + lobyte;
     }
+
+#ifdef DEBUG_LOG
+    std::string conditionName = name_from_condition(conditionCode);
+    AddDebugLog(std::format("RET {}",conditionName));
+#endif
 }
 
 
@@ -263,4 +291,8 @@ void CPU::rst()
     mem[--specialRegs.SP] = static_cast<uint8_t>(specialRegs.PC);
 
     specialRegs.PC = location[locationCode];
+
+#ifdef DEBUG_LOG
+    AddDebugLog(std::format("RST {:#04x}",location[locationCode]));
+#endif
 }
