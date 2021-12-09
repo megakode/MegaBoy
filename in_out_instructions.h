@@ -23,82 +23,6 @@ void CPU::in( uint8_t& dstReg , uint8_t portNumber, bool only_set_flags )
     setFlag(FlagBitmaskSign, value & 0x80);
 }
 
-
-void CPU::OUT_pC_A()
-{
-    out(regs.C, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),A");
-#endif
-}
-
-void CPU::OUT_pC_0() {
-    out(regs.C, 0);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),0");
-#endif
-}
-
-void CPU::OUT_pC_L() {
-    out(regs.C, regs.L);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),L");
-#endif
-}
-
-void CPU::OUT_pC_H() {
-    out(regs.C, regs.H);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),H");
-#endif
-}
-
-void CPU::OUT_pC_E() {
-    out(regs.C, regs.E);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),E");
-#endif
-}
-
-void CPU::OUT_pC_D() {
-    out(regs.C, regs.D);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),D");
-#endif
-}
-
-void CPU::OUT_pC_C() {
-    out(regs.C, regs.C);
-#ifdef DEBUG_LOG
-    AddDebugLog("OUT (C),C");
-#endif
-}
-
-
-// OUT (N),A
-// opcode: 0xD3
-// cycles: 11
-void CPU::out_n_a(){
-    uint8_t value = fetch8BitValue();
-    out(value,regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("OUT ({:#04x}),A",value));
-#endif
-}
-
-// IN A,(N)
-// opcode: 0xDB
-// flags: -
-// cycles: 11
-void CPU::in_a_n(){
-    uint8_t port = fetch8BitValue();
-    in(regs.A,port);
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("IN A,({:#04x})",port));
-#endif
-}
-
 // INI
 // opcode: 0xed 0xa2
 // cycles: 16
@@ -124,27 +48,12 @@ void CPU::ini( bool decrease , bool repeat )
     setFlag(FlagBitmaskN,true);
 };
 
-void CPU::inir()
-{
-    ini(false,true);
-#ifdef DEBUG_LOG
-    AddDebugLog("INIR");
-#endif
-}
 
 void CPU::ind()
 {
     ini(true,false);
 #ifdef DEBUG_LOG
     AddDebugLog("IND");
-#endif
-}
-
-void CPU::indr()
-{
-    ini(true,true);
-#ifdef DEBUG_LOG
-    AddDebugLog("INDR");
 #endif
 }
 
@@ -184,13 +93,5 @@ void CPU::outd()
     outi(true,false);
 #ifdef DEBUG_LOG
     AddDebugLog("OUTD");
-#endif
-}
-
-void CPU::otdr()
-{
-    outi(true,true);
-#ifdef DEBUG_LOG
-    AddDebugLog("OTDR");
 #endif
 }

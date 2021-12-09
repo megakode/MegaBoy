@@ -216,17 +216,6 @@ TEST_CASE("RegCodes")
     REQUIRE(cpu.reg_from_regcode(RegisterCode::HLPtr) == 0xaa);
 }
 
-TEST_CASE("BitInstructionsIX"){
-
-    CPU cpu;
-    cpu.regs.B = 0b00001111;
-    cpu.specialRegs.IX = 10;
-    cpu.mem[0] = 1;
-    cpu.do_bit_instruction( 0 , cpu.mem[0] , cpu.mem[0] );
-
-    REQUIRE(cpu.mem[0] == cpu.regs.A);
-}
-
 TEST_CASE("LoadBCNN")
 {
     CPU cpu;
@@ -266,7 +255,7 @@ TEST_CASE("IncB"){
 
     cpu.regs.F = 0;
     cpu.regs.B = 0;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE(cpu.regs.B == 1);
     REQUIRE((cpu.regs.F & FlagBitmaskSign) == 0);
     REQUIRE((cpu.regs.F & FlagBitmaskZero) == 0);
@@ -278,31 +267,31 @@ TEST_CASE("IncB"){
     // Test Sign flag
     cpu.regs.F = 0;
     cpu.regs.B = 0x80;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE(cpu.regs.F & FlagBitmaskSign);
 
     // Test Z flag
     cpu.regs.F = 0;
     cpu.regs.B = 0xff;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE(cpu.regs.F & FlagBitmaskZero);
 
     // Test HalfCarry
     cpu.regs.F = 0;
     cpu.regs.B = 0x0F;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE(cpu.regs.F & FlagBitmaskHalfCarry);
 
     // Test Parity flag
     cpu.regs.F = 0;
     cpu.regs.B = 0x7f;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE(cpu.regs.F & FlagBitmaskPV);
 
     // Test N flag
     cpu.regs.F = 0xff;
     cpu.regs.B = 0b011111111;
-    cpu.inc_b();
+    cpu.INC_B();
     REQUIRE((cpu.regs.F & FlagBitmaskN) == 0);
     
 }
@@ -312,7 +301,7 @@ TEST_CASE("DecB"){
 
     cpu.regs.F = 0;
     cpu.regs.B = 0x10;
-    cpu.dec_b();
+    cpu.DEC_B();
     REQUIRE(cpu.regs.B == 0x0f);
     REQUIRE((cpu.regs.F & FlagBitmaskSign) == 0);
     REQUIRE((cpu.regs.F & FlagBitmaskZero) == 0);

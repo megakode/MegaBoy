@@ -13,6 +13,13 @@ void CPU::NOP(){
 #endif
 };
 
+/// Strange 1 or 2 byte instruction, that is not used in any commercial game, so dont bother implementing it correctly.
+/// It is described with a flowchart here:
+/// https://gbdev.io/pandocs/Reducing_Power_Consumption.html
+void CPU::STOP()
+{
+    // Do nothing
+}
 
 void CPU::disable_interrupts()
 {
@@ -124,11 +131,8 @@ void CPU::daa(){
         }
     }
 
-    setFlag( FlagBitmaskSign, regs.A & 0b10000000 );
     setFlag( FlagBitmaskZero, regs.A == 0);
-    setFlag( FlagBitmaskPV, has_parity(regs.A) );
-    // TODO: tech.manual says "See instruction" for H flag, but it doesn't say anything else?!
-    // Parity: if number of 1s id odd p=0, if number is even p=1
+
 #ifdef DEBUG_LOG
     AddDebugLog("DAA");
 #endif
@@ -155,10 +159,8 @@ void CPU::cpl(){
 void CPU::NEG()
 {
     uint8_t result = 0-regs.A;
-    setFlag(FlagBitmaskPV,regs.A == 0x80);
     setFlag(FlagBitmaskC,regs.A != 0);
     setFlag(FlagBitmaskHalfCarry, (0xf0 & regs.A) < (result & 0xf0) );
-    setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     regs.A = result;
 #ifdef DEBUG_LOG

@@ -6,6 +6,10 @@ Work in progress, and will probably rewrite large chunks of it a couple of times
 
 First step: doing a fast and accurate Z80 CPU emulator.
 
+**TODO**
+ - Make flags portable by encapsulating all access to regs.F into getFlag instead, and do distinct flag bitmask logic in getFlag/setFlag depending on `is_gameboy_cpu`
+ - IRQ handling
+ - 
 **References:**
 
 Bare metal programming for rPi

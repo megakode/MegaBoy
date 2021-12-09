@@ -6,17 +6,6 @@
 
 #include <format>
 
-// cycles: 4 (8 when src or dst is an index register: ixl,ixh,iyl,iyh
-void CPU::LD_r(uint8_t& dstReg, uint8_t value )
-{
-    dstReg = value;
-}
-
-void CPU::LD_rr(uint16_t& dstReg, uint16_t& value )
-{
-    dstReg = value;
-}
-
 // LD (**),BC
 // LD (**),DE
 // LD (**),HL
@@ -31,36 +20,16 @@ void CPU::LD_pnn_rr(uint16_t location, uint16_t value)
     mem[location+1] = value >> 8;
 }
 
-// LD rr,(nn)
-//
-// LD BC,(**)
-// LD DE,(**)
-// LD HL,(**)
-// LD SP,(**)
-// LD IX,(**)
-// LD IY,(**)
-//
-// cycles: 20
-// flags: -
-void CPU::LD_rr_pnn(uint16_t& regPair, uint16_t addr )
-{
-    uint16_t value = mem[addr] + (mem[addr+1]<<8);
-    regPair = value;
-}
-
 // ***********************************************************************************
 // Load Instructions
 // ***********************************************************************************
 
-void CPU::LD_BC_pnn() { LD_rr_pnn(regs.BC, fetch16BitValue()); }
-void CPU::LD_SP_pnn() { LD_rr_pnn(specialRegs.SP, fetch16BitValue()); }
-void CPU::LD_DE_pnn() { LD_rr_pnn(regs.DE, fetch16BitValue()); }
+void CPU::LD_pnn_SP() {
+    LD_pnn_rr(fetch16BitValue(), regs.SP);
+}
 
-void CPU::LD_pnn_SP() { LD_pnn_rr(fetch16BitValue(), specialRegs.SP); }
-void CPU::LD_pnn_DE() { LD_pnn_rr(fetch16BitValue(), regs.DE); }
-void CPU::LD_pnn_BC() { LD_pnn_rr(fetch16BitValue(), regs.BC); }
 
-void CPU::ld_r_r()
+void CPU::LD_r_r()
 {
     uint8_t dstRegCode = (current_opcode >> 3) & 0b111;
     uint8_t srcRegCode = current_opcode & 0b111;
@@ -90,7 +59,7 @@ void CPU::LD_r_n()
 }
 
 void CPU::LD_R_A() {
-    specialRegs.R = regs.A;
+    regs.R = regs.A;
 }
 
 // LD HL,NN
@@ -111,9 +80,9 @@ void CPU::LD_HL_nn(){
 // flags: -
 void CPU::LD_SP_nn()
 {
-    specialRegs.SP = fetch16BitValue();
+    regs.SP = fetch16BitValue();
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD SP,{:#06x}",specialRegs.SP));
+    AddDebugLog(std::format("LD SP,{:#06x}",regs.SP));
 #endif
 }
 
@@ -129,31 +98,6 @@ void CPU::LD_pnn_A()
 #endif
 }
 
-// LD HL,(nn)
-// opcode: 0x2a
-// cycles: 16
-// flags: -
-void CPU::LD_HL_pnn()
-{
-    auto addr = fetch16BitValue();
-    LD_rr_pnn(regs.HL,addr);
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD HL,({:#06x})",addr));
-    #endif
-}
-
-// LD (NN),HL
-// opcode: 0x22
-// flags: -
-void CPU::LD_pnn_HL(){
-    auto addr = fetch16BitValue();
-    LD_pnn_rr(addr,regs.HL);
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD ({:#06x}),HL",addr));
-    #endif
-}
 
 // LD (HL),N
 // opcode: 0x36
@@ -167,66 +111,13 @@ void CPU::LD_pHL_n()
     #endif
 }
 
-// LD IX,nn
-// opcode: 0xdd 0x21
-// cycles: 14
-void CPU::LD_IX_nn()
-{
-    specialRegs.IX = fetch16BitValue();
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IX,{:#06x}", specialRegs.IX));
-    #endif
-}
-
-// LD IX,nn
-// opcode: 0xfd 0x21
-// cycles: 14
-void CPU::ld_iy_nn()
-{
-    specialRegs.IY = fetch16BitValue();
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IY,{:#06x}", specialRegs.IY));
-    #endif
-}
-
-// LD IX,(nn)
-// opcode: 0xdd 0x2a
-// cycles: 20
-// flags: -
-void CPU::LD_IX_pnn()
-{
-    uint16_t addr = fetch16BitValue();
-    LD_rr_pnn(specialRegs.IX,addr);
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IX,({:#06x})", addr));
-    #endif
-}
-
-// LD IY,(nn)
-// opcode: 0xfd 0x2a
-// cycles: 20
-// flags: -
-void CPU::ld_iy_ptr_nn()
-{
-    uint16_t addr = fetch16BitValue();
-    specialRegs.IYH = mem[addr+1];
-    specialRegs.IYL = mem[addr];
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IY,({:#06x})", addr));
-    #endif
-}
-
 // LD SP,HL
 // opcode: 0xf9
 // flags: -
 // cycles: 6
 void CPU::ld_sp_hl()
 {
-    specialRegs.SP = regs.HL;
+    regs.SP = regs.HL;
     #ifdef DEBUG_LOG
     AddDebugLog("LD SP,HL");
     #endif
@@ -235,7 +126,8 @@ void CPU::ld_sp_hl()
 // ld bc,nn
 // opcode: 01 n  n
 // cycles: 10
-void CPU::LD_BC_nn(){
+void CPU::LD_BC_nn()
+{
     regs.C = fetch8BitValue();
     regs.B = fetch8BitValue();
 
@@ -247,7 +139,8 @@ void CPU::LD_BC_nn(){
 // ld (bc),a
 // Opcode: 02
 // Cycles: 7
-void CPU::LD_pBC_A(){
+void CPU::LD_pBC_A()
+{
     mem[regs.BC] = regs.A;
 
     #ifdef DEBUG_LOG
@@ -259,7 +152,8 @@ void CPU::LD_pBC_A(){
 // opcode: 0x0A
 // cycles: 7
 // flags: -
-void CPU::LD_A_pBC(){
+void CPU::LD_A_pBC()
+{
     regs.A = mem[regs.BC];
 
     #ifdef DEBUG_LOG
@@ -270,9 +164,9 @@ void CPU::LD_A_pBC(){
 // ld de,nn
 // opcode: 11 n  n
 // cycles: 10
-void CPU::load_de_nn(){
-    regs.E = fetch8BitValue();
-    regs.D = fetch8BitValue();
+void CPU::LD_DE_nn()
+{
+    regs.DE = fetch16BitValue();
 
     #ifdef DEBUG_LOG
     AddDebugLog(std::format("LD DE,{:#06x}", regs.DE));
@@ -282,7 +176,8 @@ void CPU::load_de_nn(){
 // load (de),a
 // opcode: 0x12
 // cycles: 7
-void CPU::load_ptr_de_a(){
+void CPU::LD_pDE_A()
+{
     mem[regs.DE] = regs.A;
 
     #ifdef DEBUG_LOG
@@ -290,30 +185,12 @@ void CPU::load_ptr_de_a(){
     #endif
 }
 
-// LD a,i - load the interrupt vector register I into A
-// opcode: 0xed 0x57
-// cycles: 9
-void CPU::LD_A_I()
-{
-    regs.A = specialRegs.I;
-    regs.F &= 0b00000001;
-    // Bits affected:
-    setFlag(FlagBitmaskSign,specialRegs.I & 0x80);
-    setFlag(FlagBitmaskZero, specialRegs.I == 0);
-    setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskPV,IFF2); // P/V: contents of IFF2
-    setFlag(FlagBitmaskN,0);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,I");
-#endif
-}
-
 // LD A,(DE)
 // opcode: 0x1a
 // cycles: 7
 // flags: -
-void CPU::LD_A_pDE(){
+void CPU::LD_A_pDE()
+{
     regs.A = mem[regs.DE];
 
 #ifdef DEBUG_LOG
@@ -321,165 +198,95 @@ void CPU::LD_A_pDE(){
 #endif
 }
 
-// Load A,R - Loads memory refresh register R into A
-// opcode: 0xed 0x5f
-// cycles: 9
-void CPU::LD_A_R()
+/// LDI  (HL),A
+/// opcode: 22
+/// cycles: 8
+void CPU::LDI_pHL_A()
 {
-    regs.A = specialRegs.R;
-    setFlag(FlagBitmaskSign, specialRegs.R & 0x80);
-    setFlag(FlagBitmaskZero, specialRegs.R == 0);
-    setFlag(FlagBitmaskHalfCarry, 0);
-    setFlag(FlagBitmaskPV, IFF2); // "If an interrupt occurs during execution of this instruction, the Parity flag will contain a 0" (p.51 Z80 tech ref)
-    setFlag(FlagBitmaskN,0);
-
-    #ifdef DEBUG_LOG
-    AddDebugLog("A,R");
-    #endif
+    mem[regs.HL++] = regs.A;
 }
 
-// LD A,(NN)
-// opcode: 0x3a
-void CPU::ld_a_ptr_nn()
+/// LDI  A,(HL)
+/// opcode: 2a
+/// cycles: 8
+void CPU::LDI_A_pHL()
 {
-    uint16_t addr = fetch16BitValue();
+    regs.A = mem[regs.HL++];
+}
+
+/// LDD (HL),A
+/// opcode: 0x32
+/// cycles: 8
+void CPU::LDD_pHL_A()
+{
+    mem[regs.HL--] = regs.A;
+}
+
+/// LDD  A,(HL)
+/// opcode: 0x3a
+/// cycles: 8
+void CPU::LDD_A_pHL()
+{
+    regs.A = mem[regs.HL--];
+}
+
+/// LD (0xff00 + n),A
+/// opcode: e0 nn
+/// cycles: 8
+/// flags: -
+void CPU::LD_ff00n_A()
+{
+    uint8_t lowbyte = fetch8BitValue();
+    uint16_t addr = 0xff00 + lowbyte;
+    mem[addr] = regs.A;
+}
+
+/// LD (FF00+C),A
+/// opcode: 0xe2
+void CPU::LD_ff00C_A()
+{
+    uint16_t addr = 0xff00 + regs.C;
+    mem[addr] = regs.A;
+}
+
+/// LD A,(0xff00 + n)
+/// opcode: f0 nn
+/// cycles: 8
+/// flags: -
+void CPU::LD_A_ff00n()
+{
+    uint8_t lowbyte = fetch8BitValue();
+    uint16_t addr = 0xff00 + lowbyte;
     regs.A = mem[addr];
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD A,({:#06x})",addr));
-    #endif
 }
 
-
-// LD IXH,n
-// cycles: 8
-void CPU::LD_IXH_n(uint8_t value )
+/// LD A,(FF00+C)
+/// opcode: 0xe2
+void CPU::LD_A_ff00C()
 {
-    specialRegs.IXH = value;
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IXH,{:#04x}",value));
-    #endif
+    uint16_t addr = 0xff00 + regs.C;
+    regs.A = mem[addr];
 }
 
-// LD IXL,n
-// cycles: 8
-void CPU::LD_IXL_n(uint8_t value )
+
+/// LD HL,SP+dd
+/// HL = SP +/- dd ; dd is 8-bit signed number
+/// cycles: 12
+void CPU::LD_HL_SPs8()
 {
-    specialRegs.IXL = value;
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IXL,{:#04x}",value));
-    #endif
+    auto value = static_cast<int8_t>(fetch8BitValue());
+    regs.HL = regs.SP + value;
 }
 
-// LD IYH,n
-// cycles: 8
-void CPU::ld_iyh_n( uint8_t value )
+/// LD A,(nn)
+/// opcode: 0xfa
+/// cycles: 16
+void CPU::LD_A_pnn()
 {
-    specialRegs.IYH = value;
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IYH({:#04x}",value));
-    #endif
+    regs.A = mem[fetch16BitValue()];
 }
 
-// LD IYL,n
-// cycles: 8
-void CPU::ld_iyl_n( uint8_t value )
-{
-    specialRegs.IYL = value;
 
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD IYL,{:#04x}",value));
-    #endif
-}
-
-// LD (IX+d),n
-// cycles: 19
-// flags: -
-void CPU::LD_pIXn_n()
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto value = fetch8BitValue();
-    mem[specialRegs.IX + offset] = value;
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD (IX+{}),{:#04x}",offset,value));
-    #endif
-}
-
-// LD (IY+d),n
-// cycles: 19
-// flags: -
-void CPU::LD_pIYn_n()
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto value =  fetch8BitValue();
-    mem[specialRegs.IY + offset] = value;
-
-    #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD (IY+{}),{:#04x}",offset,value));
-    #endif
-}
-
-// LD (IX+d),n
-// cycles: 19
-// flags: -
-void CPU::LD_pIXn_r(uint8_t& reg )
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto regName = reg_name_from_regcode(reg);
-
-    mem[specialRegs.IX+offset] = reg;
-
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD (IX+{}),{1}",offset,regName));
-#endif
-}
-
-// LD (IY+d),n
-// cycles: 19
-// flags: -
-void CPU::LD_pIYn_r( uint8_t& reg)
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto regName = reg_name_from_regcode(reg);
-
-    mem[specialRegs.IY+offset] = reg;
-
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD (IY+{0}),{1}",offset,regName));
-#endif
-}
-
-// LD r,(ix+n)
-// cycles: 19
-void CPU::LD_r_pIXn(uint8_t& reg )
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto regName = reg_name_from_regcode(reg);
-
-    reg = mem[specialRegs.IX+offset];
-
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD {1},(IX+{0})",offset,regName));
-#endif
-}
-
-// LD r,(iy+n)
-// cycles: 19
-void CPU::LD_r_pIYn( uint8_t& reg )
-{
-    auto offset = static_cast<int8_t>(fetch8BitValue());
-    auto regName = reg_name_from_regcode(reg);
-
-    reg = mem[specialRegs.IY+offset];
-
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD {1},(IY+{0})",offset,regName));
-#endif
-}
 
 // ********************************************************************************
 // PUSH / POP
@@ -489,8 +296,8 @@ void CPU::LD_r_pIYn( uint8_t& reg )
 /// \param regPair The 16 bit register pair to pop the stack value into
 void CPU::pop16( uint16_t& regPair )
 {
-    uint8_t lobyte = mem[specialRegs.SP++];
-    uint8_t hibyte = mem[specialRegs.SP++];
+    uint8_t lobyte = mem[regs.SP++];
+    uint8_t hibyte = mem[regs.SP++];
     regPair = (hibyte << 8) + lobyte;
 }
 
@@ -527,57 +334,42 @@ void CPU::pop_qq()
     }
 };
 
-
-// cyckes; 11
+/// PUSH BC
+/// cycles: 11
 void CPU::push_bc(){
-    mem[--specialRegs.SP] = regs.B;
-    mem[--specialRegs.SP] = regs.C;
+    mem[--regs.SP] = regs.B;
+    mem[--regs.SP] = regs.C;
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH BC");
 #endif
 }
 
-// cyckes; 11
+/// PUSH DE
+/// cycles: 11
 void CPU::push_de(){
-    mem[--specialRegs.SP] = regs.D;
-    mem[--specialRegs.SP] = regs.E;
+    mem[--regs.SP] = regs.D;
+    mem[--regs.SP] = regs.E;
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH DE");
 #endif
 }
 
-// cyckes; 11
+/// PUSH HL
+/// cycles: 11
 void CPU::push_hl(){
-    mem[--specialRegs.SP] = regs.H;
-    mem[--specialRegs.SP] = regs.L;
+    mem[--regs.SP] = regs.H;
+    mem[--regs.SP] = regs.L;
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH HL");
 #endif
 }
 
-// cyckes; 11
+/// PUSH AF
+/// cycles: 11
 void CPU::push_af(){
-    mem[--specialRegs.SP] = regs.A;
-    mem[--specialRegs.SP] = regs.F;
+    mem[--regs.SP] = regs.A;
+    mem[--regs.SP] = regs.F;
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH AF");
-#endif
-}
-
-// cycles 15
-void CPU::push_ix(){
-    mem[--specialRegs.SP] = specialRegs.IXH;
-    mem[--specialRegs.SP] = specialRegs.IXL;
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH IX");
-#endif
-}
-
-// cycles 15
-void CPU::push_iy(){
-    mem[--specialRegs.SP] = specialRegs.IYH;
-    mem[--specialRegs.SP] = specialRegs.IYL;
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH IY");
 #endif
 }

@@ -17,24 +17,6 @@ void CPU::add( uint8_t srcValue, bool carry ){
     setFlag(FlagBitmaskZero, (result&0xff) == 0);
     setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
     setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskSign, result & 0x80);
-
-    // TODO: test this!
-    // if like signs in numbers being added, and result sign is different, set overflow:
-    /*
-           ADDITION SIGN BITS
-    num1sign num2sign ADDsign
-   ---------------------------
-        0       0       0
- *OVER* 0       0       1 (adding two positives should be positive)
-        0       1       0
-        0       1       1
-        1       0       0
-        1       0       1
- *OVER* 1       1       0 (adding two negatives should be negative)
-        1       1       1
-        */
-    setFlag(FlagBitmaskPV, !((regs.A ^ srcValue) & 0x80) && ((result ^ regs.A) & 0x80) );
 
     regs.A = static_cast<uint8_t>(result);
 }
@@ -51,8 +33,6 @@ void CPU::add16( uint16_t& regPair, uint16_t value_to_add , bool carry )
     setFlag(FlagBitmaskZero, (result&0xffff) == 0);
     setFlag(FlagBitmaskHalfCarry, (regPair & 0x0fffu) > (result & 0x0fffu));
     setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskSign, result & 0x8000);
-    setFlag(FlagBitmaskPV, !((regPair ^ value_to_add) & 0x8000) && ((result ^ regPair) & 0x8000) );
 
     regPair = result;
 }
@@ -73,26 +53,6 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
     setFlag(FlagBitmaskHalfCarry, (0x00f0 & regs.A) < (result & 0x00f0) );
-    setFlag(FlagBitmaskSign, result & 0x80 );
-    /*
-
-     http://teaching.idallen.com/dat2343/11w/notes/040_overflow.txt
-
-         SUBTRACTION SIGN BITS
-       num1sign num2sign SUBsign
-      ---------------------------
-           0       0       0
-           0       0       1
-           0       1       0
-    *OVER* 0       1       1 (subtract negative is same as adding a positive)
-    *OVER* 1       0       0 (subtract positive is same as adding a negative)
-           1       0       1
-           1       1       0
-           1       1       1
-     */
-    bool isOperandsSignBitDifferent = (regs.A ^ srcValue) & 0x80;
-    bool didChangeSignInResult = (regs.A ^ result) & 0x80;
-    setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
 
     if(!onlySetFlagsForComparison){
         regs.A = static_cast<uint8_t>(result);
@@ -113,96 +73,10 @@ void CPU::DEC_r(uint8_t &reg)
 }
 
 
-// INC IX
-// cycles: 10
-void CPU::INC_IX()
-{
-    specialRegs.IX++;
-}
-
-// DEC IX
-// opcode: 0xdd 0x2b
-// cycles: 10
-void CPU::DEC_IX()
-{
-    specialRegs.IX--;
-}
-
-// INC IY
-// cycles: 10
-void CPU::INC_IY()
-{
-    specialRegs.IY++;
-}
-
-// DEC IY
-// opcode: 0xfd 0x2b
-// cycles: 10
-void CPU::DEC_IY()
-{
-    specialRegs.IY--;
-}
-
-// INC (ix+n)
-// cycles: 23
-void CPU::INC_pIXn()
-{
-    uint8_t& location = fetch_pIXn();
-    location++;
-    set_INC_operation_flags(location);
-
-#ifdef DEBUG_LOG
-    std::cout << "INC (IX+n) [IX+n=" << location << "]" << std::endl;
-#endif
-}
-
-// DEC (ix+n)
-// cycles: 23
-void CPU::DEC_pIXn()
-{
-    uint8_t& location = fetch_pIXn();
-    location--;
-    set_DEC_operation_flags(location);
-
-#ifdef DEBUG_LOG
-    std::cout << "DEC (IX+n) [IX+n=" << location << "]" << std::endl;
-#endif
-}
-
-// INC (iy+n)
-// cycles: 23
-void CPU::INC_pIYn()
-{
-    uint8_t& location = fetch_pIYn();
-    location++;
-    set_INC_operation_flags(location);
-
-#ifdef DEBUG_LOG
-    std::cout << "INC (IY+n) [IY+n=" << location << "]" << std::endl;
-#endif
-}
-
-// DEC (iy+n)
-// cycles: 23
-void CPU::DEC_pIYn()
-{
-    uint8_t& location = fetch_pIYn();
-    location--;
-    set_DEC_operation_flags(location);
-
-#ifdef DEBUG_LOG
-    std::cout << "DEC (IY+n) [IY+n=" << location << "]" << std::endl;
-#endif
-}
 
 // *********************************************************************************
 // Compare
 // *********************************************************************************
-
-void CPU::cp_a_with_value( uint8_t value )
-{
-    sub(value,false, true);
-}
 
 void CPU::cp_r()
 {
@@ -234,16 +108,6 @@ void CPU::cp_n()
 // *********************************************************************************
 // ADD
 // *********************************************************************************
-
-
-void CPU::adc_hl_nn(uint16_t value)
-{
-    add16(regs.HL,value,true);
-
-#ifdef DEBUG_LOG
-    AddDebugLog(std::format("ADD HL, {:#06x}", value));
-#endif
-}
 
 // add hl,hl
 // opcode: 0x29
@@ -277,7 +141,7 @@ void CPU::ADD_HL_DE() {
 // flags: C N H
 void CPU::add_hl_sp()
 {
-    add16(regs.HL,specialRegs.SP);
+    add16(regs.HL,regs.SP);
 }
 
 
@@ -316,12 +180,6 @@ void CPU::adc_a_n(){
 // SUB
 // *********************************************************************************
 
-// SBC HL,nn
-// opcode: 0xed 01ss0010
-void CPU::sbc_hl_nn( uint16_t value ){
-    sub16(regs.HL,value,true);
-}
-
 void CPU::sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry )
 {
     uint32_t result = (0xffff0000 | regs.HL) - value_to_sub;
@@ -332,11 +190,6 @@ void CPU::sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry )
     setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xffff0000) < 0xffff0000) );
     setFlag(FlagBitmaskHalfCarry, (0xfffff000 & regs.HL) < (result & 0xfffff000) );
-    setFlag(FlagBitmaskSign, result & 0x8000 );
-
-    bool isOperandsSignBitDifferent = (regs.HL ^ value_to_sub) & 0x80;
-    bool didChangeSignInResult = (regs.HL ^ result) & 0x80;
-    setFlag( FlagBitmaskPV, isOperandsSignBitDifferent && didChangeSignInResult );
 
     regs.HL = result;
 }
@@ -442,10 +295,8 @@ void CPU::xor_a_with_value( uint8_t value )
 {
     regs.A ^= value;
 
-    setFlag(FlagBitmaskSign, regs.A & 0x80);
     setFlag(FlagBitmaskZero, regs.A == 0);
     setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskPV, has_parity(regs.A));
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskC,0);
 }
@@ -484,10 +335,8 @@ void CPU::or_a_with_value(uint8_t value)
 {
     regs.A |= value;
 
-    setFlag(FlagBitmaskSign, regs.A & 0x80);
     setFlag(FlagBitmaskZero, regs.A == 0);
     setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskPV, has_parity(regs.A));
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskC,0);
 }
@@ -502,7 +351,7 @@ void CPU::or_a_with_value(uint8_t value)
 // opcode: 0x3b
 void CPU::DEC_SP()
 {
-    specialRegs.SP--;
+    regs.SP--;
 }
 
 // opcode: 0x3c
@@ -547,7 +396,7 @@ void CPU::DEC_L(){
 // flags: -
 void CPU::INC_SP()
 {
-    specialRegs.SP++;
+    regs.SP++;
 
 }
 
@@ -557,10 +406,8 @@ void CPU::INC_SP()
 void CPU::INC_pHL()
 {
     uint8_t result = mem[regs.HL]++;
-    setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00010000 );
-    setFlag(FlagBitmaskPV, result ==  0x80);
     setFlag(FlagBitmaskN,0);
 }
 
@@ -569,10 +416,8 @@ void CPU::INC_pHL()
 void CPU::DEC_pHL()
 {
     uint8_t result = mem[regs.HL]--;
-    setFlag(FlagBitmaskSign, result & 0x80);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00001111 );
-    setFlag(FlagBitmaskPV, result ==  0x7f);
     setFlag(FlagBitmaskN,1);
 }
 
@@ -591,7 +436,7 @@ void CPU::inc_bc(){
 // opcode: 04
 // cycles: 4
 // flags: S Z HC PV N
-void CPU::inc_b(){
+void CPU::INC_B(){
     INC_r(regs.B);
 #ifdef DEBUG_LOG
     AddDebugLog("INC B");
@@ -601,7 +446,7 @@ void CPU::inc_b(){
 // dec b
 // opcode: 0x05
 // cycles: 4
-void CPU::dec_b(){
+void CPU::DEC_B(){
     DEC_r(regs.B);
 #ifdef DEBUG_LOG
     AddDebugLog("DEC B");
@@ -643,7 +488,7 @@ void CPU::dec_c(){
 // Opcode: 0x13
 // Cycles: 06
 // Flags: -
-void CPU::inc_de(){
+void CPU::INC_DE(){
     regs.DE++;
 #ifdef DEBUG_LOG
     AddDebugLog("INC DE");
@@ -672,7 +517,7 @@ void CPU::dec_d(){
 // Opcode: 0x23
 // Cycles: 06
 // Flags: -
-void CPU::inc_hl(){
+void CPU::INC_HL(){
     regs.HL++;
 #ifdef DEBUG_LOG
     AddDebugLog("INC HL");
@@ -681,7 +526,7 @@ void CPU::inc_hl(){
 
 // INC H
 // opcodE: 0x24
-void  CPU::inc_h(){
+void  CPU::INC_H(){
     INC_r(regs.H);
 #ifdef DEBUG_LOG
     AddDebugLog("INC H");
@@ -690,7 +535,7 @@ void  CPU::inc_h(){
 
 // DEC H
 // opcode: 0x25
-void  CPU::dec_h(){
+void  CPU::DEC_H(){
     DEC_r(regs.H);
 #ifdef DEBUG_LOG
     AddDebugLog("DEC H");
@@ -725,4 +570,17 @@ void CPU::DEC_E(){
 #ifdef DEBUG_LOG
     AddDebugLog("DEC E");
 #endif
+}
+
+/// ADD SP,dd
+/// opcode: 0xe8
+/// cycles: 16
+/// flags: 00hc
+void CPU::ADD_SP_s8()
+{
+    auto value = static_cast<int8_t>(fetch8BitValue());
+    uint32_t result = regs.SP + value;
+    regs.F = 0;
+    setFlag(FlagBitmaskC, result & 0xff0000);
+    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0x0fffu) > (result & 0x0fffu));
 }
