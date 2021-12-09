@@ -1,16 +1,39 @@
 #include <catch2/catch_test_macros.hpp>
-#include "cpu.h"
 #include <fstream>
 #include <filesystem>
-// TODO: check ZEXDOC - Z80 instruction set exerciser
-// https://github.com/anotherlin/z80emu/blob/master/testfiles/zexdoc.z80
+
+#include "cpu.h"
 #include "jump_tests.h"
+
+TEST_CASE("cp 0x02")
+{
+    CPU cpu;
+
+    cpu.regs.F = 0xff;
+    cpu.regs.A = 0x09;
+
+    cpu.sub(0x02,false,true);
+
+    REQUIRE(!cpu.getFlag(FlagBitmaskSign));
+    REQUIRE(!cpu.getFlag(FlagBitmaskZero));
+    REQUIRE(!cpu.getFlag(FlagBitmaskHalfCarry));
+    REQUIRE(!cpu.getFlag(FlagBitmaskPV));
+    REQUIRE(cpu.getFlag(FlagBitmaskN));
+    REQUIRE(!cpu.getFlag(FlagBitmaskC));
+
+
+}
 
 TEST_CASE("z80 exerciser")
 {
     CPU cpu;
-    std::filesystem::path filename = "zexdoc.com";
+
+    //std::filesystem::path filename = "zexdoc.com";
+    std::filesystem::path filename = "zexdoc_sdsc.sms";
+
     auto path = std::filesystem::absolute(filename);
+    auto size = std::filesystem::file_size(path);
+
     std::cout << "path: " << path << std::endl;
     if(exists(path)){
         std::cout << "file exists! :)";
@@ -22,12 +45,12 @@ TEST_CASE("z80 exerciser")
         std::cout << "could not read zexdoc.com";
     } else
     {
-        std::cout << "Reading zexdoc.com";
-        z80file.read ((char*)&cpu.mem[0x100], 12000 );
+        std::cout << "Reading " << filename;
+        z80file.read ((char*)&cpu.mem[0], size );
         z80file.close();
     }
 
-    cpu.specialRegs.PC = 0x100;
+    cpu.specialRegs.PC = 0x0;
 
     while(1){
         cpu.step();

@@ -15,6 +15,9 @@ private:
     CPU cpu;
     RegisterWindow registerWindow;
 
+    /// Scroll to the lates entry in the disassembly
+    bool scroll_to_bottom = false;
+
 public:
 
     MegaBoyDebugger();
@@ -22,4 +25,6 @@ public:
     void UpdateUI();
 
     void LoadTestRom();
+
+    void Step();
 };

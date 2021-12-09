@@ -12,7 +12,6 @@
 
 MegaBoyDebugger::MegaBoyDebugger() : registerWindow(cpu) {
     cpu.reset();
-
 }
 
 void MegaBoyDebugger::LoadTestRom()
@@ -43,43 +42,86 @@ void MegaBoyDebugger::LoadTestRom()
 void MegaBoyDebugger::UpdateUI() {
 
 
+    static bool is_running = false;
+
     registerWindow.UpdateUI();
 
     ImGui::Begin("Disassembly");
 
-    ImGui::BeginListBox("");
+   static int item_current_idx = 0;
 
-    for( auto entry : cpu.debug_log_entries )
-    {
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
+    if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
 
-        for (unsigned char opcode : entry.opcodes) {
-            if (opcode != 0) {
-                ImGui::SameLine();
-                ImGui::Text("%02x", opcode);
-            } else {
-                ImGui::SameLine();
-                ImGui::Text("  ");
-            }
+        //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
+        {
+            ImGuiListClipper clipper;
+            clipper.Begin(cpu.debug_log_entries.size());
+            while (clipper.Step())
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
+                    auto& entry = cpu.debug_log_entries[i];
+                    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
+
+                    for (unsigned char opcode : entry.opcodes) {
+                        if (opcode != 0) {
+                            ImGui::SameLine();
+                            ImGui::Text("%02x", opcode);
+                        } else {
+                            ImGui::SameLine();
+                            ImGui::Text("  ");
+                        }
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("%s", entry.text.c_str());
+
+                    if( i == clipper.DisplayEnd-1){
+                        if(scroll_to_bottom){
+                            ImGui::SetScrollHereY();
+                            scroll_to_bottom = false;
+                        }
+                    }
+                }
         }
-        ImGui::SameLine();
-        ImGui::Text("%s", entry.text.c_str());
-    }
 
+    }
     ImGui::EndListBox();
 
     ImGui::End();
 
 
 
-    if (ImGui::Button("Step"))
+
+    if (ImGui::Button("Reset"))
     {
-        cpu.step();
+        is_running = false;
+        cpu.debug_log_entries.clear();
+        //Step();
     }
+
+   if (ImGui::Button("Step"))
+   {
+       is_running = false;
+       Step();
+   }
+
+    if (ImGui::Button("Run"))
+    {
+        is_running = true;
+    }
+
+    if(is_running){
+        Step();
+    }
+
 
     //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 
     ImGui::End();
 
+}
+
+void MegaBoyDebugger::Step()
+{
+    cpu.step();
+    scroll_to_bottom = true;
 }

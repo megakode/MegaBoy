@@ -152,7 +152,7 @@ void CPU::cpl(){
 // opcode: 0xed 0x44
 // flags S Z H PV N C
 // cycles: 8
-void CPU::neg()
+void CPU::NEG()
 {
     uint8_t result = 0-regs.A;
     setFlag(FlagBitmaskPV,regs.A == 0x80);

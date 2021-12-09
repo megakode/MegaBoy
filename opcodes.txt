@@ -559,8 +559,8 @@ https://clrhome.org/table/
         out (c),b         ed 41
         sbc hl,bc         ed 42
         ld (nn),bc        ed 43 n  n
-        neg               ed 44
-        retn              ed 45
+        NEG               ed 44
+        RETN              ed 45
         im 0              ed 46
         ld i,a            ed 47
         in c,(c)          ed 48

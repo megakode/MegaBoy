@@ -24,6 +24,19 @@ class HostMemory {
 
 };
 
+// Flags:
+//
+// [S | Z | . | H | . | P/V | N | C ]
+//
+// S - Sign flag
+// Z - Zero flag
+// . - unused
+// H - Half-carry
+// . - unused
+// P/V - Parity/overflow
+// N Add/Subtract flag
+// C - Carry
+
 enum FlagBitmask : uint8_t {
     FlagBitmaskSign = 0b10000000,
     FlagBitmaskZero = 0b01000000,
@@ -62,7 +75,7 @@ class CPU {
 
     public:
     
-    CPU();
+    CPU( bool is_gameboy_cpu = false );
 
     struct Instruction {
         std::string name;
@@ -76,7 +89,7 @@ class CPU {
     std::vector<std::function<void()>> ix_instructions;
     std::vector<std::function<void()>> iy_instructions;
 
-    std::list<DebugLogEntry> debug_log_entries;
+    std::vector<DebugLogEntry> debug_log_entries;
 
     HostMemory mem;
 
@@ -86,18 +99,6 @@ class CPU {
 
     struct GeneralRegisters {
 
-        // Flags:
-        //
-        // [S | Z | . | H | . | P/V | N | C ]
-        //        
-        // S - Sign flag
-        // Z - Zero flag
-        // . - unused
-        // H - Half-carry
-        // . - unused
-        // P/V - Parity/overflow
-        // N Add/Subtract flag
-        // C - Carry 
         union {
             uint16_t BC;
             struct { uint8_t C,B; };
@@ -157,6 +158,8 @@ class CPU {
     /// Current number of cycles spent by the currently executing opcode. Each instruction adds cycles to this variable during execution,
     /// and the step method waits this number of cycles after a step, and resets it to 0 afterwards.
     uint16_t currentCycles;
+
+    bool is_gameboy_cpu = false;
 
     // *************************************************************************************
     // Fetching instruction bytes
@@ -307,7 +310,7 @@ class CPU {
     void set_interrupt_mode( InterruptMode mode ) {
         interrupt_mode = mode;
 #ifdef DEBUG_LOG
-        AddDebugLog(std::format("IM {:#06x}",static_cast<int>(mode)));
+        AddDebugLog(std::format("IM {:#01d}",static_cast<int>(mode)));
 #endif
     }
 
@@ -459,7 +462,7 @@ public:
     void or_r();
     void cp_r();
 
-    void ret_cc();
+    void RET_cc();
 
     void pop_qq();
 
@@ -474,7 +477,7 @@ public:
     void push_af();
 
     void rst();
-    void ret();
+    void RET();
 
     void decode_bit_instruction();
     void decode_ix_instruction();
@@ -500,20 +503,20 @@ public:
 
     void sbc_hl_nn(uint16_t value);
 
-    void neg();
+    void NEG();
 
-    void retn();
+    void RETN();
 
 
     void adc_hl_nn(uint16_t value);
 
-    void reti();
+    void RETI();
 
 
 
     void rrd();
 
-    void rld();
+    void RLD();
 
     void invalid_opcode();
 
@@ -582,4 +585,49 @@ public:
     void reset();
 
     void LD_r_n();
+
+    void OUT_pC_C();
+
+    void OUT_pC_D();
+
+    void OUT_pC_E();
+
+    void OUT_pC_H();
+
+    void OUT_pC_L();
+
+    void OUT_pC_0();
+
+    void OUT_pC_A();
+
+    void LD_BC_pnn();
+
+    void LD_DE_pnn();
+
+    void LD_SP_pnn();
+
+    void LD_pnn_BC();
+
+    void LD_pnn_DE();
+
+    void LD_pnn_SP();
+
+    void LD_R_A();
+
+    // Gameboy instructions
+
+    void STOP();
+    void LDI_pHL_A();
+    void LDI_A_pHL();
+    void LDD_pHL_A();
+    void LDD_A_pHL();
+    void LD_ff00n_A();
+    void LD_ff00C_A();
+    void LD_A_ff00n();
+    void LD_A_ff00C();
+    void ADD_SP_s8();
+    void LD_HL_SPs8();
+    void LD_A_pnn();
+    void SWAP_r(uint8_t regCode);
+
 };

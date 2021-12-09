@@ -16,3 +16,8 @@ https://github.com/Immediate-Mode-UI/Nuklear
 
 Embox RTOS
 https://github.com/embox/embox
+
+Gameboy docs
+
+- https://gbdev.io/pandocs/
+- https://gbdev.io/pandocs/CPU_Comparison_with_Z80.html

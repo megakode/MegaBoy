@@ -37,7 +37,6 @@ void CPU::djnz_n(){
     regs.B--;
     int8_t jumpOffset = static_cast<int8_t>(fetch8BitValue());
     if(regs.B != 0) {
-        specialRegs.PC -= 2; // measure from the start of this instruction opcode
         specialRegs.PC += jumpOffset;
     }
 
@@ -67,7 +66,6 @@ void CPU::jr_c()
 {
     int8_t offset =  static_cast<int8_t>(fetch8BitValue());
     if((regs.F & FlagBitmaskC)){ // If zero
-        specialRegs.PC -= 2; // start calculation from beginning of this instruction
         specialRegs.PC += offset;
     }
 #ifdef DEBUG_LOG
@@ -111,7 +109,6 @@ void CPU::jr_nz(){
 /// cycles: 12
 void CPU::jr_n(){
     int8_t offset =  static_cast<int8_t>(fetch8BitValue());
-    specialRegs.PC -= 2; // start calculation from beginning of this instruction
     specialRegs.PC += offset;
 
 #ifdef DEBUG_LOG
@@ -206,7 +203,7 @@ void CPU::call(){
 // opcode: 0xc9
 // cycles: 10
 // flags: -
-void CPU::ret()
+void CPU::RET()
 {
     uint8_t lobyte = mem[specialRegs.SP++];
     uint8_t hibyte = mem[specialRegs.SP++];
@@ -220,9 +217,9 @@ void CPU::ret()
 // RETN - "used at the end of a non-maskable interrupt rountine (located at 0x0066)"
 // opcode: 0xed 0x45
 // cycles: 14
-void CPU::retn()
+void CPU::RETN()
 {
-    ret();
+    RET();
     IFF = IFF2;
 #ifdef DEBUG_LOG
     AddDebugLog("RETN");
@@ -233,9 +230,9 @@ void CPU::retn()
 // opcode: 0xed 0x4d
 // cycles: 14
 // flags: -
-void CPU::reti()
+void CPU::RETI()
 {
-    ret();
+    RET();
 #ifdef DEBUG_LOG
     AddDebugLog("RETI");
 #endif
@@ -245,7 +242,7 @@ void CPU::reti()
 // RET cc (NZ/Z/NC/C/PO/PE/P/N)
 // cycles: 11 (true) 5 (false)
 // flags: -
-void CPU::ret_cc(){
+void CPU::RET_cc(){
 
     uint8_t conditionCode = (current_opcode & 0b00111000) >> 3;
     bool conditionValue = false;

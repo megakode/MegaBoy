@@ -11,6 +11,7 @@
 #include "arithmetic_instructions.h"
 #include "general_instructions.h"
 #include "ex_block_search_instruction.h"
+#include "gameboy_instructions.h"
 
 uint8_t& HostMemory::operator[] (int index)
 {
@@ -21,7 +22,9 @@ uint8_t& HostMemory::operator[] (int index)
     return memory[index];
 }
 
-CPU::CPU() {
+CPU::CPU( bool is_gameboy_cpu ) {
+
+    this->is_gameboy_cpu = is_gameboy_cpu;
 
     // Based on tables from:
     // https://clrhome.org/table/
@@ -29,7 +32,7 @@ CPU::CPU() {
     instructions = {
         {"NOP",&CPU::NOP},                  // 0x00
         {"LD BC,NN", &CPU::LD_BC_nn},      // 0x01
-        {"LD BC,A", &CPU::LD_pBC_A},        // 0x02
+        {"LD (BC),A", &CPU::LD_pBC_A},        // 0x02
         {"INC BC",&CPU::inc_bc},            // 0x03
         {"INC B",&CPU::inc_b},              // 0x04
         {"DEC B",&CPU::dec_b},              // 0x05
@@ -235,7 +238,7 @@ CPU::CPU() {
         { "CP r",&CPU::cp_r},             // 0xbe
         { "CP r",&CPU::cp_r},             // 0xbf
 
-        {"RET NZ",&CPU::ret_cc},            // 0xc0
+        {"RET NZ", &CPU::RET_cc},            // 0xc0
         {"POP BC",&CPU::pop_qq},            // 0xc1
         {"JP NZ NN",&CPU::jp_cc_nn},        // 0xc2
         {"JP NN",&CPU::jp_nn},              // 0xc3
@@ -243,8 +246,8 @@ CPU::CPU() {
         {"PUSH BC",&CPU::push_bc},          // 0xc5
         {"ADD A,n",&CPU::add_a_n},          // 0xc6
         {"RST 00h",&CPU::rst},              // 0xc7
-        {"RET Z",&CPU::ret_cc},             // 0xc8
-        {"RET",&CPU::ret},                  // 0xc9
+        {"RET Z", &CPU::RET_cc},             // 0xc8
+        {"RET", &CPU::RET},                  // 0xc9
         {"JP Z,**",&CPU::jp_cc_nn},         // 0xca
         {"BIT opcode group", &CPU::decode_bit_instruction}, // 0xcb
         {"CALL Z,nn",&CPU::call_cc_nn},     // 0xcc
@@ -252,7 +255,7 @@ CPU::CPU() {
         {"ADC A,N",&CPU::adc_a_n},          // 0xce
         {"RST 08h",&CPU::rst},              // 0xcf
 
-        {"RET NC",&CPU::ret_cc},            // 0xd0
+        {"RET NC", &CPU::RET_cc},            // 0xd0
         {"POP DE",&CPU::pop_qq},            // 0xd1
         {"JP NC,NN",&CPU::jp_cc_nn},        // 0xd2
         {"OUT (N),A",&CPU::out_n_a},        // 0xd3
@@ -260,7 +263,7 @@ CPU::CPU() {
         {"PUSH DE",&CPU::push_de},          // 0xd5
         {"SUB N",&CPU::sub_n},              // 0xd6
         {"RST 10h",&CPU::rst},              // 0xd7
-        {"RET C",&CPU::ret_cc},             // 0xd8
+        {"RET C", &CPU::RET_cc},             // 0xd8
         {"EXX",&CPU::exx},                  // 0xd9
         {"JP C,NN",&CPU::jp_cc_nn},         // 0xda
         {"IN A,(n)",&CPU::in_a_n},          // 0xdb
@@ -269,7 +272,7 @@ CPU::CPU() {
         {"SBC N",&CPU::sbc_n},              // 0xde
         {"RST 18h",&CPU::rst},              // 0xdf
 
-        {"RET PO",&CPU::ret_cc},            // 0xe0
+        {"RET PO", &CPU::RET_cc},            // 0xe0
         {"POP HL",&CPU::pop_qq},            // 0xe1
         {"JP PO,NN",&CPU::jp_cc_nn},        // 0xe2
         {"EX (SP),HL", &CPU::EX_pSP_HL},  // 0xe3
@@ -277,7 +280,7 @@ CPU::CPU() {
         {"PUSH HL",&CPU::push_hl},          // 0xe5
         {"AND N",&CPU::and_n},              // 0xe6
         {"RST 20h",&CPU::rst},              // 0xe7
-        {"RET PE",&CPU::ret_cc},            // 0xe8
+        {"RET PE", &CPU::RET_cc},            // 0xe8
         {"JP (HL)",&CPU::jp_ptr_hl},        // 0xe9
         {"JP PE,NN",&CPU::jp_cc_nn},        // 0xea
         {"EX DH,HL",&CPU::ex_de_hl},        // 0xeb
@@ -286,7 +289,7 @@ CPU::CPU() {
         {"XOR N",&CPU::xor_n},              // 0xee
         {"RST 28h",&CPU::rst},              // 0xef
 
-        {"RET P",&CPU::ret_cc},             // 0xf0
+        {"RET P", &CPU::RET_cc},             // 0xf0
         {"POP AF",&CPU::pop_qq},            // 0xf1
         {"JP P,NN",&CPU::jp_cc_nn},         // 0xf2
         {"DI",&CPU::disable_interrupts},    // 0xf3
@@ -294,7 +297,7 @@ CPU::CPU() {
         {"PUSH AF",&CPU::push_af},          // 0xf5
         {"OR N",&CPU::or_n},                // 0xf6
         {"RST 30h",&CPU::rst},              // 0xf7
-        {"RET M",&CPU::ret_cc},             // 0xf8
+        {"RET M", &CPU::RET_cc},             // 0xf8
         {"LD SP,HL",&CPU::ld_sp_hl},        // 0xf9
         {"JP M,NN",&CPU::jp_cc_nn},         // 0xfa
         {"EI",&CPU::enable_interrupts},     // 0xfb
@@ -320,68 +323,68 @@ CPU::CPU() {
             [&](){ in(regs.B,regs.C); },                        // 0x40: IN B,(C)
             [&](){ out_n_a(); },                                // 0x41: OUT (C),B
             [&](){ sbc_hl_nn(regs.BC); },                       // 0x42: SBC HL,BC
-            [&](){ LD_pnn_rr(fetch16BitValue(), regs.BC); },  // 0x43: LD (**),BC
-            [&](){ neg(); },                                    // 0x44: NEG
-            [&](){ retn(); },                                   // 0x45: RETN
+            [&](){ LD_pnn_BC(); },  // 0x43: LD (**),BC
+            [&](){ NEG(); },                                    // 0x44: NEG
+            [&](){ RETN(); },                                   // 0x45: RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x46: im 0
             [&](){ specialRegs.I = regs.A; },                   // 0x47: LD I,A
             [&](){ in(regs.C,regs.C); },                        // 0x48; IN C,(C)
-            [&](){ out(regs.C,regs.C); },                       // 0x49: OUT (c),C
+            [&](){ OUT_pC_C(); },                       // 0x49: OUT (c),C
             [&](){ adc_hl_nn(regs.BC); },                       // 0x4A: ADC HL,BC
-            [&](){ LD_rr_pnn(regs.BC, fetch16BitValue()); },  // 0x4B: LD BC,(NN)
-            [&](){ neg(); },                                    // 0x4C: NEG
-            [&](){ reti(); },                                   // 0x4d: RETI
+            [&](){ LD_BC_pnn(); },  // 0x4B: LD BC,(NN)
+            [&](){ NEG(); },                                    // 0x4C: NEG
+            [&](){ RETI(); },                                   // 0x4d: RETI
             [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x4e: Set undefined IM0/1 mode
-            [&](){ specialRegs.R = regs.A; },                   // 0x4f: LD R,A
+            [&](){ LD_R_A(); },                   // 0x4f: LD R,A
 
             [&](){ in(regs.D,regs.C); },                        // 0x50: in d,(c)
-            [&](){ out(regs.C,regs.D); },                       // 0x51: out (c),d
+            [&](){ OUT_pC_D(); },                       // 0x51: out (c),d
             [&](){ sbc_hl_nn(regs.DE); },                       // 0x52: sbc hl,de
-            [&](){ LD_pnn_rr(fetch16BitValue(), regs.DE); },  // 0x53: ld (**),de
-            [&](){ neg(); },                                    // 0x54: neg
-            [&](){ retn(); },                                   // 0x55: retn
+            [&](){ LD_pnn_DE(); },  // 0x53: ld (**),de
+            [&](){ NEG(); },                                    // 0x54: NEG
+            [&](){ RETN(); },                                   // 0x55: RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_1); },  // 0x56: im 1
             [&](){ LD_A_I(); },                                 // 0x57: ld a,i
             [&](){ in(regs.E,regs.C); },                        // 0x58: in e,(c)
-            [&](){ out(regs.C,regs.E); },                       // 0x59: out (c),e
+            [&](){ OUT_pC_E(); },                               // 0x59: out (c),e
             [&](){ adc_hl_nn(regs.DE); },                       // 0x5a: adc hl,de
-            [&](){ LD_rr_pnn(regs.DE, fetch16BitValue()); },  // 0x5b: ld de,(**)
-            [&](){ neg(); },                                    // 0x5c: neg
-            [&](){ retn(); },                                   // 0x5d: retn
+            [&](){ LD_DE_pnn(); },                              // 0x5b: ld de,(**)
+            [&](){ NEG(); },                                    // 0x5c: NEG
+            [&](){ RETN(); },                                   // 0x5d: RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_2); },  // 0x5e: im 2
             [&](){ LD_A_R(); },                                 // 0x5f: ld a,r
 
             [&](){ in(regs.H,regs.C); },                        // 0x60: IN H,(C)
-            [&](){ out(regs.C,regs.H); },                       // 0x61: OUT (C),H
+            [&](){ OUT_pC_H(); },                               // 0x61: OUT (C),H
             [&](){ sbc_hl_nn(regs.HL); },                       // 0x62: SBC HL,HL
-            [&](){ LD_pnn_rr(fetch16BitValue(), regs.HL); },  // 0x63: ld (**),hl
-            [&](){ neg(); },                                    // 0x64: neg
-            [&](){ retn(); },                                   // 0x65: retn
+            [&](){ LD_pnn_HL(); },    // 0x63: ld (**),hl
+            [&](){ NEG(); },                                    // 0x64: NEG
+            [&](){ RETN(); },                                   // 0x65: RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x66: im 0
             [&](){ rrd(); },                                    // 0x67: rrd
             [&](){ in(regs.L,regs.C); },                        // 0x68: in l,(c)
-            [&](){ out(regs.C,regs.L); },                       // 0x69: out (c),l
+            [&](){ OUT_pC_L(); },                               // 0x69: out (c),l
             [&](){ adc_hl_nn(regs.HL); },                       // 0x6a: ADC HL,HL
-            [&](){ LD_rr_pnn(regs.HL, fetch16BitValue()); },  // 0x6b: ld hl,(**)
-            [&](){ neg(); },                                    // 0x6c: neg
-            [&](){ retn(); },                                   // 0x6d: retn
+            [&](){ LD_HL_nn(); },    // 0x6b: ld hl,(**)
+            [&](){ NEG(); },                                    // 0x6c: NEG
+            [&](){ RETN(); },                                   // 0x6d: RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_0); },  // 0x6e: im 0/1
-            [&](){ rld(); },                                    // 0x6f: rld
+            [&](){ RLD(); },                                    // 0x6f: rld
 
             [&](){ in(regs.C,regs.C,true); },                        // 0x70: in (c)
-            [&](){ out(regs.C,0); },                                 // 0x71: out
+            [&](){ OUT_pC_0(); },                                    // 0x71: out
             [&](){ sbc_hl_nn(specialRegs.SP); },                     // 0x72: sbc hl,sp
-            [&](){ LD_pnn_rr(fetch16BitValue(), specialRegs.SP); },// 0x73: ld (**),sp
-            [&](){ neg(); },                                         // 0x74: neg
-            [&](){ retn(); },                                        // 0x75:
+            [&](){ LD_pnn_SP(); },  // 0x73: ld (**),sp
+            [&](){ NEG(); },                                         // 0x74: NEG
+            [&](){ RETN(); },                                        // 0x75:
             [&](){ set_interrupt_mode(InterruptMode::IM_1); },       // 0x76: im 1
             [&](){ invalid_opcode(); },                              // 0x77
             [&](){ in(regs.A,regs.C); },                             // 0x78 in a,(c)
-            [&](){ out(regs.C,regs.A); },                            // 0x79 out (c),a
+            [&](){ OUT_pC_A(); },                                    // 0x79 out (c),a
             [&](){ adc_hl_nn(specialRegs.SP); },                     // 0x7a adc hl,sp
-            [&](){ LD_rr_pnn(specialRegs.SP, fetch16BitValue()); },// 0x7b ld sp,(**)
-            [&](){ neg(); },                                         // 0x7c neg
-            [&](){ retn(); },                                        // 0x7d retn
+            [&](){ LD_SP_pnn(); },                                   // 0x7b ld sp,(**)
+            [&](){ NEG(); },                                         // 0x7c NEG
+            [&](){ RETN(); },                                        // 0x7d RETN
             [&](){ set_interrupt_mode(InterruptMode::IM_2); },       // 0x7e im2
             [&](){ },                                                // 0x7f
 
@@ -835,9 +838,38 @@ CPU::CPU() {
             [&](){ },[&](){ },[&](){ },[&](){ },[&](){ },[&](){ },
     };
 
+    if(is_gameboy_cpu)
+    {
+        instructions[0x08] =  {"NOP",&CPU::LD_pnn_SP};
+        instructions[0x10] = {"STOP",&CPU::STOP};
+        instructions[0x22] = {"LDI",&CPU::LDI_pHL_A};
+        instructions[0x2a] = {"LDI",&CPU::LDI_A_pHL};
+        instructions[0x32] = {"LDD",&CPU::LDD_pHL_A};
+        instructions[0x3a] = {"LDD",&CPU::LDD_A_pHL};
+        instructions[0xd3] = {"-",&CPU::invalid_opcode};
+        instructions[0xd9] = {"RETI",&CPU::RETI};
+        instructions[0xdb] = {"-",&CPU::invalid_opcode};
+        instructions[0xdd] = {"-",&CPU::invalid_opcode};
+        instructions[0xe0] = {"-",&CPU::LD_ff00n_A};
+        instructions[0xe2] = {"-",&CPU::LD_ff00C_A};
+        instructions[0xe3] = {"-",&CPU::invalid_opcode};
+        instructions[0xe4] = {"-",&CPU::invalid_opcode};
+        instructions[0xe8] = {"-",&CPU::ADD_SP_s8};
+        instructions[0xea] = {"-",&CPU::LD_pnn_A};
+        instructions[0xeb] = {"-",&CPU::invalid_opcode};
+        instructions[0xec] = {"-",&CPU::invalid_opcode};
+        instructions[0xed] = {"-",&CPU::invalid_opcode};
+        instructions[0xf0] = {"-",&CPU::LD_A_ff00n};
+        instructions[0xf2] = {"-",&CPU::LD_A_ff00C};
+        instructions[0xf4] = {"-",&CPU::invalid_opcode};
+        instructions[0xf8] = {"-",&CPU::LD_HL_SPs8};
+        instructions[0xfa] = {"-",&CPU::LD_A_pnn};
+        instructions[0xfc] = {"-",&CPU::invalid_opcode};
+        instructions[0xfd] = {"-",&CPU::invalid_opcode};
+    }
+
 
 }
-
 
 // opcode: 0xed
 void CPU::decode_extended_instruction()
@@ -919,6 +951,7 @@ void CPU::reset()
 void CPU::AddDebugLog(const std::string& text)
 {
     // TODO: also add opcodes
+    std::cout << current_pc << ": " << text << std::endl;
     debug_log_entries.push_back({current_pc, {current_opcode,0,0,0}, text});
 }
 

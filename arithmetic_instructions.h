@@ -64,7 +64,7 @@ void CPU::add16( uint16_t& regPair, uint16_t value_to_add , bool carry )
  * @param onlySetFlagsForComparison Only set the flags for usage by the `cp` compare instruction and don't perform the actual subtraction
  */
 void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
-    // TODO: finish this
+
     uint16_t result = (0xff00 | regs.A) - srcValue;
     if ( carry && (regs.F & FlagBitmaskC) ) {
         result--;
@@ -72,7 +72,7 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     setFlag(FlagBitmaskZero, srcValue == regs.A);
     setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
-    setFlag(FlagBitmaskHalfCarry, (0xfff0 & regs.A) < (result & 0xfff0) );
+    setFlag(FlagBitmaskHalfCarry, (0x00f0 & regs.A) < (result & 0x00f0) );
     setFlag(FlagBitmaskSign, result & 0x80 );
     /*
 
@@ -209,6 +209,11 @@ void CPU::cp_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     sub(srcRegValue,false, true);
+
+    #ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog(std::format("CP {}",regName));
+    #endif
 }
 
 // CP N
@@ -218,10 +223,11 @@ void CPU::cp_r()
 void CPU::cp_n()
 {
     uint8_t value = fetch8BitValue();
-#ifdef DEBUG_LOG
-    std::cout << "CP " << (int)value << std::endl;
-#endif
     sub(value,false, true);
+
+    #ifdef DEBUG_LOG
+    AddDebugLog(std::format("CP {:#04x}", value));
+    #endif
 }
 
 
@@ -233,6 +239,10 @@ void CPU::cp_n()
 void CPU::adc_hl_nn(uint16_t value)
 {
     add16(regs.HL,value,true);
+
+#ifdef DEBUG_LOG
+    AddDebugLog(std::format("ADD HL, {:#06x}", value));
+#endif
 }
 
 // add hl,hl
@@ -380,13 +390,18 @@ void CPU::and_r()
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    std::cout << "AND " << regName << " {A="<< (int)regs.A <<","<<regName<<"=" << (int)srcRegValue << "}" << std::endl;
+    AddDebugLog(std::format("AND {}",regName));
 #endif
 }
 
 void CPU::and_n()
 {
-    and_a_with_value(fetch8BitValue());
+    auto value = fetch8BitValue();
+    and_a_with_value(value);
+
+#ifdef DEBUG_LOG
+    AddDebugLog(std::format("AND {:#04x}",value));
+#endif
 }
 
 // *********************************************************************************
@@ -403,15 +418,24 @@ void CPU::xor_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
-
     xor_a_with_value(srcRegValue);
+
+    #ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog(std::format("XOR {}",regName));
+    #endif
 }
 
 // opcode: 0xee
 // cycles: 7
 void CPU::xor_n()
 {
-    xor_a_with_value(fetch8BitValue());
+    auto value = fetch8BitValue();
+    xor_a_with_value(value);
+
+#ifdef DEBUG_LOG
+    AddDebugLog(std::format("XOR {:#04x}",value));
+#endif
 }
 
 void CPU::xor_a_with_value( uint8_t value )
@@ -440,8 +464,12 @@ void CPU::or_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
-
     or_a_with_value(srcRegValue);
+
+#ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog(std::format("OR {}",regName));
+#endif
 }
 
 // OR N
@@ -553,10 +581,9 @@ void CPU::DEC_pHL()
 // Cycles: 06
 // Flags: -
 void CPU::inc_bc(){
-    regs.C++;
-    if(regs.C==0) regs.B++;
+    regs.BC++;
 #ifdef DEBUG_LOG
-    std::cout << "INC BC" << std::endl;
+    AddDebugLog("INC BC");
 #endif
 }
 
@@ -566,6 +593,9 @@ void CPU::inc_bc(){
 // flags: S Z HC PV N
 void CPU::inc_b(){
     INC_r(regs.B);
+#ifdef DEBUG_LOG
+    AddDebugLog("INC B");
+#endif
 }
 
 // dec b
@@ -573,6 +603,9 @@ void CPU::inc_b(){
 // cycles: 4
 void CPU::dec_b(){
     DEC_r(regs.B);
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC B");
+#endif
 }
 
 
@@ -581,6 +614,9 @@ void CPU::dec_b(){
 // cycles: 6
 void CPU::dec_bc(){
     regs.BC--;
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC BC");
+#endif
 }
 
 // INC C
@@ -588,6 +624,9 @@ void CPU::dec_bc(){
 // cycles: 4
 void CPU::inc_c(){
     INC_r(regs.C);
+#ifdef DEBUG_LOG
+    AddDebugLog("INC C");
+#endif
 }
 
 // DEC C
@@ -595,6 +634,9 @@ void CPU::inc_c(){
 // cycles: 4
 void CPU::dec_c(){
     DEC_r(regs.C);
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC C");
+#endif
 }
 
 // inc de
@@ -602,20 +644,28 @@ void CPU::dec_c(){
 // Cycles: 06
 // Flags: -
 void CPU::inc_de(){
-    regs.E++;
-    if(regs.E==0) regs.D++;
+    regs.DE++;
+#ifdef DEBUG_LOG
+    AddDebugLog("INC DE");
+#endif
 }
 
 // inc d
 // opcode: 0x14
 void CPU::inc_d(){
     INC_r(regs.D);
+#ifdef DEBUG_LOG
+    AddDebugLog("INC D");
+#endif
 }
 
 // dec d
 // opcode: 0x15
 void CPU::dec_d(){
     DEC_r(regs.D);
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC D");
+#endif
 }
 
 // INC HL
@@ -623,20 +673,28 @@ void CPU::dec_d(){
 // Cycles: 06
 // Flags: -
 void CPU::inc_hl(){
-    regs.L++;
-    if(regs.L==0) regs.H++;
+    regs.HL++;
+#ifdef DEBUG_LOG
+    AddDebugLog("INC HL");
+#endif
 }
 
 // INC H
 // opcodE: 0x24
 void  CPU::inc_h(){
     INC_r(regs.H);
+#ifdef DEBUG_LOG
+    AddDebugLog("INC H");
+#endif
 }
 
 // DEC H
 // opcode: 0x25
 void  CPU::dec_h(){
     DEC_r(regs.H);
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC H");
+#endif
 }
 
 // DEC DE
@@ -644,6 +702,9 @@ void  CPU::dec_h(){
 // cycles: 6
 void CPU::DEC_DE(){
     regs.DE--;
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC DE");
+#endif
 }
 
 // INC E
@@ -651,6 +712,9 @@ void CPU::DEC_DE(){
 // cycles 4
 void CPU::INC_E(){
     INC_r(regs.E);
+#ifdef DEBUG_LOG
+    AddDebugLog("INC E");
+#endif
 }
 
 // DEC E
@@ -658,4 +722,7 @@ void CPU::INC_E(){
 // cycles: 4
 void CPU::DEC_E(){
     DEC_r(regs.E);
+#ifdef DEBUG_LOG
+    AddDebugLog("DEC E");
+#endif
 }

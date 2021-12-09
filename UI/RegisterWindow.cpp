@@ -62,6 +62,29 @@ void RegisterWindow::UpdateUI() {
     ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",cpu.specialRegs.IY);  ImGui::SameLine();
     ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",cpu.specialRegs.IY);
 
+    ImGui::Text("Flags:");
+    ImGui::BeginTable("Special Regs",8,ImGuiTableFlags_Borders);
+    //  [S | Z | . | H | . | P/V | N | C ]
+    ImGui::TableNextColumn();
+    ImGui::Text("S"); ImGui::TableNextColumn();
+    ImGui::Text("Z"); ImGui::TableNextColumn();
+    ImGui::Text("."); ImGui::TableNextColumn();
+    ImGui::Text("H"); ImGui::TableNextColumn();
+    ImGui::Text("."); ImGui::TableNextColumn();
+    ImGui::Text("P"); ImGui::TableNextColumn();
+    ImGui::Text("N"); ImGui::TableNextColumn();
+    ImGui::Text("C"); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskSign) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskZero) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( (cpu.regs.F & (1 << 5)) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskHalfCarry) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( (cpu.regs.F & (1 << 3)) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskPV) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskN) ? "1" : "0" ); ImGui::TableNextColumn();
+    ImGui::Text( cpu.getFlag(FlagBitmaskC) ? "1" : "0" );
+
+    ImGui::EndTable();
+
 /*
     ImGui::Text("I 0x%02x R 0x%02x",cpu.specialRegs.I,cpu.specialRegs.R);
 */

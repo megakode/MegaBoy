@@ -27,6 +27,10 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskC, carry);
 
         reg |= (carry ? 1 : 0);
+#ifdef DEBUG_LOG
+        AddDebugLog("RLC r");
+#endif
+
     } else
 
         // RRC r
@@ -48,6 +52,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskC, carry);
 
         reg |= (carry ? 0x80 : 0);
+#ifdef DEBUG_LOG
+        AddDebugLog("RRC r");
+#endif
     } else
 
         // RL r
@@ -70,6 +77,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskPV, has_parity(reg));
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
+#ifdef DEBUG_LOG
+        AddDebugLog("RL r");
+#endif
     } else
 
         // RR r
@@ -92,6 +102,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskPV, has_parity(reg));
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
+#ifdef DEBUG_LOG
+        AddDebugLog("RR r");
+#endif
     } else
 
         // SLA r
@@ -108,6 +121,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskPV, has_parity(reg));
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
+#ifdef DEBUG_LOG
+        AddDebugLog("SLA r");
+#endif
     } else
 
         // SRA r
@@ -115,7 +131,8 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         // cycles: r:8 (hl):15 (ix+d):23
     if( op2 >= 0x28 && op2 <= 0x2f )
     {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t regCode = op2 & 0b00000111;
+        uint8_t &reg = reg_from_regcode(regCode);
         uint8_t carry = reg & 0x01;
         int8_t signedValue = reg;
         // TODO: page 210. Make sure this is an arithmetic shift that preserves bit 7
@@ -127,29 +144,54 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskPV, has_parity(reg));
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
+#ifdef DEBUG_LOG
+        auto regName = reg_name_from_regcode(regCode);
+        AddDebugLog(std::format("SRA {}",regName));
+#endif
     } else
 
-        // SLL r
-        // opcode: 0x30 - 0x37
+    // opcode: 0x30 - 0x37
     if( op2 >= 0x30 && op2 <= 0x37 ){
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
-        uint8_t carry = reg & 0x80;
 
-        reg = reg << 1;
-        reg |= 1;
+        uint8_t regCode = op2 & 0b00000111;
+        uint8_t &reg = reg_from_regcode(regCode);
 
-        setFlag(FlagBitmaskSign, reg & 0x80);
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskPV, has_parity(reg));
-        setFlag(FlagBitmaskN,0);
-        setFlag(FlagBitmaskC, carry);
+        if(is_gameboy_cpu){
+
+            // On gameboy CPU this opcode is 'SWAP r'
+            SWAP_r(regCode);
+
+        } else {
+
+            // SLL r
+            uint8_t carry = reg & 0x80;
+
+            reg = reg << 1;
+            reg |= 1;
+
+            setFlag(FlagBitmaskSign, reg & 0x80);
+            setFlag(FlagBitmaskHalfCarry,0);
+            setFlag(FlagBitmaskPV, has_parity(reg));
+            setFlag(FlagBitmaskN,0);
+            setFlag(FlagBitmaskC, carry);
+            #ifdef DEBUG_LOG
+            auto regName = reg_name_from_regcode(regCode);
+            AddDebugLog(std::format("SLL {}",regName));
+            #endif
+
+        }
+
+
+
+
     } else
 
         // SRL r
         // Shift right
     if( op2 >= 0x38 && op2 <= 0x3f)
     {
-        uint8_t &reg = reg_from_regcode(op2 & 0b00000111);
+        uint8_t regCode = op2 & 0b00000111;
+        uint8_t &reg = reg_from_regcode(regCode);
         uint8_t carry = reg & 0x01;
 
         reg = reg >> 1;
@@ -159,6 +201,10 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskPV, has_parity(reg));
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
+#ifdef DEBUG_LOG
+        auto regName = reg_name_from_regcode(regCode);
+        AddDebugLog(std::format("SRL {}",regName));
+#endif
     } else
 
 
@@ -173,6 +219,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         setFlag(FlagBitmaskZero, result == 0);
         setFlag(FlagBitmaskHalfCarry,1);
         setFlag(FlagBitmaskN,0);
+#ifdef DEBUG_LOG
+        AddDebugLog("BIT b,r");
+#endif
     } else
 
         // RES b,r
@@ -185,6 +234,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = ~(1 << bitNumber);
         reg &= bitMask;
+#ifdef DEBUG_LOG
+        AddDebugLog("RES b,r");
+#endif
     } else
 
         // SET b,r
@@ -197,6 +249,9 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg , uint8_t& copyResultToR
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = (1 << bitNumber);
         reg |= bitMask;
+#ifdef DEBUG_LOG
+        AddDebugLog("SET b,r");
+#endif
     }
 
     // The undocumented IX and IY bit instructions also loads a copy of the result from (IX+d) or (IY+d)
@@ -220,7 +275,7 @@ void CPU::rlca(){
     if(carry)regs.A |= 1;
 
 #ifdef DEBUG_LOG
-    std::cout << "RLCA" << std::endl;
+    AddDebugLog("RLCA");
 #endif
 }
 
@@ -236,6 +291,9 @@ void CPU::rrca(){
     setFlag(FlagBitmaskHalfCarry,0);
     regs.A >>= 1;
     regs.A |= (carry<<7);
+#ifdef DEBUG_LOG
+    AddDebugLog("rrca");
+#endif
 }
 
 // opcode: 0x17
@@ -249,6 +307,9 @@ void CPU::rla(){
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskN,false);
     setFlag(FlagBitmaskC,newcarry);
+#ifdef DEBUG_LOG
+    AddDebugLog("RLA");
+#endif
 }
 
 // RRA
@@ -267,6 +328,9 @@ void CPU::rra(){
     regs.A >>= 1;
     regs.A |= (regs.F<<7); // Set bit 7 to previous carry flag
     setFlag(FlagBitmaskC, carry); // Set new carry flag
+#ifdef DEBUG_LOG
+    AddDebugLog("RRA");
+#endif
 }
 
 
@@ -288,13 +352,16 @@ void CPU::rrd()
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskPV, has_parity(regs.A));
     setFlag(FlagBitmaskN,false);
+#ifdef DEBUG_LOG
+    AddDebugLog("RRD");
+#endif
 }
 
 // RLD - do some swapping of nibbles between A and (HL) (see details on p.217 z80 tech ref.)
 // opcode: 0xed 0x6f
 // cycles: 18
 // flags: s z h pv n
-void CPU::rld()
+void CPU::RLD()
 {
     uint16_t hl = regs.HL;
     uint8_t data = mem[hl];
@@ -309,4 +376,7 @@ void CPU::rld()
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskPV, has_parity(regs.A));
     setFlag(FlagBitmaskN,false);
+#ifdef DEBUG_LOG
+    AddDebugLog("RLD");
+#endif
 }
