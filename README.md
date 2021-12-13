@@ -25,3 +25,5 @@ Gameboy docs
 
 - https://gbdev.io/pandocs/
 - https://gbdev.io/pandocs/CPU_Comparison_with_Z80.html
+- https://github.com/AntonioND/giibiiadvance/ (GB/GBC/GBA emulator)
+- https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf (cycle accurate docs)

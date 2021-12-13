@@ -78,7 +78,7 @@ void CPU::DEC_r(uint8_t &reg)
 // Compare
 // *********************************************************************************
 
-void CPU::cp_r()
+void CPU::CP_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
@@ -94,7 +94,7 @@ void CPU::cp_r()
 // Compare A with N by internally doing a sub but only setting flags
 // opcode: 0xfe
 // cycles: 7
-void CPU::cp_n()
+void CPU::CP_n()
 {
     uint8_t value = fetch8BitValue();
     sub(value,false, true);

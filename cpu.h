@@ -9,20 +9,9 @@
 #include <iostream>
 #include <format>
 
+#include "HostMemory.h"
 
 #pragma once
-
-class HostMemory {
-
-    public:
-
-        uint8_t& operator[] (int index);
-
-    private:
-
-        uint8_t memory[UINT16_MAX];
-
-};
 
 enum FlagBitmask : uint8_t {
     FlagBitmaskZero = 0b10000000,
@@ -48,23 +37,17 @@ struct DebugLogEntry {
     std::string text;
 };
 
-
-/// Interrupt mode - see Z80 technical reference manual p.153
-enum class InterruptMode {
-    IM_0,
-    IM_1,
-    IM_2
-};
-
 class CPU {
 
     public:
     
-    CPU();
+    explicit CPU(HostMemory& mem);
 
     struct Instruction {
-        std::string name;
-         void (CPU::*code)(void) = nullptr;
+        /// Number of CPU cycles the instruction takes to execute
+        uint8_t cycles = 0;
+        /// pointer to the function executing the instruction
+        void (CPU::*code)() = nullptr;
     };
 
     std::vector<Instruction> instructions;
@@ -72,11 +55,7 @@ class CPU {
 
     std::vector<DebugLogEntry> debug_log_entries;
 
-    HostMemory mem;
-
-    // Interrupt enable Flip Flop #1 and #2 (see page 323 in Zilog Z80 Technical manual)
-    bool IFF = 0;
-    bool IFF2 = 0;
+    HostMemory& mem;
 
     struct GeneralRegisters {
 
@@ -113,7 +92,7 @@ class CPU {
 
     GeneralRegisters regs;
 
-    InterruptMode interrupt_mode = InterruptMode::IM_0;
+    bool interrupt_master_enabled = true;
 
     /// The address of the opcode currently being decoded.
     /// Contrary to the program counter (PC) which increases throughout decoding of a multi-byte instruction,
@@ -129,7 +108,9 @@ class CPU {
     // Fetching instruction bytes
     // *************************************************************************************
 
-    void step();
+    /// Fetch, decode and execute an instruction
+    /// - returns: the number of CPU cycles spent. The implementor should wait this amount of cycles before calling `Step` again.
+    uint8_t step();
 
     /// Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
     inline uint8_t fetch8BitValue(){
@@ -171,7 +152,8 @@ class CPU {
                 return regs.L;
             case RegisterCode::H:
                 return regs.H;
-
+            default:
+                return regs.A; // just to silence the compiler warning
         }
     }
 
@@ -229,13 +211,6 @@ class CPU {
         return p;
     }
 
-    void set_interrupt_mode( InterruptMode mode ) {
-        interrupt_mode = mode;
-#ifdef DEBUG_LOG
-        AddDebugLog(std::format("IM {:#01d}",static_cast<int>(mode)));
-#endif
-    }
-
     inline void setFlag( FlagBitmask flag, bool value ){
         if(value){
             regs.F |= flag;
@@ -256,18 +231,24 @@ class CPU {
     void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
 
-    void do_bit_instruction(uint8_t op2, uint8_t &reg);
+    void do_bit_instruction( uint8_t op2, uint8_t& reg );
 
     void AddCurrentCycles(uint8_t cycles);
 
     void AddDebugLog(const std::string &text);
 
+    void set_AND_operation_flags();
+    void set_INC_operation_flags(uint8_t result);
+    void set_DEC_operation_flags(uint8_t result);
 
 public:
 
     // generic instructions
     void INC_r(uint8_t &reg );
     void DEC_r(uint8_t &reg );
+
+    void enable_interrupts();
+    void disable_interrupts();
 
     // instructions
     void NOP(); // 0x00
@@ -353,7 +334,7 @@ public:
 
     void xor_r();
     void or_r();
-    void cp_r();
+    void CP_r();
 
     void RET_cc();
 
@@ -384,11 +365,9 @@ public:
     void jp_ptr_hl();
 
     void xor_n();
-    void enable_interrupts();
-    void disable_interrupts();
     void or_n();
     void ld_sp_hl();
-    void cp_n();
+    void CP_n();
 
     void NEG();
 
@@ -397,10 +376,6 @@ public:
     void RLD();
 
     void invalid_opcode();
-
-    void set_AND_operation_flags();
-    void set_INC_operation_flags(uint8_t result);
-    void set_DEC_operation_flags(uint8_t result);
 
     void and_a_with_value(uint8_t value);
 
@@ -429,4 +404,5 @@ public:
     void LD_A_pnn();
     void SWAP_r(uint8_t regCode);
 
+    void push_pc();
 };

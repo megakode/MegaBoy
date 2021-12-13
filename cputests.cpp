@@ -4,6 +4,12 @@
 
 #include "cpu.h"
 #include "jump_tests.h"
+#include "Timer.h"
+
+TEST_CASE("Timer")
+{
+
+}
 
 TEST_CASE("cp 0x02")
 {

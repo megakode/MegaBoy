@@ -373,3 +373,8 @@ void CPU::push_af(){
     AddDebugLog("PUSH AF");
 #endif
 }
+
+void CPU::push_pc(){
+    mem[--regs.SP] = regs.PC >> 8; // hi-byte
+    mem[--regs.SP] = regs.PC & 0xff; // lo-byte
+}

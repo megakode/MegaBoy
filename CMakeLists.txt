@@ -33,7 +33,7 @@ target_link_libraries("ImGui" d3d9.lib)
         # Testing ###################################
 
 enable_testing()
-add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h ex_block_search_instruction.h jump_tests.h)
+add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h jump_tests.h)
 target_link_libraries(cputests PRIVATE Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -41,7 +41,7 @@ include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
-add_executable(MegaBoy main.cpp cpu.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx9.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h gameboy_instructions.h)
+add_executable(MegaBoy main.cpp cpu.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx9.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 target_link_libraries(MegaBoy PUBLIC ImGui d3d9.lib)
 

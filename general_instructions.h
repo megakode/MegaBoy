@@ -23,7 +23,7 @@ void CPU::STOP()
 
 void CPU::disable_interrupts()
 {
-    // TODO: disable interrupts
+    interrupt_master_enabled = false;
 #ifdef DEBUG_LOG
     AddDebugLog("DI");
 #endif
@@ -31,7 +31,7 @@ void CPU::disable_interrupts()
 
 void CPU::enable_interrupts()
 {
-    // TODO: enable interrupts
+    interrupt_master_enabled = true;
 #ifdef DEBUG_LOG
     AddDebugLog("EI");
 #endif

@@ -10,8 +10,8 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 
-MegaBoyDebugger::MegaBoyDebugger() : registerWindow(cpu) {
-    cpu.reset();
+MegaBoyDebugger::MegaBoyDebugger() : registerWindow(gb.cpu)  {
+    gb.cpu.reset();
 }
 
 void MegaBoyDebugger::LoadTestRom()
@@ -34,7 +34,7 @@ void MegaBoyDebugger::LoadTestRom()
     } else
     {
         std::cout << "Reading zexdoc.com";
-        z80file.read ((char*)&cpu.mem[0], size );
+        z80file.read ((char*)&gb.cpu.mem[0], size );
         z80file.close();
     }
 }
@@ -55,10 +55,10 @@ void MegaBoyDebugger::UpdateUI() {
         //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
         {
             ImGuiListClipper clipper;
-            clipper.Begin(cpu.debug_log_entries.size());
+            clipper.Begin(gb.cpu.debug_log_entries.size());
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
-                    auto& entry = cpu.debug_log_entries[i];
+                    auto& entry = gb.cpu.debug_log_entries[i];
                     ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
 
                     for (unsigned char opcode : entry.opcodes) {
@@ -93,7 +93,7 @@ void MegaBoyDebugger::UpdateUI() {
     if (ImGui::Button("Reset"))
     {
         is_running = false;
-        cpu.debug_log_entries.clear();
+        gb.cpu.debug_log_entries.clear();
         //Step();
     }
 
@@ -122,6 +122,6 @@ void MegaBoyDebugger::UpdateUI() {
 
 void MegaBoyDebugger::Step()
 {
-    cpu.step();
+    gb.Step();
     scroll_to_bottom = true;
 }

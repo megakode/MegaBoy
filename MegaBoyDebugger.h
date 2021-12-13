@@ -5,6 +5,7 @@
 #include "imgui/imgui.h"
 #include "cpu.h"
 #include "UI/RegisterWindow.h"
+#include "Gameboy.h"
 
 #pragma once
 
@@ -12,7 +13,7 @@ class MegaBoyDebugger {
 
 private:
 
-    CPU cpu;
+    Gameboy gb;
     RegisterWindow registerWindow;
 
     /// Scroll to the lates entry in the disassembly
