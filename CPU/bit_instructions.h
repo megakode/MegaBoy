@@ -7,8 +7,9 @@
 /// Perform a bit instruction from the "bit opcode group"
 /// \param op2 The opcode which contains the information about the operation
 /// \param reg The register to operate on
+/// \returns number of CPU cycles spent
 
-void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
+uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 {
     // RLC r
     // opcode: 0x00 - 0x07
@@ -26,17 +27,16 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("RLC r");
 #endif
+        return 8;
 
     } else
 
-        // RRC r
-        // opcode: 0x08 - 0x0f
-        // cycles:
-        // RRC r : 8
-        // RRC (HL) : 15
-        // RRC (IX+d): 23
-        // RRC (IY+d): 23
-    if( (op2 & 0b11111000) == 0b00001000)
+    // RRC r
+    // opcode: 0x08 - 0x0f
+    // cycles:
+    // RRC r : 8
+    // RRC (HL) : 15
+    if( op2 >= 0x08 && op2 <= 0xf )
     {
         uint8_t carry = reg & 0x01;
         reg = reg >> 1;
@@ -49,17 +49,16 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("RRC r");
 #endif
+        return 8;
     } else
 
-        // RL r
-        // opcode: 0x10 - 0x17
-        // cycles:
-        // RL r: 8
-        // RL (hl): 15
-        // RL (ix+d): 23
-        // RL (iy+d): 23
-        // flags: S Z H PV N C
-    if( (op2 & 0b11111000) == 0b00010000)
+    // RL r
+    // opcode: 0x10 - 0x17
+    // cycles:
+    // RL r: 8
+    // RL (hl): 15
+    // flags: S Z H PV N C
+    if( op2 >= 0x10 && op2 <= 0x17 )
     {
         uint8_t carry = reg & 0x80;
 
@@ -72,16 +71,15 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("RL r");
 #endif
+        return 8;
     } else
 
-        // RR r
-        // opcode: 0x18 - 0x1f
-        // cycles:
-        // RR r: 8
-        // RR (hl): 15
-        // RR (ix+d): 23
-        // RR (iy+d): 23
-        // flags: S Z H PV N C
+    // RR r
+    // opcode: 0x18 - 0x1f
+    // cycles:
+    // RR r: 8
+    // RR (hl): 15
+    // flags: S Z H PV N C
     if( (op2 & 0b11111000) == 0b00011000)
     {
         uint8_t carry = reg & 0x01;
@@ -95,11 +93,12 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("RR r");
 #endif
+        return 8;
     } else
 
-        // SLA r
-        // opcode: 0x20 - 0x27
-        // cycles: r:8 (hl):15 (ix+d):23
+    // SLA r
+    // opcode: 0x20 - 0x27
+    // cycles: r:8 (hl):15
     if( op2 >= 0x20 && op2 <= 0x27 )
     {
         uint8_t carry = reg & 0x80;
@@ -112,11 +111,12 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("SLA r");
 #endif
+        return 8;
     } else
 
-        // SRA r
-        // opcode: 0x28 - 0x2f
-        // cycles: r:8 (hl):15 (ix+d):23
+    // SRA r
+    // opcode: 0x28 - 0x2f
+    // cycles: r:8 (hl):15 (ix+d):23
     if( op2 >= 0x28 && op2 <= 0x2f )
     {
         uint8_t regCode = op2 & 0b00000111;
@@ -134,6 +134,7 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         auto regName = reg_name_from_regcode(regCode);
         AddDebugLog(std::format("SRA {}",regName));
 #endif
+        return 8;
     } else
 
     // opcode: 0x30 - 0x37
@@ -141,15 +142,15 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 
         uint8_t regCode = op2 & 0b00000111;
         SWAP_r(regCode);
+        return 8;
 
     } else
 
         // SRL r
         // Shift right
+        // cycles: 8
     if( op2 >= 0x38 && op2 <= 0x3f)
     {
-        uint8_t regCode = op2 & 0b00000111;
-        uint8_t &reg = reg_from_regcode(regCode);
         uint8_t carry = reg & 0x01;
 
         reg = reg >> 1;
@@ -158,16 +159,19 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         setFlag(FlagBitmaskN,0);
         setFlag(FlagBitmaskC, carry);
 #ifdef DEBUG_LOG
+        uint8_t regCode = op2 & 0b00000111;
         auto regName = reg_name_from_regcode(regCode);
         AddDebugLog(std::format("SRL {}",regName));
 #endif
+        return 8;
     } else
 
 
-        // BIT b,r
-        // Test bit b in register r and sets Z flag accordingly
-        // opcode: 0x40 - 0x7f
-        // flag: Z H N
+    // BIT b,r
+    // Test bit b in register r and sets Z flag accordingly
+    // opcode: 0x40 - 0x7f
+    // cycles: 8
+    // flag: Z H N
     if( op2 >= 0x40 && op2 <= 0x7f )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
@@ -178,13 +182,14 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("BIT b,r");
 #endif
+        return 8;
     } else
 
-        // RES b,r
-        // Reset bit b in register r
-        // opcode: 0x80 - 0xbf (01 bbb rrr)
-        // flags: -
-        // cycles: 8
+    // RES b,r
+    // Reset bit b in register r
+    // opcode: 0x80 - 0xbf (01 bbb rrr)
+    // flags: -
+    // cycles: 8
     if( op2 >= 0x80 && op2 <= 0xbf )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
@@ -193,6 +198,7 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("RES b,r");
 #endif
+        return 8;
     } else
 
         // SET b,r
@@ -208,14 +214,18 @@ void CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         AddDebugLog("SET b,r");
 #endif
+        return 8;
     }
+
+    return 8;
 
 }
 
-// RLCA
-// opcode: 0x07
-// cycles: 4
-void CPU::rlca(){
+/// RLCA
+/// opcode: 0x07
+/// cycles: 4
+void CPU::rlca()
+{
     bool carry = regs.A & 0b10000000;
     setFlag(FlagBitmaskC,carry);
     setFlag(FlagBitmaskHalfCarry,0);
@@ -230,11 +240,12 @@ void CPU::rlca(){
 }
 
 
-// RRCA - Rotate right with carry A
-// opcode: 0x0f
-// cycles: 4
-// flags: C N H
-void CPU::rrca(){
+/// RRCA - Rotate right with carry A
+/// opcode: 0x0f
+/// cycles: 4
+/// flags: C N H
+void CPU::rrca()
+{
     uint8_t carry = regs.A & 1;
     setFlag(FlagBitmaskC,carry);
     setFlag(FlagBitmaskN,0);
@@ -246,9 +257,11 @@ void CPU::rrca(){
 #endif
 }
 
-// opcode: 0x17
-// cycles: 4
-void CPU::rla(){
+/// RLA
+/// opcode: 0x17
+/// cycles: 4
+void CPU::rla()
+{
     // rotate left and set carry
     // Set bit 0 to previous carry.
     uint8_t newcarry = regs.A & 0x80;
@@ -262,16 +275,17 @@ void CPU::rla(){
 #endif
 }
 
-// RRA
-//
-// contents of A is rotated one bit right
-// The contents of bit 0 are copied to the carry flag,
-// and the previous contents of the carry flag are copied to bit 7
-//
-// opcode: 0x1f
-// cycles: 4
-// flags: C N H
-void CPU::rra(){
+/// RRA
+///
+/// contents of A is rotated one bit right
+/// The contents of bit 0 are copied to the carry flag,
+/// and the previous contents of the carry flag are copied to bit 7
+///
+/// opcode: 0x1f
+/// cycles: 4
+/// flags: C N H
+void CPU::rra()
+{
     uint8_t carry = regs.A & 1;
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskHalfCarry,0);
@@ -283,10 +297,10 @@ void CPU::rra(){
 #endif
 }
 
-// RLD - do some swapping of nibbles between A and (HL) (see details on p.217 z80 tech ref.)
-// opcode: 0xed 0x6f
-// cycles: 18
-// flags: s z h pv n
+/// RLD - do some swapping of nibbles between A and (HL) (see details on p.217 z80 tech ref.)
+/// opcode: 0xed 0x6f
+/// cycles: 18
+/// flags: s z h pv n
 void CPU::RLD()
 {
     uint16_t hl = regs.HL;

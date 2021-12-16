@@ -2,9 +2,9 @@
 #include <fstream>
 #include <filesystem>
 
-#include "cpu.h"
+#include "../CPU/cpu.h"
 #include "jump_tests.h"
-#include "Timer.h"
+#include "../Timer.h"
 
 TEST_CASE("Timer")
 {

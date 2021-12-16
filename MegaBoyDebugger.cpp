@@ -10,14 +10,14 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 
-MegaBoyDebugger::MegaBoyDebugger() : registerWindow(gb.cpu)  {
-    gb.cpu.reset();
+MegaBoyDebugger::MegaBoyDebugger() : registerWindow(gb->cpu)  {
+    gb->cpu.reset();
 }
 
 void MegaBoyDebugger::LoadTestRom()
 {
-    //std::filesystem::path filename = "zexdoc.com";
-    std::filesystem::path filename = "zexdoc_sdsc.sms";
+    std::filesystem::path filename = "zexdoc.com";
+    //std::filesystem::path filename = "cpu_instrs.gb";
 
     auto path = std::filesystem::absolute(filename);
     auto size = std::filesystem::file_size(path);
@@ -30,13 +30,15 @@ void MegaBoyDebugger::LoadTestRom()
     }
     std::ifstream z80file (path, std::ios::in | std::ios::binary);
     if (!z80file) {
-        std::cout << "could not read zexdoc.com";
+        std::cout << "could not read " << path;
     } else
     {
-        std::cout << "Reading zexdoc.com";
-        z80file.read ((char*)&gb.cpu.mem[0], size );
+        std::cout << "Reading " << path;
+        z80file.read ((char*)&gb->cpu.mem[0x0], size );
         z80file.close();
     }
+
+    gb->cpu.regs.PC = 0x100;
 }
 
 void MegaBoyDebugger::UpdateUI() {
@@ -55,10 +57,10 @@ void MegaBoyDebugger::UpdateUI() {
         //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
         {
             ImGuiListClipper clipper;
-            clipper.Begin(gb.cpu.debug_log_entries.size());
+            clipper.Begin(gb->cpu.debug_log_entries.size());
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
-                    auto& entry = gb.cpu.debug_log_entries[i];
+                    auto& entry = gb->cpu.debug_log_entries[i];
                     ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
 
                     for (unsigned char opcode : entry.opcodes) {
@@ -93,7 +95,7 @@ void MegaBoyDebugger::UpdateUI() {
     if (ImGui::Button("Reset"))
     {
         is_running = false;
-        gb.cpu.debug_log_entries.clear();
+        gb->cpu.debug_log_entries.clear();
         //Step();
     }
 
@@ -122,6 +124,6 @@ void MegaBoyDebugger::UpdateUI() {
 
 void MegaBoyDebugger::Step()
 {
-    gb.Step();
+    gb->Step();
     scroll_to_bottom = true;
 }

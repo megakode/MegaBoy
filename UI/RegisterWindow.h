@@ -6,7 +6,7 @@
 #define MEGABOY_REGISTERWINDOW_H
 
 
-#include "../cpu.h"
+#include "../CPU/cpu.h"
 
 class RegisterWindow {
 

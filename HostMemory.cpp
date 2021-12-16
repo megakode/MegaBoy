@@ -17,10 +17,3 @@ uint8_t& HostMemory::operator[] (int index)
 
 // TODO split into mem_read and mem_write functions.
 //    blarggs test - serial output
-/*
-if (memory[0xff02] == 0x81) {
-    char c = memory[0xff01];
-    printf("%c", c);
-    memory[0xff02] = 0x0;
-}
-*/

@@ -3,7 +3,7 @@
 //
 
 #include "imgui/imgui.h"
-#include "cpu.h"
+#include "CPU/cpu.h"
 #include "UI/RegisterWindow.h"
 #include "Gameboy.h"
 
@@ -13,7 +13,7 @@ class MegaBoyDebugger {
 
 private:
 
-    Gameboy gb;
+    std::unique_ptr<Gameboy> gb = std::make_unique<Gameboy>();
     RegisterWindow registerWindow;
 
     /// Scroll to the lates entry in the disassembly

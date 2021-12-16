@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <functional>
 
 #pragma once
 
@@ -39,6 +40,8 @@ private:
     constexpr static uint8_t TimerMultiplierBitmask = 0b011;
 
 public:
+
+    std::function<void()> overflow_delegate = nullptr;
 
     Timer() = default;
 
@@ -77,7 +80,11 @@ public:
             // Did timer overflow?
             if(timer_counter < last_timer_counter){
                 timer_counter = timer_modulo;
-                // TODO: Set timer interrupt flag (Request timer interrupt)
+                // Set timer interrupt flag (Request timer interrupt)
+                if(overflow_delegate != nullptr)
+                {
+                    overflow_delegate();
+                }
             }
         }
 

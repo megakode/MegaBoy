@@ -14,7 +14,7 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG        v3.0.0-preview3
 )
-add_compile_definitions(DEBUG_LOG)
+# add_compile_definitions(DEBUG_LOG)
 FetchContent_MakeAvailable(Catch2)
 
 # Direct X ####################################
@@ -33,7 +33,7 @@ target_link_libraries("ImGui" d3d9.lib)
         # Testing ###################################
 
 enable_testing()
-add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h jump_tests.h)
+add_executable(cputests tests/cputests.cpp CPU/cpu.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/in_out_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/jump_tests.h)
 target_link_libraries(cputests PRIVATE Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -41,7 +41,7 @@ include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
-add_executable(MegaBoy main.cpp cpu.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx9.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h)
+add_executable(MegaBoy main.cpp CPU/cpu.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx9.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 target_link_libraries(MegaBoy PUBLIC ImGui d3d9.lib)
 

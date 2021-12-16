@@ -9,7 +9,7 @@
 #include <iostream>
 #include <format>
 
-#include "HostMemory.h"
+#include "../HostMemory.h"
 
 #pragma once
 
@@ -42,6 +42,8 @@ class CPU {
     public:
     
     explicit CPU(HostMemory& mem);
+
+    CPU() = delete;
 
     struct Instruction {
         /// Number of CPU cycles the instruction takes to execute
@@ -102,7 +104,7 @@ class CPU {
     uint8_t current_opcode;
     /// Current number of cycles spent by the currently executing opcode. Each instruction adds cycles to this variable during execution,
     /// and the step method waits this number of cycles after a step, and resets it to 0 afterwards.
-    uint16_t currentCycles;
+    uint16_t additional_cycles_spent;
 
     // *************************************************************************************
     // Fetching instruction bytes
@@ -176,7 +178,7 @@ class CPU {
     /// Each condition code reflects a flag and a state. E.g. Carry, non-carry, zero, non-zero, etc.
     /// \param conditionCode The 3bit condition code from 0-7
     /// \return Condition state.
-    inline bool is_condition_true( uint8_t conditionCode ){
+    [[nodiscard]] inline bool is_condition_true( uint8_t conditionCode ) const{
         switch (conditionCode)
         {
             case 0: return !(regs.F & FlagBitmaskZero); // Non zero
@@ -188,7 +190,7 @@ class CPU {
     }
 
     /// Debug method to get the name of a condition code, encoded in jump instruction
-    inline std::string name_from_condition( uint8_t conditionCode )
+    static inline std::string name_from_condition( uint8_t conditionCode )
     {
         switch (conditionCode)
         {
@@ -196,7 +198,7 @@ class CPU {
             case 1: return "Z"; // zero
             case 2: return "NC"; // non carry
             case 3: return "C"; // carry
-            default: return "Unknow condition code?!";
+            default: return "Unknown condition code?!";
         }
     }
 
@@ -219,7 +221,7 @@ class CPU {
         }
     }
 
-    inline bool getFlag( FlagBitmask flag ){
+    inline bool getFlag( FlagBitmask flag ) const{
         return regs.F & flag;
     }
 
@@ -231,9 +233,7 @@ class CPU {
     void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
 
-    void do_bit_instruction( uint8_t op2, uint8_t& reg );
-
-    void AddCurrentCycles(uint8_t cycles);
+    uint8_t do_bit_instruction( uint8_t op2, uint8_t& reg );
 
     void AddDebugLog(const std::string &text);
 
@@ -296,7 +296,7 @@ public:
     void DEC_H();
     void INC_L();
     void DEC_L();
-    void inc_bc();
+    void INC_BC();
     void dec_bc();
     void INC_DE();
     void DEC_DE();

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "cpu.h"
+#include "CPU/cpu.h"
 #include "HostMemory.h"
 #include "Timer.h"
 
@@ -14,12 +14,9 @@ public:
 
     bool IsDoubleSpeedMode = false;
 
-    HostMemory mem{};
+    HostMemory mem;
     CPU cpu;
     Timer timer;
-
-    /// Interrupt Master Enable
-    bool ime = true;
 
     /// FFFF - IE - Interrupt Enable (R/W)
     ///

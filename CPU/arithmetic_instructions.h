@@ -421,11 +421,11 @@ void CPU::DEC_pHL()
     setFlag(FlagBitmaskN,1);
 }
 
-// inc bc
+// INC BC
 // Opcode: 03
 // Cycles: 06
 // Flags: -
-void CPU::inc_bc(){
+void CPU::INC_BC(){
     regs.BC++;
 #ifdef DEBUG_LOG
     AddDebugLog("INC BC");

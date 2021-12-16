@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <vector>
 #include <iostream>
 
 #include "cpu.h"
@@ -20,7 +19,7 @@ CPU::CPU(HostMemory& mem) : mem(mem) {
         { 4, &CPU::NOP},        // 0x00 NOP
         {12, &CPU::LD_BC_nn},   // 0x01 LD BC,NN
         { 8, &CPU::LD_pBC_A},   // 0x02 "LD (BC),A"
-        { 8, &CPU::inc_bc},     // 0x03 "INC BC"
+        { 8, &CPU::INC_BC},     // 0x03 "INC BC"
         { 4, &CPU::INC_B},      // 0x04 {"INC B"
         { 4, &CPU::DEC_B},      // 0x05 "DEC B"
         { 8, &CPU::LD_r_n},     // 0x06 "LD B,N"
@@ -301,7 +300,8 @@ void CPU::decode_bit_instruction()
 {
     uint8_t op2 = fetch8BitValue(); // fetch next opcode
     uint8_t& reg = reg_from_regcode(op2 & 0b00000111);
-    do_bit_instruction(op2,reg);
+    // Get the number of cycles that the bit instruction spent
+    additional_cycles_spent += do_bit_instruction(op2, reg);
 }
 
 void CPU::reset()
@@ -339,18 +339,14 @@ uint8_t CPU::step()
     std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
 #endif
     (this->*instructions[current_opcode].code)();
-    // TODO: wait `currentCycles` number of cycles
-    currentCycles = 0;
 
-    return this->instructions[current_opcode].cycles;
+    // Cycles spent in this step = base instruction cycles + additional cycles spent (i.e. jumps and conditions taking longer depending on outcome)
+    uint8_t cycles_spent = this->instructions[current_opcode].cycles + additional_cycles_spent;
+
+    additional_cycles_spent = 0;
+    // TODO: wait `cycles_spent` number of cycles
+    return cycles_spent;
 };
-
-
-/// Add a number of cycles that the current operation has spent.
-/// At the end of each `step`, the final number of cycles is used as a delay to wait before running the next `step`.
-void CPU::AddCurrentCycles(uint8_t cycles ){
-
-}
 
 // *******************************************************
 // Flag helpers

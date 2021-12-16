@@ -14,6 +14,14 @@ void Gameboy::Step() {
 
     HandleInterrupts();
 
+    // print debug rom output
+
+    if (cpu.mem[0xff02] == 0x81) {
+        char c = cpu.mem[0xff01];
+        printf("%c", c);
+        cpu.mem[0xff02] = 0x0;
+    }
+
 }
 
 void Gameboy::HandleInterrupts() {
@@ -23,7 +31,7 @@ void Gameboy::HandleInterrupts() {
     // Interrupt handling should take ~5 cycles
     // TODO: wait some cycles
 
-    if(ime)
+    if(cpu.interrupt_master_enabled)
     {
         // Priority:
         // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
@@ -36,7 +44,6 @@ void Gameboy::HandleInterrupts() {
         {
             if(mem.InterruptEnabled() & mem.InterruptFlag() & (1<<i) )
             {
-                ime = false;
                 cpu.push_pc();
                 // Clear the given interrupt flag again
                 mem.InterruptFlag() = mem.InterruptFlag() & ~(1<<i);
@@ -49,5 +56,10 @@ void Gameboy::HandleInterrupts() {
 }
 
 void Gameboy::Start() {
+
+    // Set interrupt flag when timer overflows
+    timer.overflow_delegate = [&](){
+        mem.InterruptFlag() |= InterruptFlagTimer;
+    };
 
 }
