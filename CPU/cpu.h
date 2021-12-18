@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <format>
 
 #include "../HostMemory.h"
 
@@ -235,7 +234,7 @@ class CPU {
 
     uint8_t do_bit_instruction( uint8_t op2, uint8_t& reg );
 
-    void AddDebugLog(const std::string &text);
+    void AddDebugLog(const char *text, va_list args);
 
     void set_AND_operation_flags();
     void set_INC_operation_flags(uint8_t result);

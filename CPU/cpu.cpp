@@ -320,10 +320,14 @@ void CPU::reset()
 
 }
 
-void CPU::AddDebugLog(const std::string& text)
+void CPU::AddDebugLog(const char *text, va_list args)
 {
+    constexpr int buffer_length = 200;
+    char buffer[buffer_length];
+    snprintf(buffer, buffer_length, text,args);
+    std::string buffAsStdStr = buffer;
     // TODO: also add opcodes
-    std::cout << current_pc << ": " << text << std::endl;
+    //std::cout << current_pc << ": " << text << std::endl;
     debug_log_entries.push_back({current_pc, {current_opcode,0,0,0}, text});
 }
 

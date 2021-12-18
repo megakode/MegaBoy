@@ -16,8 +16,8 @@ MegaBoyDebugger::MegaBoyDebugger() : registerWindow(gb->cpu)  {
 
 void MegaBoyDebugger::LoadTestRom()
 {
-    std::filesystem::path filename = "zexdoc.com";
-    //std::filesystem::path filename = "cpu_instrs.gb";
+    //std::filesystem::path filename = "../tests/zexdoc.com";
+    std::filesystem::path filename = "../tests/cpu_instrs.gb";
 
     auto path = std::filesystem::absolute(filename);
     auto size = std::filesystem::file_size(path);
