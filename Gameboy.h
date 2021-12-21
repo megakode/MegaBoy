@@ -14,7 +14,7 @@ public:
 
     bool IsDoubleSpeedMode = false;
 
-    HostMemory mem;
+    HostMemory mem{};
     CPU cpu;
     Timer timer;
 

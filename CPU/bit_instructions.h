@@ -132,7 +132,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         setFlag(FlagBitmaskC, carry);
 #ifdef DEBUG_LOG
         auto regName = reg_name_from_regcode(regCode);
-        AddDebugLog(std::format("SRA {}",regName));
+        AddDebugLog("SRA %s",regName);
 #endif
         return 8;
     } else
@@ -161,7 +161,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 #ifdef DEBUG_LOG
         uint8_t regCode = op2 & 0b00000111;
         auto regName = reg_name_from_regcode(regCode);
-        AddDebugLog(std::format("SRL {}",regName));
+        AddDebugLog("SRL %s",regName);
 #endif
         return 8;
     } else
@@ -333,6 +333,6 @@ void CPU::SWAP_r(uint8_t regCode)
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(regCode);
-    AddDebugLog(std::format("SWAP {}",regName));
+    AddDebugLog("SWAP %s",regName);
 #endif
 }

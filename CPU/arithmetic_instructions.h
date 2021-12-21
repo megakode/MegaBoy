@@ -52,7 +52,7 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
     setFlag(FlagBitmaskZero, srcValue == regs.A);
     setFlag(FlagBitmaskN,true);
     setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
-    setFlag(FlagBitmaskHalfCarry, (0x00f0 & regs.A) < (result & 0x00f0) );
+    setFlag(FlagBitmaskHalfCarry, (0x0f & regs.A) < (srcValue & 0x0f) );
 
     if(!onlySetFlagsForComparison){
         regs.A = static_cast<uint8_t>(result);
@@ -86,7 +86,7 @@ void CPU::CP_r()
 
     #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog(std::format("CP {}",regName));
+    AddDebugLog("CP %s",regName);
     #endif
 }
 
@@ -100,7 +100,7 @@ void CPU::CP_n()
     sub(value,false, true);
 
     #ifdef DEBUG_LOG
-    AddDebugLog(std::format("CP {:#04x}", value));
+    AddDebugLog("CP %02x", value);
     #endif
 }
 
@@ -243,7 +243,7 @@ void CPU::and_r()
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog(std::format("AND {}",regName));
+    AddDebugLog("AND %s",regName);
 #endif
 }
 
@@ -253,7 +253,7 @@ void CPU::and_n()
     and_a_with_value(value);
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("AND {:#04x}",value));
+    AddDebugLog("AND %02x",value);
 #endif
 }
 
@@ -275,7 +275,7 @@ void CPU::xor_r()
 
     #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog(std::format("XOR {}",regName));
+    AddDebugLog("XOR %s",regName);
     #endif
 }
 
@@ -287,7 +287,7 @@ void CPU::xor_n()
     xor_a_with_value(value);
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("XOR {:#04x}",value));
+    AddDebugLog("XOR %02x",value);
 #endif
 }
 
@@ -319,7 +319,7 @@ void CPU::or_r()
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog(std::format("OR {}",regName));
+    AddDebugLog("OR %s",regName.c_str());
 #endif
 }
 

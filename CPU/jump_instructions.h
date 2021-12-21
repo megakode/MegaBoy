@@ -16,7 +16,7 @@ void CPU::jp_cc_nn()
     }
 
 #ifdef DEBUG_LOG
-        AddDebugLog(std::format("JP {},{:#06x}",name_from_condition(conditionCode),location));
+        AddDebugLog("JP %s,%04x",name_from_condition(conditionCode).c_str(),location);
 #endif
 
 }
@@ -31,7 +31,7 @@ void CPU::jr_nc()
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR NC,{:+#04d}",offset));
+    AddDebugLog("JR NC,%+i",offset);
 #endif
 }
 
@@ -45,7 +45,7 @@ void CPU::jr_c()
         regs.PC += offset;
     }
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR C,{:+#04d}",offset));
+    AddDebugLog("JR C,%+i",offset);
 #endif
 }
 
@@ -61,7 +61,7 @@ void CPU::jr_z(){
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR Z,{:+#04d}",offset));
+    AddDebugLog("JR Z,%+i",offset);
 #endif
 }
 
@@ -75,7 +75,7 @@ void CPU::jr_nz(){
     }
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR NZ,{:+#04d}",offset));
+    AddDebugLog("JR NZ,%+i",offset);
 #endif
 }
 
@@ -88,7 +88,7 @@ void CPU::jr_n(){
     regs.PC += offset;
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JR {:+#04d}",offset));
+    AddDebugLog("JR %+i",offset);
 #endif
 }
 
@@ -100,7 +100,7 @@ void CPU::jp_nn()
     regs.PC = fetch16BitValue();
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("JP  {:#06x}",regs.PC));
+    AddDebugLog("JP %04x",regs.PC);
 #endif
 }
 
@@ -132,7 +132,7 @@ void CPU::call_cc_nn()
     }
 #ifdef DEBUG_LOG
     std::string conditionName = name_from_condition(conditionCode);
-    AddDebugLog(std::format("CALL {},{:#06x}",conditionName,regs.PC));
+    AddDebugLog("CALL %s,%04x",conditionName,regs.PC);
 #endif
 }
 
@@ -146,7 +146,7 @@ void CPU::call(){
     regs.PC = location;
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("CALL {:#06x}",location));
+    AddDebugLog("CALL %04x",location);
 #endif
 }
 
@@ -203,7 +203,7 @@ void CPU::RET_cc(){
 
 #ifdef DEBUG_LOG
     std::string conditionName = name_from_condition(conditionCode);
-    AddDebugLog(std::format("RET {}",conditionName));
+    AddDebugLog("RET %s",conditionName);
 #endif
 }
 
@@ -225,6 +225,6 @@ void CPU::rst()
     regs.PC = location[locationCode];
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("RST {:#04x}",location[locationCode]));
+    AddDebugLog("RST %04x",location[locationCode]);
 #endif
 }

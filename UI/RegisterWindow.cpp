@@ -6,7 +6,7 @@
 #include "../imgui/imgui.h"
 #include "UIConfig.h"
 
-void RegisterWindow::UpdateUI() {
+void RegisterWindow::UpdateUI(CPU &cpu) {
 
     // Create window
     ImGui::Begin("Registers");

@@ -14,7 +14,7 @@
 
 enum FlagBitmask : uint8_t {
     FlagBitmaskZero = 0b10000000,
-    FlagBitmaskN = 0b01000010,
+    FlagBitmaskN = 0b01000000,
     FlagBitmaskHalfCarry = 0b00100000,
     FlagBitmaskC = 0b00010000
 };
@@ -234,6 +234,7 @@ class CPU {
 
     uint8_t do_bit_instruction( uint8_t op2, uint8_t& reg );
 
+    void AddDebugLog(const char* fmt, ...);
     void AddDebugLog(const char *text, va_list args);
 
     void set_AND_operation_flags();

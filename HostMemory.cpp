@@ -15,5 +15,6 @@ uint8_t& HostMemory::operator[] (int index)
     return memory[index];
 }
 
+
 // TODO split into mem_read and mem_write functions.
 //    blarggs test - serial output

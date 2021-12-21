@@ -10,14 +10,16 @@
 
 class RegisterWindow {
 
-    CPU& cpu;
+    //CPU& cpu;
 
 public:
-
+/*
     explicit RegisterWindow(CPU &cpu) : cpu(cpu) {
     }
+*/
+    //RegisterWindow();
 
-    void UpdateUI();
+    static void UpdateUI(CPU &cpu);
 
 };
 

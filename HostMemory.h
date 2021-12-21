@@ -22,7 +22,6 @@ public:
         return memory[InterruptFlagAddress];
     }
 
-
 private:
 
     static constexpr uint16_t InterruptFlagAddress = 0xff0f; // IF

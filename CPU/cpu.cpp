@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <stdarg.h>
 
 #include "cpu.h"
 
@@ -10,8 +11,8 @@
 #include "general_instructions.h"
 
 
-CPU::CPU(HostMemory& mem) : mem(mem) {
-
+CPU::CPU(HostMemory& memref) : mem(memref) {
+    
     // Based on tables from:
     // https://clrhome.org/table/
 
@@ -188,75 +189,75 @@ CPU::CPU(HostMemory& mem) : mem(mem) {
         {8, &CPU::sbc_r},              // 0x9e "SBC (HL)"
         {4, &CPU::sbc_r},              // 0x9f "SBC A"
 
-        {4, &CPU::and_r},             // 0xa0 "AND B"
-        {4, &CPU::and_r},             // 0xa1 "AND C"
-        {4, &CPU::and_r},             // 0xa2 "AND D"
-        {4, &CPU::and_r},             // 0xa3 "AND E"
-        {4, &CPU::and_r},             // 0xa4 "AND H"
-        {4, &CPU::and_r},             // 0xa5 "AND L"
-        {8, &CPU::and_r},             // 0xa6 "AND (HL)"
-        {4, &CPU::and_r},             // 0xa7 "AND A"
+        {4, &CPU::and_r},          // 0xa0 "AND B"
+        {4, &CPU::and_r},          // 0xa1 "AND C"
+        {4, &CPU::and_r},          // 0xa2 "AND D"
+        {4, &CPU::and_r},          // 0xa3 "AND E"
+        {4, &CPU::and_r},          // 0xa4 "AND H"
+        {4, &CPU::and_r},          // 0xa5 "AND L"
+        {8, &CPU::and_r},          // 0xa6 "AND (HL)"
+        {4, &CPU::and_r},          // 0xa7 "AND A"
 
-        {4, &CPU::xor_r},             // 0xa8 "XOR B"
-        {4, &CPU::xor_r},             // 0xa9 "XOR C"
-        {4, &CPU::xor_r},             // 0xaa "XOR D"
-        {4, &CPU::xor_r},             // 0xab "XOR E"
-        {4, &CPU::xor_r},             // 0xac "XOR H"
-        {4, &CPU::xor_r},             // 0xad "XOR L"
-        {8, &CPU::xor_r},             // 0xae "XOR (HL)"
-        {4, &CPU::xor_r},             // 0xaf "XOR A"
+        {4, &CPU::xor_r},          // 0xa8 "XOR B"
+        {4, &CPU::xor_r},          // 0xa9 "XOR C"
+        {4, &CPU::xor_r},          // 0xaa "XOR D"
+        {4, &CPU::xor_r},          // 0xab "XOR E"
+        {4, &CPU::xor_r},          // 0xac "XOR H"
+        {4, &CPU::xor_r},          // 0xad "XOR L"
+        {8, &CPU::xor_r},          // 0xae "XOR (HL)"
+        {4, &CPU::xor_r},          // 0xaf "XOR A"
 
-        {4, &CPU::or_r},             // 0xb0 "OR B"
-        {4, &CPU::or_r},             // 0xb1 "OR C"
-        {4, &CPU::or_r},             // 0xb2 "OR D"
-        {4, &CPU::or_r},             // 0xb3 "OR E"
-        {4, &CPU::or_r},             // 0xb4 "OR H"
-        {4, &CPU::or_r},             // 0xb5 "OR L"
-        {8, &CPU::or_r},             // 0xb6 "OR (HL)"
-        {4, &CPU::or_r},             // 0xb7 "OR A"
+        {4, &CPU::or_r},           // 0xb0 "OR B"
+        {4, &CPU::or_r},           // 0xb1 "OR C"
+        {4, &CPU::or_r},           // 0xb2 "OR D"
+        {4, &CPU::or_r},           // 0xb3 "OR E"
+        {4, &CPU::or_r},           // 0xb4 "OR H"
+        {4, &CPU::or_r},           // 0xb5 "OR L"
+        {8, &CPU::or_r},           // 0xb6 "OR (HL)"
+        {4, &CPU::or_r},           // 0xb7 "OR A"
 
-        {4, &CPU::CP_r},             // 0xb8 "CP B"
-        {4, &CPU::CP_r},             // 0xb9 "CP C"
-        {4, &CPU::CP_r},             // 0xba "CP D"
-        {4, &CPU::CP_r},             // 0xbb "CP E"
-        {4, &CPU::CP_r},             // 0xbc "CP H"
-        {4, &CPU::CP_r},             // 0xbd "CP L"
-        {8, &CPU::CP_r},             // 0xbe "CP (HL)"
-        {4, &CPU::CP_r},             // 0xbf "CP A"
+        {4, &CPU::CP_r},           // 0xb8 "CP B"
+        {4, &CPU::CP_r},           // 0xb9 "CP C"
+        {4, &CPU::CP_r},           // 0xba "CP D"
+        {4, &CPU::CP_r},           // 0xbb "CP E"
+        {4, &CPU::CP_r},           // 0xbc "CP H"
+        {4, &CPU::CP_r},           // 0xbd "CP L"
+        {8, &CPU::CP_r},           // 0xbe "CP (HL)"
+        {4, &CPU::CP_r},           // 0xbf "CP A"
 
-        { 8, &CPU::RET_cc},            // 0xc0 "RET NZ"
-        {12, &CPU::pop_qq},            // 0xc1 "POP BC"
-        {12, &CPU::jp_cc_nn},        // 0xc2 "JP NZ NN"
-        {16, &CPU::jp_nn},              // 0xc3 "JP NN"
+        { 8, &CPU::RET_cc},        // 0xc0 "RET NZ"
+        {12, &CPU::pop_qq},        // 0xc1 "POP BC"
+        {12, &CPU::jp_cc_nn},      // 0xc2 "JP NZ NN"
+        {16, &CPU::jp_nn},         // 0xc3 "JP NN"
         {12, &CPU::call_cc_nn},    // 0xc4 "CALL NZ,NN"
-        {16, &CPU::push_bc},          // 0xc5 "PUSH BC"
-        { 8, &CPU::add_a_n},          // 0xc6 "ADD A,n"
-        {16, &CPU::rst},              // 0xc7 "RST 00h"
-        { 8, &CPU::RET_cc},             // 0xc8 "RET Z"
-        {16, &CPU::RET},                  // 0xc9 "RET"
-        {12, &CPU::jp_cc_nn},         // 0xca "JP Z,**"
+        {16, &CPU::push_bc},       // 0xc5 "PUSH BC"
+        { 8, &CPU::add_a_n},       // 0xc6 "ADD A,n"
+        {16, &CPU::rst},           // 0xc7 "RST 00h"
+        { 8, &CPU::RET_cc},        // 0xc8 "RET Z"
+        {16, &CPU::RET},           // 0xc9 "RET"
+        {12, &CPU::jp_cc_nn},      // 0xca "JP Z,**"
         { 4, &CPU::decode_bit_instruction}, // 0xcb "BIT opcode group"
-        {12, &CPU::call_cc_nn},     // 0xcc "CALL Z,nn"
-        {24, &CPU::call},             // 0xcd "CALL nn"
-        { 8, &CPU::adc_a_n},          // 0xce "ADC A,N"
-        {16, &CPU::rst},              // 0xcf "RST 08h"
+        {12, &CPU::call_cc_nn},    // 0xcc "CALL Z,nn"
+        {24, &CPU::call},          // 0xcd "CALL nn"
+        { 8, &CPU::adc_a_n},       // 0xce "ADC A,N"
+        {16, &CPU::rst},           // 0xcf "RST 08h"
 
-        { 8, &CPU::RET_cc},         // 0xd0 "RET NC"
-        {12, &CPU::pop_qq},         // 0xd1 "POP DE"
-        {12, &CPU::jp_cc_nn},       // 0xd2 "JP NC,NN"
-        { 0, &CPU::invalid_opcode}, // 0xd3 "OUT (N),A"
-        {12, &CPU::call_cc_nn},     // 0xd4 "CALL NC,NN"
-        {16, &CPU::push_de},        // 0xd5 "PUSH DE"
-        { 8, &CPU::sub_n},          // 0xd6 "SUB N"
-        {16, &CPU::rst},            // 0xd7 "RST 10h"
-        { 8, &CPU::RET_cc},         // 0xd8 "RET C"
-        {16, &CPU::RETI},           // 0xd9 "EXX"
-        {12, &CPU::jp_cc_nn},       // 0xda "JP C,NN"
-        { 0, &CPU::invalid_opcode}, // 0xdb "IN A,(n)"
-        {12, &CPU::call_cc_nn},     // 0xdc "CALL C,NN"
-        { 0, &CPU::invalid_opcode}, // 0xdd
-        { 8, &CPU::sbc_n},          // 0xde "SBC N"
-        {16, &CPU::rst},            // 0xdf "RST 18h"
+        { 8, &CPU::RET_cc},        // 0xd0 "RET NC"
+        {12, &CPU::pop_qq},        // 0xd1 "POP DE"
+        {12, &CPU::jp_cc_nn},      // 0xd2 "JP NC,NN"
+        { 0, &CPU::invalid_opcode},// 0xd3 "OUT (N),A"
+        {12, &CPU::call_cc_nn},    // 0xd4 "CALL NC,NN"
+        {16, &CPU::push_de},       // 0xd5 "PUSH DE"
+        { 8, &CPU::sub_n},         // 0xd6 "SUB N"
+        {16, &CPU::rst},           // 0xd7 "RST 10h"
+        { 8, &CPU::RET_cc},        // 0xd8 "RET C"
+        {16, &CPU::RETI},          // 0xd9 "EXX"
+        {12, &CPU::jp_cc_nn},      // 0xda "JP C,NN"
+        { 0, &CPU::invalid_opcode},// 0xdb "IN A,(n)"
+        {12, &CPU::call_cc_nn},    // 0xdc "CALL C,NN"
+        { 0, &CPU::invalid_opcode},// 0xdd
+        { 8, &CPU::sbc_n},         // 0xde "SBC N"
+        {16, &CPU::rst},           // 0xdf "RST 18h"
 
         {12, &CPU::LD_ff00n_A},     // 0xe0 "RET PO"
         {12, &CPU::pop_qq},         // 0xe1 "POP HL"
@@ -268,7 +269,7 @@ CPU::CPU(HostMemory& mem) : mem(mem) {
         {16, &CPU::rst},            // 0xe7 "RST 20h"
         {16, &CPU::ADD_SP_s8},      // 0xe8 "RET PE"
         { 4, &CPU::jp_ptr_hl},      // 0xe9 "JP (HL)"
-        {16, &CPU::LD_pnn_A},       // 0xea "JP PE,NN"
+        {16, &CPU::LD_pnn_A},       // 0xea "LD (nn),A"
         { 0, &CPU::invalid_opcode}, // 0xeb "EX DH,HL"
         { 0, &CPU::invalid_opcode}, // 0xec "CALL PE,NN"
         { 0, &CPU::invalid_opcode}, // 0xed Extended instructions
@@ -320,15 +321,25 @@ void CPU::reset()
 
 }
 
+void CPU::AddDebugLog(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    AddDebugLog(fmt, args);
+    va_end(args);
+}
+
 void CPU::AddDebugLog(const char *text, va_list args)
 {
     constexpr int buffer_length = 200;
     char buffer[buffer_length];
-    snprintf(buffer, buffer_length, text,args);
+    // snprintf(buffer, buffer_length, text,args);
+    vsnprintf(buffer, buffer_length, text, args);
+
     std::string buffAsStdStr = buffer;
     // TODO: also add opcodes
     //std::cout << current_pc << ": " << text << std::endl;
-    debug_log_entries.push_back({current_pc, {current_opcode,0,0,0}, text});
+    debug_log_entries.push_back({current_pc, {current_opcode,0,0,0}, buffAsStdStr});
 }
 
 
@@ -340,7 +351,7 @@ uint8_t CPU::step()
     current_opcode = fetch8BitValue();
 
 #ifdef DEBUG_LOG
-    std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
+    //std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
 #endif
     (this->*instructions[current_opcode].code)();
 

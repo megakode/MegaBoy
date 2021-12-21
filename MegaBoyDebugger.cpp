@@ -10,8 +10,11 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 
-MegaBoyDebugger::MegaBoyDebugger() : registerWindow(gb->cpu)  {
+MegaBoyDebugger::MegaBoyDebugger() {
+
+    gb = std::make_unique<Gameboy>();
     gb->cpu.reset();
+
 }
 
 void MegaBoyDebugger::LoadTestRom()
@@ -21,6 +24,11 @@ void MegaBoyDebugger::LoadTestRom()
 
     auto path = std::filesystem::absolute(filename);
     auto size = std::filesystem::file_size(path);
+
+    if( size > 0xffff ){
+        std::cout << "Warning: ROM file size is larger than 64k! will only read first 64k" << std::endl;
+        size = 0xffff;
+    }
 
     std::cout << "path: " << path << std::endl;
     if(exists(path)){
@@ -34,19 +42,18 @@ void MegaBoyDebugger::LoadTestRom()
     } else
     {
         std::cout << "Reading " << path;
-        z80file.read ((char*)&gb->cpu.mem[0x0], size );
+        z80file.read ((char*)&gb->cpu.mem[0], size );
         z80file.close();
     }
 
     gb->cpu.regs.PC = 0x100;
 }
 
-void MegaBoyDebugger::UpdateUI() {
-
-
+void MegaBoyDebugger::UpdateUI() 
+{
     static bool is_running = false;
 
-    registerWindow.UpdateUI();
+    RegisterWindow::UpdateUI(gb->cpu);
 
     ImGui::Begin("Disassembly");
 

@@ -24,7 +24,11 @@ void CPU::LD_pnn_rr(uint16_t location, uint16_t value)
 // ***********************************************************************************
 
 void CPU::LD_pnn_SP() {
-    LD_pnn_rr(fetch16BitValue(), regs.SP);
+    auto addr = fetch16BitValue();
+    LD_pnn_rr(addr, regs.SP);
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD (0x%04x),SP",regs.SP);
+    #endif
 }
 
 
@@ -39,7 +43,7 @@ void CPU::LD_r_r()
     dst = src;
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD {},{}",reg_name_from_regcode(dstRegCode),reg_name_from_regcode(srcRegCode)));
+    AddDebugLog("LD %s,%s",reg_name_from_regcode(dstRegCode).c_str(),reg_name_from_regcode(srcRegCode).c_str());
 #endif
 
 }
@@ -52,13 +56,15 @@ void CPU::LD_r_n()
     dstReg = value;
 
     #ifdef DEBUG_LOG
-    auto regName =  reg_name_from_regcode(dstRegCode);
-    AddDebugLog(std::format("LD {},{:#04x}",regName,value));
+    AddDebugLog("LD %s,0x%02x",reg_name_from_regcode(dstRegCode).c_str(),value);
     #endif
 }
 
 void CPU::LD_R_A() {
     regs.R = regs.A;
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD R,A");
+    #endif
 }
 
 // LD HL,NN
@@ -70,7 +76,7 @@ void CPU::LD_HL_nn(){
     regs.H = fetch8BitValue();
 
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD HL,{:#06x}",regs.HL));
+    AddDebugLog("LD HL,0x%04x",regs.HL);
 #endif
 }
 
@@ -81,7 +87,7 @@ void CPU::LD_SP_nn()
 {
     regs.SP = fetch16BitValue();
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD SP,{:#06x}",regs.SP));
+    AddDebugLog("LD SP,0x%04x",regs.SP);
 #endif
 }
 
@@ -91,9 +97,9 @@ void CPU::LD_SP_nn()
 void CPU::LD_pnn_A()
 {
     auto addr = fetch16BitValue();
-    mem[fetch16BitValue()] = regs.A;
+    mem[addr] = regs.A;
 #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD ({:#06x}),A",addr));
+    AddDebugLog("LD (0x%04x),A",addr);
 #endif
 }
 
@@ -106,7 +112,7 @@ void CPU::LD_pHL_n()
     mem[regs.HL] = value;
 
     #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD (HL),{:#04x}", value));
+    AddDebugLog("LD (HL),0x%02x", value);
     #endif
 }
 
@@ -131,7 +137,7 @@ void CPU::LD_BC_nn()
     regs.B = fetch8BitValue();
 
     #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD BC,{:#06x}", regs.BC));
+    AddDebugLog("LD BC,0x%04x", regs.BC);
     #endif
 };
 
@@ -168,7 +174,7 @@ void CPU::LD_DE_nn()
     regs.DE = fetch16BitValue();
 
     #ifdef DEBUG_LOG
-    AddDebugLog(std::format("LD DE,{:#06x}", regs.DE));
+    AddDebugLog("LD DE,0x%04x", regs.DE);
     #endif
 };
 
@@ -203,6 +209,9 @@ void CPU::LD_A_pDE()
 void CPU::LDI_pHL_A()
 {
     mem[regs.HL++] = regs.A;
+#ifdef DEBUG_LOG
+    AddDebugLog("LDI (HL),A");
+#endif
 }
 
 /// LDI  A,(HL)
@@ -211,6 +220,9 @@ void CPU::LDI_pHL_A()
 void CPU::LDI_A_pHL()
 {
     regs.A = mem[regs.HL++];
+#ifdef DEBUG_LOG
+    AddDebugLog("LDI A,(HL)");
+#endif
 }
 
 /// LDD (HL),A
@@ -219,6 +231,9 @@ void CPU::LDI_A_pHL()
 void CPU::LDD_pHL_A()
 {
     mem[regs.HL--] = regs.A;
+#ifdef DEBUG_LOG
+    AddDebugLog("LDD (HL),A");
+#endif
 }
 
 /// LDD  A,(HL)
@@ -227,6 +242,9 @@ void CPU::LDD_pHL_A()
 void CPU::LDD_A_pHL()
 {
     regs.A = mem[regs.HL--];
+#ifdef DEBUG_LOG
+    AddDebugLog("LDD A,(HL)");
+#endif
 }
 
 /// LD (0xff00 + n),A
@@ -238,6 +256,9 @@ void CPU::LD_ff00n_A()
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
     mem[addr] = regs.A;
+#ifdef DEBUG_LOG
+    AddDebugLog("LD (0xff00 + 0x%02x),A",lowbyte);
+#endif
 }
 
 /// LD (FF00+C),A
@@ -246,6 +267,9 @@ void CPU::LD_ff00C_A()
 {
     uint16_t addr = 0xff00 + regs.C;
     mem[addr] = regs.A;
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD (0xff00 + C),A");
+#endif
 }
 
 /// LD A,(0xff00 + n)
@@ -257,6 +281,9 @@ void CPU::LD_A_ff00n()
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
     regs.A = mem[addr];
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD A,(0xff00 + 0x%02x)",lowbyte);
+    #endif
 }
 
 /// LD A,(FF00+C)
@@ -265,6 +292,9 @@ void CPU::LD_A_ff00C()
 {
     uint16_t addr = 0xff00 + regs.C;
     regs.A = mem[addr];
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD A,(0xff00 + C)");
+    #endif
 }
 
 
@@ -275,6 +305,9 @@ void CPU::LD_HL_SPs8()
 {
     auto value = static_cast<int8_t>(fetch8BitValue());
     regs.HL = regs.SP + value;
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD HL,SP+%+i",value);
+    #endif
 }
 
 /// LD A,(nn)
@@ -282,7 +315,11 @@ void CPU::LD_HL_SPs8()
 /// cycles: 16
 void CPU::LD_A_pnn()
 {
-    regs.A = mem[fetch16BitValue()];
+    auto addr = fetch16BitValue();
+    regs.A = mem[addr];
+    #ifdef DEBUG_LOG
+    AddDebugLog("LD A,(0x%04x)",addr);
+    #endif
 }
 
 

@@ -54,7 +54,7 @@ endif()
 #catch_discover_tests(cputests)
 
 
-add_executable(MegaBoy ${MainFile} CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h)
+add_executable(MegaBoy ${MainFile} CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})
