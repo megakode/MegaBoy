@@ -405,7 +405,8 @@ void CPU::INC_SP()
 // N PV H S Z
 void CPU::INC_pHL()
 {
-    uint8_t result = mem[regs.HL]++;
+    uint8_t result = mem.Read(regs.HL);
+    mem.Write(regs.HL,++result);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00010000 );
     setFlag(FlagBitmaskN,0);
@@ -415,7 +416,8 @@ void CPU::INC_pHL()
 // opcode: 0x35
 void CPU::DEC_pHL()
 {
-    uint8_t result = mem[regs.HL]--;
+    uint8_t result = mem.Read(regs.HL);
+    mem.Write(regs.HL,--result);
     setFlag(FlagBitmaskZero, result == 0);
     setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00001111 );
     setFlag(FlagBitmaskN,1);

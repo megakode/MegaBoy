@@ -15,6 +15,16 @@ uint8_t& HostMemory::operator[] (int index)
     return memory[index];
 }
 
+uint8_t HostMemory::Read( uint16_t address ) const
+{
+    return memory[address];
+}
+
+void HostMemory::Write( const uint16_t address, const uint8_t value )
+{
+    memory[address] = value;
+}
+
 
 // TODO split into mem_read and mem_write functions.
 //    blarggs test - serial output

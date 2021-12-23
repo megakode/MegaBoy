@@ -115,7 +115,7 @@ class CPU {
 
     /// Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
     inline uint8_t fetch8BitValue(){
-        return mem[regs.PC++];
+        return mem.Read(regs.PC++);
     };
 
     /// Fetch two instruction bytes from memory as a 16 bit address and increase Program Counter by +2 (PC)

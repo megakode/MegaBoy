@@ -126,8 +126,8 @@ void CPU::call_cc_nn()
     uint16_t location = fetch16BitValue();
 
     if(is_condition_true(conditionCode)){
-        mem[--regs.SP] = regs.PC >> 8; // (SP-1) = PC_h
-        mem[--regs.SP] = static_cast<uint8_t >(regs.PC);      // (SP-2) = PC_h
+        mem.Write(--regs.SP, regs.PC >> 8); // (SP-1) = PC_h
+        mem.Write(--regs.SP, static_cast<uint8_t >(regs.PC));      // (SP-2) = PC_h
         regs.PC = location;
     }
 #ifdef DEBUG_LOG
@@ -141,8 +141,8 @@ void CPU::call_cc_nn()
 // cycles: 17
 void CPU::call(){
     uint16_t location = fetch16BitValue();
-    mem[--regs.SP] = regs.PC >> 8; // (SP-1) = PC_h
-    mem[--regs.SP] = static_cast<uint8_t>(regs.PC);      // (SP-2) = PC_h
+    mem.Write(--regs.SP, regs.PC >> 8); // (SP-1) = PC_h
+    mem.Write(--regs.SP, static_cast<uint8_t>(regs.PC));      // (SP-2) = PC_h
     regs.PC = location;
 
 #ifdef DEBUG_LOG
@@ -157,8 +157,8 @@ void CPU::call(){
 // flags: -
 void CPU::RET()
 {
-    uint8_t lobyte = mem[regs.SP++];
-    uint8_t hibyte = mem[regs.SP++];
+    uint8_t lobyte = mem.Read(regs.SP++);
+    uint8_t hibyte = mem.Read(regs.SP++);
     regs.PC = (hibyte<<8) + lobyte;
 #ifdef DEBUG_LOG
     AddDebugLog("RET");
@@ -196,8 +196,8 @@ void CPU::RET_cc(){
     }
 
     if(conditionValue){
-        uint8_t lobyte = mem[regs.SP++];
-        uint8_t hibyte = mem[regs.SP++];
+        uint8_t lobyte = mem.Read(regs.SP++);
+        uint8_t hibyte = mem.Read(regs.SP++);
         regs.PC = (hibyte<<8) + lobyte;
     }
 
@@ -219,8 +219,8 @@ void CPU::rst()
     uint8_t location[] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38};
     uint8_t locationCode = (current_opcode & 0b00111000) >> 3;
 
-    mem[--regs.SP] = regs.PC >> 8;
-    mem[--regs.SP] = static_cast<uint8_t>(regs.PC);
+    mem.Write(--regs.SP, regs.PC >> 8);
+    mem.Write(--regs.SP, static_cast<uint8_t>(regs.PC));
 
     regs.PC = location[locationCode];
 

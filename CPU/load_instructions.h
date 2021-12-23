@@ -10,8 +10,8 @@
 
 void CPU::LD_pnn_SP() {
     auto addr = fetch16BitValue();
-    mem[addr] = static_cast<uint8_t>(regs.SP);
-    mem[addr+1] = regs.SP >> 8;
+    mem.Write(addr, static_cast<uint8_t>(regs.SP));
+    mem.Write(addr+1, regs.SP >> 8);
     #ifdef DEBUG_LOG
     AddDebugLog("LD (0x%04x),SP",addr);
     #endif
@@ -82,7 +82,7 @@ void CPU::LD_SP_nn()
 void CPU::LD_pnn_A()
 {
     auto addr = fetch16BitValue();
-    mem[addr] = regs.A;
+    mem.Write(addr,regs.A);
 #ifdef DEBUG_LOG
     AddDebugLog("LD (0x%04x),A",addr);
 #endif
@@ -94,7 +94,7 @@ void CPU::LD_pnn_A()
 void CPU::LD_pHL_n()
 {
     uint8_t value = fetch8BitValue();
-    mem[regs.HL] = value;
+    mem.Write(regs.HL,value);
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD (HL),0x%02x", value);
@@ -131,7 +131,7 @@ void CPU::LD_BC_nn()
 // Cycles: 7
 void CPU::LD_pBC_A()
 {
-    mem[regs.BC] = regs.A;
+    mem.Write(regs.BC,regs.A);
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD (BC),A");
@@ -144,7 +144,7 @@ void CPU::LD_pBC_A()
 // flags: -
 void CPU::LD_A_pBC()
 {
-    regs.A = mem[regs.BC];
+    regs.A = mem.Read(regs.BC);
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD A,(BC)");
@@ -168,7 +168,7 @@ void CPU::LD_DE_nn()
 // cycles: 7
 void CPU::LD_pDE_A()
 {
-    mem[regs.DE] = regs.A;
+    mem.Write(regs.DE, regs.A);
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD (DE),A");
@@ -181,7 +181,7 @@ void CPU::LD_pDE_A()
 // flags: -
 void CPU::LD_A_pDE()
 {
-    regs.A = mem[regs.DE];
+    regs.A = mem.Read(regs.DE);
 
 #ifdef DEBUG_LOG
     AddDebugLog("LD A,(DE)");
@@ -193,7 +193,7 @@ void CPU::LD_A_pDE()
 /// cycles: 8
 void CPU::LDI_pHL_A()
 {
-    mem[regs.HL++] = regs.A;
+    mem.Write(regs.HL++, regs.A);
 #ifdef DEBUG_LOG
     AddDebugLog("LDI (HL),A");
 #endif
@@ -204,7 +204,7 @@ void CPU::LDI_pHL_A()
 /// cycles: 8
 void CPU::LDI_A_pHL()
 {
-    regs.A = mem[regs.HL++];
+    regs.A = mem.Read(regs.HL++);
 #ifdef DEBUG_LOG
     AddDebugLog("LDI A,(HL)");
 #endif
@@ -215,7 +215,7 @@ void CPU::LDI_A_pHL()
 /// cycles: 8
 void CPU::LDD_pHL_A()
 {
-    mem[regs.HL--] = regs.A;
+    mem.Write(regs.HL--, regs.A);
 #ifdef DEBUG_LOG
     AddDebugLog("LDD (HL),A");
 #endif
@@ -226,7 +226,7 @@ void CPU::LDD_pHL_A()
 /// cycles: 8
 void CPU::LDD_A_pHL()
 {
-    regs.A = mem[regs.HL--];
+    regs.A = mem.Read(regs.HL--);
 #ifdef DEBUG_LOG
     AddDebugLog("LDD A,(HL)");
 #endif
@@ -240,7 +240,7 @@ void CPU::LD_ff00n_A()
 {
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
-    mem[addr] = regs.A;
+    mem.Write(addr, regs.A);
 #ifdef DEBUG_LOG
     AddDebugLog("LD (0xff00 + 0x%02x),A",lowbyte);
 #endif
@@ -251,7 +251,7 @@ void CPU::LD_ff00n_A()
 void CPU::LD_ff00C_A()
 {
     uint16_t addr = 0xff00 + regs.C;
-    mem[addr] = regs.A;
+    mem.Write(addr, regs.A);
     #ifdef DEBUG_LOG
     AddDebugLog("LD (0xff00 + C),A");
 #endif
@@ -265,7 +265,7 @@ void CPU::LD_A_ff00n()
 {
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
-    regs.A = mem[addr];
+    regs.A = mem.Read(addr);
     #ifdef DEBUG_LOG
     AddDebugLog("LD A,(0xff00 + 0x%02x)",lowbyte);
     #endif
@@ -276,7 +276,7 @@ void CPU::LD_A_ff00n()
 void CPU::LD_A_ff00C()
 {
     uint16_t addr = 0xff00 + regs.C;
-    regs.A = mem[addr];
+    regs.A = mem.Read(addr);
     #ifdef DEBUG_LOG
     AddDebugLog("LD A,(0xff00 + C)");
     #endif
@@ -301,7 +301,7 @@ void CPU::LD_HL_SPs8()
 void CPU::LD_A_pnn()
 {
     auto addr = fetch16BitValue();
-    regs.A = mem[addr];
+    regs.A = mem.Read(addr);
     #ifdef DEBUG_LOG
     AddDebugLog("LD A,(0x%04x)",addr);
     #endif
@@ -317,8 +317,8 @@ void CPU::LD_A_pnn()
 /// \param regPair The 16 bit register pair to pop the stack value into
 void CPU::pop16( uint16_t& regPair )
 {
-    uint8_t lobyte = mem[regs.SP++];
-    uint8_t hibyte = mem[regs.SP++];
+    uint8_t lobyte = mem.Read(regs.SP++);
+    uint8_t hibyte = mem.Read(regs.SP++);
     regPair = (hibyte << 8) + lobyte;
 }
 
@@ -358,8 +358,8 @@ void CPU::pop_qq()
 /// PUSH BC
 /// cycles: 11
 void CPU::push_bc(){
-    mem[--regs.SP] = regs.B;
-    mem[--regs.SP] = regs.C;
+    mem.Write(--regs.SP, regs.B);
+    mem.Write(--regs.SP, regs.C);
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH BC");
 #endif
@@ -368,8 +368,8 @@ void CPU::push_bc(){
 /// PUSH DE
 /// cycles: 11
 void CPU::push_de(){
-    mem[--regs.SP] = regs.D;
-    mem[--regs.SP] = regs.E;
+    mem.Write(--regs.SP, regs.D);
+    mem.Write(--regs.SP, regs.E);
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH DE");
 #endif
@@ -378,8 +378,8 @@ void CPU::push_de(){
 /// PUSH HL
 /// cycles: 11
 void CPU::push_hl(){
-    mem[--regs.SP] = regs.H;
-    mem[--regs.SP] = regs.L;
+    mem.Write(--regs.SP, regs.H);
+    mem.Write(--regs.SP, regs.L);
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH HL");
 #endif
@@ -388,14 +388,14 @@ void CPU::push_hl(){
 /// PUSH AF
 /// cycles: 11
 void CPU::push_af(){
-    mem[--regs.SP] = regs.A;
-    mem[--regs.SP] = regs.F;
+    mem.Write(--regs.SP, regs.A);
+    mem.Write(--regs.SP, regs.F);
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH AF");
 #endif
 }
 
 void CPU::push_pc(){
-    mem[--regs.SP] = regs.PC >> 8; // hi-byte
-    mem[--regs.SP] = regs.PC & 0xff; // lo-byte
+    mem.Write(--regs.SP, regs.PC >> 8); // hi-byte
+    mem.Write(--regs.SP, regs.PC & 0xff); // lo-byte
 }

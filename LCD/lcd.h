@@ -54,7 +54,7 @@ public:
 
         for(uint8_t y = 0; y < Tile_Map_Width; y++){
             for(uint8_t x = 0; x < Tile_Map_Width; x++) {
-                uint8_t current_tile_id = mem[bg_tile_map_addr + (y*Tile_Map_Width)+x];
+                uint8_t current_tile_id = mem.Read(bg_tile_map_addr + (y*Tile_Map_Width)+x);
                 uint16_t current_tile_data_addr = GetTileDataAddr(current_tile_id);
                 // TODO: Factor in BG scroll registers
                 // https://gbdev.io/pandocs/Scrolling.html#ff4a---wy-window-y-position-rw-ff4b---wx-window-x-position--7-rw
@@ -68,7 +68,7 @@ public:
 
         for(uint8_t y = 0; y < Tile_Map_Width; y++){
             for(uint8_t x = 0; x < Tile_Map_Width; x++) {
-                uint8_t current_tile_id = mem[window_tile_map_addr + (y*Tile_Map_Width)+x];
+                uint8_t current_tile_id = mem.Read(window_tile_map_addr + (y*Tile_Map_Width)+x);
                 uint16_t current_tile_data_addr = GetTileDataAddr(current_tile_id);
                 // TODO: Factor in WX and WY registers.
                 // https://gbdev.io/pandocs/Scrolling.html#ff4a---wy-window-y-position-rw-ff4b---wx-window-x-position--7-rw
@@ -81,7 +81,7 @@ public:
 
     bool IsFlagSet(LCDCBitmask flag)
     {
-        return mem[LCDC] & static_cast<uint8_t>(flag);
+        return mem.Read(LCDC) & static_cast<uint8_t>(flag);
     }
 
     /// Get the address of a tiles data based on tile id and the current LCDC control bits
@@ -107,8 +107,8 @@ public:
     /// \param dst_y Destination Y on screen (0-255)
     void DrawTile( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y ) {
         for (int y = 0; y < TILE_HEIGHT; y++) {
-            uint8_t lobits = mem[tile_data_addr++];
-            uint8_t hibits = mem[tile_data_addr++];
+            uint8_t lobits = mem.Read(tile_data_addr++);
+            uint8_t hibits = mem.Read(tile_data_addr++);
             for (int x = 0; x < TILE_WIDTH; x++) {
                 uint8_t bit_number = 7-x;
                 uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );

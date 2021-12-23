@@ -303,14 +303,13 @@ void CPU::rra()
 /// flags: s z h pv n
 void CPU::RLD()
 {
-    uint16_t hl = regs.HL;
-    uint8_t data = mem[hl];
+    uint8_t data = mem.Read(regs.HL);
     uint8_t old_data_hinib = data & 0xf0;
     data = data << 4;
     data |= (regs.A & 0x0f);
     regs.A &= 0xf0;
     regs.A |= (old_data_hinib>>4);
-    mem[hl] = data;
+    mem.Write(regs.HL, data);
     setFlag(FlagBitmaskZero, regs.A == 0);
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskN,false);
