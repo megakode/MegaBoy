@@ -4,8 +4,6 @@ My first try at writing an emulator.
 
 Work in progress, and will probably rewrite large chunks of it a couple of times :)
 
-First step: doing a fast and accurate Z80 CPU emulator.
-
 **TODO**
 
  - IRQ handling: trigger IRQs from Timer, LCD, Input, etc.
@@ -31,3 +29,8 @@ Gameboy docs
 Other GB emulators:
 
 - https://github.com/LIJI32/SameBoy/blob/master/Core/sm83_cpu.c
+
+Test Roms:
+
+- https://github.com/mattcurrie/dmg-acid2
+- https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM

@@ -20,7 +20,8 @@ MegaBoyDebugger::MegaBoyDebugger() {
 void MegaBoyDebugger::LoadTestRom()
 {
     //std::filesystem::path filename = "../tests/zexdoc.com";
-    std::filesystem::path filename = "../tests/cpu_instrs.gb";
+    //std::filesystem::path filename = "../tests/cpu_instrs.gb";
+    std::filesystem::path filename = "../tests/BOBBLE.GB";
 
     auto path = std::filesystem::absolute(filename);
     auto size = std::filesystem::file_size(path);
@@ -129,8 +130,22 @@ void MegaBoyDebugger::UpdateUI()
 
 }
 
+void MegaBoyDebugger::UpdateLCDBuffer()
+{
+    for(int i = 0 ; i < GB_SCREEN_WIDTH*GB_SCREEN_HEIGHT; )
+    {
+        // TODO: palette
+        static uint8_t color_values[] = {0,64,128,255};
+        uint8_t color_index = gb->lcd.renderBuffer[i];
+        screenData[i++] = color_values[color_index]; // Red
+        screenData[i++] = color_values[color_index]; // Green
+        screenData[i++] = color_values[color_index]; // Blue
+    }
+}
+
 void MegaBoyDebugger::Step()
 {
     gb->Step();
+    UpdateLCDBuffer();
     scroll_to_bottom = true;
 }

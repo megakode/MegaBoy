@@ -4,33 +4,18 @@
 
 #pragma once
 
-
-// LD (**),BC
-// LD (**),DE
-// LD (**),HL
-// LD (**),SP
-// LD (**),IX
-// LD (**),IY
-// cycles: 20
-// flags: -
-void CPU::LD_pnn_rr(uint16_t location, uint16_t value)
-{
-    mem[location] = static_cast<uint8_t>(value);
-    mem[location+1] = value >> 8;
-}
-
 // ***********************************************************************************
 // Load Instructions
 // ***********************************************************************************
 
 void CPU::LD_pnn_SP() {
     auto addr = fetch16BitValue();
-    LD_pnn_rr(addr, regs.SP);
+    mem[addr] = static_cast<uint8_t>(regs.SP);
+    mem[addr+1] = regs.SP >> 8;
     #ifdef DEBUG_LOG
-    AddDebugLog("LD (0x%04x),SP",regs.SP);
+    AddDebugLog("LD (0x%04x),SP",addr);
     #endif
 }
-
 
 void CPU::LD_r_r()
 {

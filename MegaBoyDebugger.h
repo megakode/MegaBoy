@@ -27,4 +27,11 @@ public:
     void LoadTestRom();
 
     void Step();
+
+    static constexpr uint8_t GB_SCREEN_WIDTH = 160;
+    static constexpr uint8_t GB_SCREEN_HEIGHT = 144;
+    /// RGB screen data
+    uint8_t screenData [GB_SCREEN_HEIGHT*GB_SCREEN_WIDTH*3] = {};
+
+    void UpdateLCDBuffer();
 };

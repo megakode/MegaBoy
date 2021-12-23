@@ -7,6 +7,7 @@
 #include "CPU/cpu.h"
 #include "HostMemory.h"
 #include "Timer.h"
+#include "LCD/lcd.h"
 
 class Gameboy {
 
@@ -17,6 +18,7 @@ public:
     HostMemory mem{};
     CPU cpu;
     Timer timer;
+    LCD lcd;
 
     /// FFFF - IE - Interrupt Enable (R/W)
     ///
@@ -44,12 +46,11 @@ public:
         InterruptFlagJoypad  = 1 << 4,
     };
 
-    Gameboy() : cpu(mem) {
+    Gameboy() : cpu(mem), lcd(mem) {
 
     }
 
     void Start();
-    void Stop();
 
     void Step();
     void HandleInterrupts();

@@ -17,6 +17,66 @@
 
 #include "MegaBoyDebugger.h"
 
+
+#define MOOSEPIC_W 64
+#define MOOSEPIC_H 88
+
+#define MOOSEFRAME_SIZE (MOOSEPIC_W * MOOSEPIC_H)
+#define MOOSEFRAMES_COUNT 10
+
+SDL_Color MooseColors[84] = {
+        {49, 49, 49, 255}, {66, 24, 0, 255}, {66, 33, 0, 255}, {66, 66, 66, 255},
+        {66, 115, 49, 255}, {74, 33, 0, 255}, {74, 41, 16, 255}, {82, 33, 8, 255},
+        {82, 41, 8, 255}, {82, 49, 16, 255}, {82, 82, 82, 255}, {90, 41, 8, 255},
+        {90, 41, 16, 255}, {90, 57, 24, 255}, {99, 49, 16, 255}, {99, 66, 24, 255},
+        {99, 66, 33, 255}, {99, 74, 33, 255}, {107, 57, 24, 255}, {107, 82, 41, 255},
+        {115, 57, 33, 255}, {115, 66, 33, 255}, {115, 66, 41, 255}, {115, 74, 0, 255},
+        {115, 90, 49, 255}, {115, 115, 115, 255}, {123, 82, 0, 255}, {123, 99, 57, 255},
+        {132, 66, 41, 255}, {132, 74, 41, 255}, {132, 90, 8, 255}, {132, 99, 33, 255},
+        {132, 99, 66, 255}, {132, 107, 66, 255}, {140, 74, 49, 255}, {140, 99, 16, 255},
+        {140, 107, 74, 255}, {140, 115, 74, 255}, {148, 107, 24, 255}, {148, 115, 82, 255},
+        {148, 123, 74, 255}, {148, 123, 90, 255}, {156, 115, 33, 255}, {156, 115, 90, 255},
+        {156, 123, 82, 255}, {156, 132, 82, 255}, {156, 132, 99, 255}, {156, 156, 156, 255},
+        {165, 123, 49, 255}, {165, 123, 90, 255}, {165, 132, 82, 255}, {165, 132, 90, 255},
+        {165, 132, 99, 255}, {165, 140, 90, 255}, {173, 132, 57, 255}, {173, 132, 99, 255},
+        {173, 140, 107, 255}, {173, 140, 115, 255}, {173, 148, 99, 255}, {173, 173, 173, 255},
+        {181, 140, 74, 255}, {181, 148, 115, 255}, {181, 148, 123, 255}, {181, 156, 107, 255},
+        {189, 148, 123, 255}, {189, 156, 82, 255}, {189, 156, 123, 255}, {189, 156, 132, 255},
+        {189, 189, 189, 255}, {198, 156, 123, 255}, {198, 165, 132, 255}, {206, 165, 99, 255},
+        {206, 165, 132, 255}, {206, 173, 140, 255}, {206, 206, 206, 255}, {214, 173, 115, 255},
+        {214, 173, 140, 255}, {222, 181, 148, 255}, {222, 189, 132, 255}, {222, 189, 156, 255},
+        {222, 222, 222, 255}, {231, 198, 165, 255}, {231, 231, 231, 255}, {239, 206, 173, 255}
+};
+
+Uint8 MooseFrames[MOOSEFRAMES_COUNT][MOOSEFRAME_SIZE];
+
+SDL_Renderer *renderer;
+int frame;
+SDL_Texture *MooseTexture;
+
+void UpdateTexture(SDL_Texture *texture, int frame)
+{
+    SDL_Color *color;
+    Uint8 *src;
+    Uint32 *dst;
+    int row, col;
+    void *pixels;
+    int pitch;
+
+    if (SDL_LockTexture(texture, NULL, &pixels, &pitch) < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't lock texture: %s\n", SDL_GetError());
+    }
+    src = MooseFrames[frame];
+    for (row = 0; row < MOOSEPIC_H; ++row) {
+        dst = (Uint32*)((Uint8*)pixels + row * pitch);
+        for (col = 0; col < MOOSEPIC_W; ++col) {
+            color = &MooseColors[*src++];
+            *dst++ = (0xFF000000|(color->r<<16)|(color->g<<8)|color->b);
+        }
+    }
+    SDL_UnlockTexture(texture);
+}
+
 // Main code
 int main(int, char**)
 {
@@ -58,11 +118,12 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_Window* window = SDL_CreateWindow("MegaBoy debugger", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
+    //renderer = SDL_GetRenderer(window);
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -77,6 +138,32 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
+/*
+    int oglIdx = -1;
+    int nRD = SDL_GetNumRenderDrivers();
+    for(int i=0; i<nRD; i++)
+    {
+        SDL_RendererInfo info;
+        if(!SDL_GetRenderDriverInfo(i, &info))
+        {
+            if(!strcmp(info.name, "opengl"))
+            {
+                oglIdx = i;
+            }
+        }
+    }
+
+    renderer = SDL_CreateRenderer(window, 2, 0);
+    if (!renderer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL Error: %s\n", SDL_GetError());
+    }
+    */
+/*
+    MooseTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, MOOSEPIC_W, MOOSEPIC_H);
+    if (!MooseTexture) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't set create texture: %s\n", SDL_GetError());
+    }
+*/
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -100,6 +187,22 @@ int main(int, char**)
 
     MegaBoyDebugger debugger;
     debugger.LoadTestRom();
+
+    // Create a texture
+    GLuint textureId;
+    glGenTextures(1, &textureId);
+
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    // Setup filtering parameters for display
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
+
+
+
 
     // Main loop
     bool done = false;
@@ -136,31 +239,14 @@ int main(int, char**)
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Gameboy screen:");                          // Create a window called "Hello, world!" and append into it.
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            // Update Texture
+            glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::Image((void*)(intptr_t)textureId, ImVec2(MegaBoyDebugger::GB_SCREEN_WIDTH*4, MegaBoyDebugger::GB_SCREEN_HEIGHT*4));
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
             ImGui::End();
         }
 
@@ -169,7 +255,15 @@ int main(int, char**)
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
+
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        frame = (frame + 1) % MOOSEFRAMES_COUNT;
+        //UpdateTexture(MooseTexture, frame);
+        //SDL_RenderClear(renderer);
+        //SDL_RenderCopy(renderer, MooseTexture, NULL, NULL);
+
         SDL_GL_SwapWindow(window);
     }
 

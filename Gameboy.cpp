@@ -6,9 +6,23 @@
 
 void Gameboy::Step() {
 
+    static int accumulated_cycles = 0;
+
     uint16_t cycles = cpu.step();
 
     timer.Step(cycles);
+
+    lcd.Step();
+
+    accumulated_cycles += cycles;
+
+    if(accumulated_cycles >= 456) {
+        accumulated_cycles -= 456;
+        mem[0xff44]++;
+        if (mem[0xff44] == 154){
+            mem[0xff44] = 0;
+        }
+    }
 
     // handle interrupts
 
@@ -21,6 +35,7 @@ void Gameboy::Step() {
         printf("%c", c);
         cpu.mem[0xff02] = 0x0;
     }
+
 
 }
 

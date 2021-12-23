@@ -16,7 +16,7 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG        v2.13.7
 )
-# add_compile_definitions(DEBUG_LOG)
+add_compile_definitions(DEBUG_LOG)
 FetchContent_MakeAvailable(Catch2)
 
 # Direct X ####################################
@@ -54,7 +54,7 @@ endif()
 #catch_discover_tests(cputests)
 
 
-add_executable(MegaBoy ${MainFile} CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp)
+add_executable(MegaBoy ${MainFile} LCD/lcd.cpp CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})
