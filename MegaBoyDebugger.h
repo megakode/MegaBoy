@@ -13,14 +13,18 @@ class MegaBoyDebugger {
 
 private:
 
+    std::thread gb_thread;
     std::unique_ptr<Gameboy> gb;
 
     /// Scroll to the lates entry in the disassembly
     bool scroll_to_bottom = false;
 
+    bool is_running = false;
+
 public:
 
     MegaBoyDebugger();
+    ~MegaBoyDebugger();
 
     void UpdateUI();
 
@@ -34,4 +38,6 @@ public:
     uint8_t screenData [GB_SCREEN_HEIGHT*GB_SCREEN_WIDTH*3] = {};
 
     void UpdateLCDBuffer();
+
+    void Run();
 };

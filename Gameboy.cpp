@@ -12,8 +12,6 @@ void Gameboy::Step() {
 
     timer.Step(cycles);
 
-    lcd.Step();
-
     accumulated_cycles += cycles;
 
     if(accumulated_cycles >= 456) {
@@ -22,6 +20,8 @@ void Gameboy::Step() {
         if (mem[0xff44] == 154){
             mem[0xff44] = 0;
         }
+
+        lcd.Step();
     }
 
     // handle interrupts

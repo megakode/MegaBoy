@@ -9,6 +9,7 @@
 #include "MegaBoyDebugger.h"
 #include "imgui.h"
 #include "UI/UIConfig.h"
+#include <thread>
 
 MegaBoyDebugger::MegaBoyDebugger() {
 
@@ -17,11 +18,19 @@ MegaBoyDebugger::MegaBoyDebugger() {
 
 }
 
+MegaBoyDebugger::~MegaBoyDebugger()
+{
+    is_running = false;
+    if(gb_thread.joinable()) {
+        gb_thread.join();
+    }
+}
+
 void MegaBoyDebugger::LoadTestRom()
 {
     //std::filesystem::path filename = "../tests/zexdoc.com";
     //std::filesystem::path filename = "../tests/cpu_instrs.gb";
-    std::filesystem::path filename = "../tests/BOBBLE.GB";
+    std::filesystem::path filename = "../tests/TETRIS.GB";
 
     auto path = std::filesystem::absolute(filename);
     auto size = std::filesystem::file_size(path);
@@ -52,8 +61,6 @@ void MegaBoyDebugger::LoadTestRom()
 
 void MegaBoyDebugger::UpdateUI() 
 {
-    static bool is_running = false;
-
     RegisterWindow::UpdateUI(gb->cpu);
 
     ImGui::Begin("Disassembly");
@@ -113,15 +120,21 @@ void MegaBoyDebugger::UpdateUI()
        Step();
    }
 
-    if (ImGui::Button("Run"))
-    {
-        is_running = true;
-    }
+   if(is_running){
+       if(ImGui::Button("Stop")){
+           is_running = false;
+           if(gb_thread.joinable()) {
+               gb_thread.join();
+           }
 
-    if(is_running){
-        Step();
-    }
-
+       }
+   } else {
+       if (ImGui::Button("Run"))
+       {
+           is_running = true;
+           gb_thread = std::thread(&MegaBoyDebugger::Run,this);
+       }
+   }
 
     //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -130,16 +143,25 @@ void MegaBoyDebugger::UpdateUI()
 
 }
 
+void MegaBoyDebugger::Run()
+{
+    while(is_running){
+        gb->Step();
+        UpdateLCDBuffer();
+        // std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+}
+
 void MegaBoyDebugger::UpdateLCDBuffer()
 {
-    for(int i = 0 ; i < GB_SCREEN_WIDTH*GB_SCREEN_HEIGHT; )
+    for(int i = 0 ; i < GB_SCREEN_WIDTH*GB_SCREEN_HEIGHT; i++)
     {
         // TODO: palette
         static uint8_t color_values[] = {0,64,128,255};
         uint8_t color_index = gb->lcd.renderBuffer[i];
-        screenData[i++] = color_values[color_index]; // Red
-        screenData[i++] = color_values[color_index]; // Green
-        screenData[i++] = color_values[color_index]; // Blue
+        screenData[i*3] = color_values[color_index]; // Red
+        screenData[i*3+1] = color_values[color_index]; // Green
+        screenData[i*3+2] = color_values[color_index]; // Blue
     }
 }
 

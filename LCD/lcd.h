@@ -84,6 +84,14 @@ public:
         return mem.Read(LCDC) & static_cast<uint8_t>(flag);
     }
 
+    void SetFlag(LCDCBitmask flag, bool value)
+    {
+        if(value)
+           mem.Write(LCDC, mem.Read(LCDC) | static_cast<uint8_t>(flag) );
+        else
+            mem.Write(LCDC, mem.Read(LCDC) & ~static_cast<uint8_t>(flag) );
+    }
+
     /// Get the address of a tiles data based on tile id and the current LCDC control bits
     /// \param tile_id for which to get data
     /// \return Address in GB memory
