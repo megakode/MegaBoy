@@ -16,7 +16,7 @@ find_package(SDL2 REQUIRED)
 #        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
 #        GIT_TAG        v2.13.7
 #)
-# add_compile_definitions(DEBUG_LOG)
+add_compile_definitions(DEBUG_LOG)
 #FetchContent_MakeAvailable(Catch2)
 
 # Direct X ####################################
@@ -45,7 +45,7 @@ endif()
 # Testing ###################################
 find_package(Catch2 REQUIRED)
 # enable_testing()
-add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/jump_tests.h)
+add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/jump_tests.h tests/lcd_tests.cpp)
 target_link_libraries(cputests Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

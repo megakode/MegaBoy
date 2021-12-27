@@ -37,6 +37,7 @@ public:
     /// The actual execution happens only if both the IME flag and the corresponding bit in the IE register are set,
     /// otherwise the interrupt “waits” until both IME and IE allow its execution.
     ///
+    /*
     enum InterruptFlag : uint8_t
     {
         InterruptFlagVBlank  = 1 << 0,
@@ -45,7 +46,7 @@ public:
         InterruptFlagSerial  = 1 << 3,
         InterruptFlagJoypad  = 1 << 4,
     };
-
+*/
     Gameboy() : cpu(mem), lcd(mem) {
 
     }

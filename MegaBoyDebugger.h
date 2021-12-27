@@ -20,6 +20,7 @@ private:
     bool scroll_to_bottom = false;
 
     bool is_running = false;
+    uint16_t run_to = 0;
 
 public:
 
@@ -32,12 +33,10 @@ public:
 
     void Step();
 
-    static constexpr uint8_t GB_SCREEN_WIDTH = 160;
-    static constexpr uint8_t GB_SCREEN_HEIGHT = 144;
+    static constexpr uint16_t GB_SCREEN_WIDTH = 256;
+    static constexpr uint16_t GB_SCREEN_HEIGHT = 256;
     /// RGB screen data
-    uint8_t screenData [GB_SCREEN_HEIGHT*GB_SCREEN_WIDTH*3] = {};
-
-    void UpdateLCDBuffer();
+    uint8_t *screenData;
 
     void Run();
 };

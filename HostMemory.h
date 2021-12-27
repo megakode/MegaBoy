@@ -6,6 +6,15 @@
 
 #include <cstdint>
 
+enum Interrupt_Flag: uint8_t
+{
+    Interrupt_Flag_VBlank = 1,
+    Interrupt_Flag_LCD_Stat = 1 << 1,
+    Interrupt_Flag_Timer = 1 << 2,
+    Interrupt_Flag_Serial = 1 << 3,
+    Interrupt_Flag_Joypad = 1 << 4
+};
+
 class HostMemory {
 
 public:
@@ -23,9 +32,20 @@ public:
         return memory[InterruptEnabledAddress];
     }
 
-    uint8_t& InterruptFlag()
+
+
+    void SetInterruptFlag( Interrupt_Flag flag , bool enabled )
     {
-        return memory[InterruptFlagAddress];
+        if( enabled ){
+            memory[InterruptFlagAddress] |= static_cast<uint8_t>(flag);
+        } else {
+            memory[InterruptFlagAddress] &= ~static_cast<uint8_t>(flag);
+        }
+    }
+
+    bool GetInterruptFlag( Interrupt_Flag flag )
+    {
+        return memory[InterruptFlagAddress] & flag;
     }
 
 private:

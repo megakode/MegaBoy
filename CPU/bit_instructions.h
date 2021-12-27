@@ -224,7 +224,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 /// RLCA
 /// opcode: 0x07
 /// cycles: 4
-void CPU::rlca()
+void CPU::RLCA()
 {
     bool carry = regs.A & 0b10000000;
     setFlag(FlagBitmaskC,carry);
@@ -244,7 +244,7 @@ void CPU::rlca()
 /// opcode: 0x0f
 /// cycles: 4
 /// flags: C N H
-void CPU::rrca()
+void CPU::RRCA()
 {
     uint8_t carry = regs.A & 1;
     setFlag(FlagBitmaskC,carry);
@@ -253,20 +253,20 @@ void CPU::rrca()
     regs.A >>= 1;
     regs.A |= (carry<<7);
 #ifdef DEBUG_LOG
-    AddDebugLog("rrca");
+    AddDebugLog("RRCA");
 #endif
 }
 
 /// RLA
 /// opcode: 0x17
 /// cycles: 4
-void CPU::rla()
+void CPU::RLA()
 {
     // rotate left and set carry
     // Set bit 0 to previous carry.
     uint8_t newcarry = regs.A & 0x80;
     regs.A <<= 1;
-    regs.A |= (regs.F&FlagBitmaskC);
+    regs.A |= getFlag(FlagBitmaskC) ? 1 : 0;
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskN,false);
     setFlag(FlagBitmaskC,newcarry);
@@ -284,13 +284,19 @@ void CPU::rla()
 /// opcode: 0x1f
 /// cycles: 4
 /// flags: C N H
-void CPU::rra()
+void CPU::RRA()
 {
     uint8_t carry = regs.A & 1;
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskHalfCarry,0);
     regs.A >>= 1;
-    regs.A |= (regs.F<<7); // Set bit 7 to previous carry flag
+    // Set bit 7 to previous carry flag
+    if(getFlag(FlagBitmaskC)){
+        regs.A |= 0b10000000;
+    } else {
+        regs.A &= 0b01111111;
+    }
+
     setFlag(FlagBitmaskC, carry); // Set new carry flag
 #ifdef DEBUG_LOG
     AddDebugLog("RRA");

@@ -80,7 +80,7 @@ class CPU {
             struct { uint8_t F,A; };
         };
 
-        uint8_t I;      // Interrupt Page Address Register
+        //uint8_t I;      // Interrupt Page Address Register
         uint8_t R;      // Memory Refresh Register
 
         union
@@ -227,10 +227,13 @@ class CPU {
     void add( uint8_t srcValue, bool carry = false);
     void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
     void sub( uint8_t srcValue, bool carry = false, bool onlySetFlagsForComparison = false );
-    void sub16( uint16_t& regPair, uint16_t value_to_sub , bool carry = false);
 
+    void and_a_with_value(uint8_t value);
     void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
+
+    void INC_r(uint8_t &reg );
+    void DEC_r(uint8_t &reg );
 
     uint8_t do_bit_instruction( uint8_t op2, uint8_t& reg );
 
@@ -241,11 +244,8 @@ class CPU {
     void set_INC_operation_flags(uint8_t result);
     void set_DEC_operation_flags(uint8_t result);
 
-public:
 
-    // generic instructions
-    void INC_r(uint8_t &reg );
-    void DEC_r(uint8_t &reg );
+public:
 
     void enable_interrupts();
     void disable_interrupts();
@@ -253,7 +253,6 @@ public:
     // instructions
     void NOP(); // 0x00
 
-    void LD_pnn_rr(uint16_t location, uint16_t value);
     void LD_SP_nn();
     void LD_pnn_A();
     void LD_pHL_n();
@@ -263,33 +262,33 @@ public:
     void LD_r_r();
     void LD_DE_nn();
     void LD_pDE_A();
-
-    void rlca();
-
-    void add_hl_bc();
-
-
-    void rrca();
-
-    void rla();
-    void jr_n();
-    void ADD_HL_DE();
-    void LD_A_pDE();
-
-
-    void rra();
-
-    void jr_nz(); // 0x20
+    void ld_sp_hl();
     void LD_HL_nn();
+    void LD_A_pDE();
+    void LD_r_n();
+    void LD_pnn_SP();
+    void LD_R_A();
+    void LDI_pHL_A();
+    void LDI_A_pHL();
+    void LDD_pHL_A();
+    void LDD_A_pHL();
+    void LD_ff00n_A();
+    void LD_ff00C_A();
+    void LD_A_ff00n();
+    void LD_A_ff00C();
+    void LD_HL_SPs8();
+    void LD_A_pnn();
+
+
 
     void INC_A();
     void DEC_A();
     void INC_B();
     void DEC_B();
-    void inc_c();
-    void dec_c();
-    void inc_d();
-    void dec_d();
+    void INC_C();
+    void DEC_C();
+    void INC_D();
+    void DEC_D();
     void INC_E();
     void DEC_E();
     void INC_H();
@@ -297,7 +296,7 @@ public:
     void INC_L();
     void DEC_L();
     void INC_BC();
-    void dec_bc();
+    void DEC_BC();
     void INC_DE();
     void DEC_DE();
     void INC_HL();
@@ -307,102 +306,79 @@ public:
     void INC_SP();
     void DEC_SP();
 
-    void daa();
+    // Bit instructions
 
-    void cpl();
+    void decode_bit_instruction();
+    void RLD();
+    void SWAP_r(uint8_t regCode);
+    void RLCA();
+    void RRCA();
+    void RLA();
+    void RRA();
 
-    void jr_z();
-    void jr_nc(); // 0x30
-    void jr_c();
+    // Jump instructions
 
-    void scf();
-
-    void ccf();
-
-    void halt();
-
-    void ADD_HL_HL();
-    void add_hl_sp();
-    void add_a_r();
-    void add_a_n();
-    void adc_a_r();
-    void sub_r();
-    void sbc_r();
-
-
-    void and_r();
-
-    void xor_r();
-    void or_r();
-    void CP_r();
-
+    void JR_z();
+    void JR_nc(); // 0x30
+    void JR_c();
+    void JR_n();
+    void JR_nz(); // 0x20
+    void JP_cc_nn();
+    void JP_nn();
+    void JP_pHL();
+    void CALL();
+    void CALL_cc_nn();
     void RET_cc();
+    void RETI();
+    void RST();
+    void RET();
 
-    void pop_qq();
+    // Arithmetic instructions
 
-    void jp_cc_nn();
-    void jp_nn();
+    void ADD_HL_DE();
+    void ADD_HL_BC();
+    void ADD_HL_HL();
+    void ADD_HL_SP();
+    void ADD_A_r();
+    void ADD_A_n();
+    void ADC_A_r();
+    void ADD_SP_s8();
+    void ADC_A_n();
+    void SUB_n();
+    void SBC_n();
+    void SUB_r();
+    void SBC_r();
 
-    void call_cc_nn();
+    void AND_n();
+    void AND_r();
+    void XOR_r();
+    void XOR_n();
+    void OR_n();
+    void OR_r();
+    void CP_r();
+    void CP_n();
 
+    void push_af();
     void push_bc();
     void push_de();
     void push_hl();
-    void push_af();
+    void push_pc();
 
-    void rst();
-    void RET();
+    void pop_qq();
+    void pop16(uint16_t &regPair);
 
-    void decode_bit_instruction();
-    void call();
-    void adc_a_n();
-
-    void sub_n();
-
-    void sbc_n();
-
-    void and_n();
-    void jp_ptr_hl();
-
-    void xor_n();
-    void or_n();
-    void ld_sp_hl();
-    void CP_n();
+    // General instructions
 
     void NEG();
-
-    void RETI();
-
-    void RLD();
+    void scf();
+    void ccf();
+    void cpl();
+    void daa();
+    void halt();
+    void reset();
+    void STOP();
 
     void invalid_opcode();
 
-    void and_a_with_value(uint8_t value);
 
-
-    void pop16(uint16_t &regPair);
-
-    void reset();
-
-    void LD_r_n();
-    void LD_pnn_SP();
-    void LD_R_A();
-
-    // Gameboy instructions
-
-    void STOP();
-    void LDI_pHL_A();
-    void LDI_A_pHL();
-    void LDD_pHL_A();
-    void LDD_A_pHL();
-    void LD_ff00n_A();
-    void LD_ff00C_A();
-    void LD_A_ff00n();
-    void LD_A_ff00C();
-    void ADD_SP_s8();
-    void LD_HL_SPs8();
-    void LD_A_pnn();
-    void SWAP_r(uint8_t regCode);
-
-    void push_pc();
 };

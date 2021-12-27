@@ -6,23 +6,10 @@
 
 void Gameboy::Step() {
 
-    static int accumulated_cycles = 0;
-
     uint16_t cycles = cpu.step();
 
     timer.Step(cycles);
-
-    accumulated_cycles += cycles;
-
-    if(accumulated_cycles >= 456) {
-        accumulated_cycles -= 456;
-        mem[0xff44]++;
-        if (mem[0xff44] == 154){
-            mem[0xff44] = 0;
-        }
-
-        lcd.Step();
-    }
+    lcd.Step(cycles);
 
     // handle interrupts
 
@@ -32,7 +19,7 @@ void Gameboy::Step() {
 
     if (cpu.mem[0xff02] == 0x81) {
         char c = cpu.mem[0xff01];
-        printf("%c", c);
+        std::cout << c << std::endl; // printf("%c", c);
         cpu.mem[0xff02] = 0x0;
     }
 
@@ -42,6 +29,7 @@ void Gameboy::Step() {
 void Gameboy::HandleInterrupts() {
 
     static const uint16_t irqJumpAddrs[] = { 0x40, 0x48, 0x50, 0x58, 0x60 };
+    static const Interrupt_Flag flags[] = { Interrupt_Flag_VBlank, Interrupt_Flag_LCD_Stat, Interrupt_Flag_Timer, Interrupt_Flag_Serial, Interrupt_Flag_Joypad};
 
     // Interrupt handling should take ~5 cycles
     // TODO: wait some cycles
@@ -55,13 +43,13 @@ void Gameboy::HandleInterrupts() {
         // Bit 3: Serial   Interrupt Enable  (INT $58)  (1=Enable)
         // Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
 
-        for(int i = 0 ; i < 5 ; i++ )
+        for(uint8_t i = 0 ; i < 5 ; i++ )
         {
-            if(mem.InterruptEnabled() & mem.InterruptFlag() & (1<<i) )
+            if(mem.InterruptEnabled() & mem.GetInterruptFlag(flags[i]) )
             {
                 cpu.push_pc();
                 // Clear the given interrupt flag again
-                mem.InterruptFlag() = mem.InterruptFlag() & ~(1<<i);
+                mem.SetInterruptFlag(flags[i],false);
                 cpu.regs.PC = irqJumpAddrs[i];
             }
         }
@@ -74,7 +62,7 @@ void Gameboy::Start() {
 
     // Set interrupt flag when timer overflows
     timer.overflow_delegate = [&](){
-        mem.InterruptFlag() |= InterruptFlagTimer;
+        mem.SetInterruptFlag(Interrupt_Flag_Timer,true);
     };
 
 }
