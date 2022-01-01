@@ -225,7 +225,7 @@ class CPU {
     }
 
     void add( uint8_t srcValue, bool carry = false);
-    void add16( uint16_t &regPair, uint16_t value_to_add, bool carry = false );
+    void add16( uint16_t &regPair, uint16_t value_to_add);
     void sub( uint8_t srcValue, bool carry = false, bool onlySetFlagsForComparison = false );
 
     void and_a_with_value(uint8_t value);
@@ -379,6 +379,5 @@ public:
     void STOP();
 
     void invalid_opcode();
-
 
 };

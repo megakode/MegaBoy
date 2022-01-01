@@ -42,7 +42,12 @@ TEST_CASE("pop")
     cpu.regs.AF = 0;
     cpu.pop16(cpu.regs.AF);
 
-    REQUIRE(cpu.regs.AF == 0x1234);
+    REQUIRE(cpu.regs.AF == 0x1230);
+
+    cpu.regs.BC = 0x4321;
+    cpu.push_bc();
+    cpu.regs.B = 0x1111;
+    //cpu.pop16()
 }
 
 TEST_CASE("reg_from_regcode")
@@ -166,8 +171,8 @@ TEST_CASE("Parity"){
     REQUIRE( cpu.has_parity(0b10000010) );
     REQUIRE( cpu.has_parity(0b11110000) );
     REQUIRE( cpu.has_parity(0b10110001) );
-    REQUIRE( cpu.has_parity(0b10110000) );
-    REQUIRE( cpu.has_parity(0b10111100) );
+    REQUIRE( !cpu.has_parity(0b10110000) );
+    REQUIRE( !cpu.has_parity(0b10111100) );
     REQUIRE( cpu.has_parity(0b11111111) );
     
 }

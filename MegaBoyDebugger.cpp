@@ -36,12 +36,12 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/01-special.gb";
     //std::filesystem::path filename = "../tests/02-interrupts.gb";
     //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; (fail)
-    //std::filesystem::path filename = "../tests/04-op r,imm.gb";
-    //std::filesystem::path filename = "../tests/";
+    std::filesystem::path filename = "../tests/04-op r,imm.gb";
+    //std::filesystem::path filename = "../tests/05-op rp.gb";
     //std::filesystem::path filename = "../tests/06-ld r,r.gb"; (PASSED!)
-    std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb";
-    //std::filesystem::path filename = "../tests/";
-    //std::filesystem::path filename = "../tests/";
+    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb";
+    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // (failed)
+    //std::filesystem::path filename = "../tests/09-op r,r.gb";
     //std::filesystem::path filename = "../tests/";
 
 
@@ -149,21 +149,18 @@ void MegaBoyDebugger::UpdateUI()
 
 
 
-/*
-    if (ImGui::Button("Reset") )
-    {
-        is_running = false;
-        gb->cpu.debug_log_entries.clear();
-        //Step();
-    }
-*/
+
    if (ImGui::Button("Step"))
    {
        is_running = false;
        Step();
    }
 
-   if(is_running){
+
+    ImGui::SameLine();
+
+
+    if(is_running){
        if(ImGui::Button("Stop")){
            is_running = false;
            if(gb_thread.joinable()) {
@@ -178,6 +175,18 @@ void MegaBoyDebugger::UpdateUI()
            gb_thread = std::thread(&MegaBoyDebugger::Run,this);
        }
    }
+
+
+    ImGui::SameLine();
+
+
+    if (ImGui::Button("Reset") )
+    {
+        is_running = false;
+        gb->cpu.debug_log_entries.clear();
+        gb->cpu.reset();
+        //Step();
+    }
 
     static char addr_input[5] = {"100"}; ImGui::InputText("hexadecimal", addr_input, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
     ImGui::SameLine();

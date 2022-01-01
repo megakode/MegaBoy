@@ -188,7 +188,7 @@ void CPU::scf()
 // flags: C N H
 void CPU::ccf()
 {
-    setFlag(FlagBitmaskHalfCarry, regs.F & FlagBitmaskC);
+    setFlag(FlagBitmaskHalfCarry, 0);
     setFlag(FlagBitmaskN,0);
     setFlag(FlagBitmaskC,!(regs.F & FlagBitmaskC));
 #ifdef DEBUG_LOG

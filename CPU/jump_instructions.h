@@ -203,7 +203,7 @@ void CPU::RET_cc(){
 
 #ifdef DEBUG_LOG
     std::string conditionName = name_from_condition(conditionCode);
-    AddDebugLog("RET %s",conditionName);
+    AddDebugLog("RET %s",conditionName.c_str());
 #endif
 }
 

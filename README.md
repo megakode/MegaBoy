@@ -32,6 +32,7 @@ https://github.com/retrio/gb-test-roms/tree/master/cpu_instrs
 Other GB emulators:
 
 - https://github.com/LIJI32/SameBoy/blob/master/Core/sm83_cpu.c
+- https://github.com/AntonioND/giibiiadvance/blob/master/source/gb_core/cpu.c
 
 Test Roms:
 

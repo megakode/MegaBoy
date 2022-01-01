@@ -10,8 +10,8 @@
 
 void CPU::LD_pnn_SP() {
     auto addr = fetch16BitValue();
-    mem.Write(addr, static_cast<uint8_t>(regs.SP));
-    mem.Write(addr+1, regs.SP >> 8);
+    mem.Write(addr, regs.SPL);
+    mem.Write(addr+1, regs.SPH);
     #ifdef DEBUG_LOG
     AddDebugLog("LD (0x%04x),SP",addr);
     #endif
@@ -118,8 +118,7 @@ void CPU::ld_sp_hl()
 // cycles: 10
 void CPU::LD_BC_nn()
 {
-    regs.C = fetch8BitValue();
-    regs.B = fetch8BitValue();
+    regs.BC = fetch16BitValue();
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD BC,0x%04x", regs.BC);
@@ -348,6 +347,7 @@ void CPU::pop_qq()
             break;
         case 3:
             pop16(regs.AF);
+            regs.F &= 0xf0; // Always mask out lower nibble of flags, as they are forced zero on hardware
             #ifdef DEBUG_LOG
             AddDebugLog("POP AF");
             #endif
@@ -389,7 +389,7 @@ void CPU::push_hl(){
 /// cycles: 11
 void CPU::push_af(){
     mem.Write(--regs.SP, regs.A);
-    mem.Write(--regs.SP, regs.F);
+    mem.Write(--regs.SP, regs.F & 0xf0); // mask out the lower 4 bits to force them to always be zero
 #ifdef DEBUG_LOG
     AddDebugLog("PUSH AF");
 #endif

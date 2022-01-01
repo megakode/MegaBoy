@@ -21,11 +21,11 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         {12, &CPU::LD_BC_nn},   // 0x01 LD BC,NN
         { 8, &CPU::LD_pBC_A},   // 0x02 "LD (BC),A"
         { 8, &CPU::INC_BC},     // 0x03 "INC BC"
-        { 4, &CPU::INC_B},      // 0x04 {"INC B"
+        { 4, &CPU::INC_B},// 0x04 "INC B"
         { 4, &CPU::DEC_B},      // 0x05 "DEC B"
         { 8, &CPU::LD_r_n},     // 0x06 "LD B,N"
         { 4, &CPU::RLCA},       // 0x07 "RLCA"
-        {20, &CPU::LD_pnn_SP},  // 0x08 "EXAF"
+        {20, &CPU::LD_pnn_SP},  // 0x08 "LD_(nnnn),SP"
         { 8, &CPU::ADD_HL_BC},  // 0x09 "ADD HL,BC"
         { 8, &CPU::LD_A_pBC},   // 0x0a "LD A,(BC)"
         { 8, &CPU::DEC_BC},     // 0x0b "DEC BC"
@@ -253,7 +253,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         { 8, &CPU::RET_cc},        // 0xd8 "RET C"
         {16, &CPU::RETI},          // 0xd9 "EXX"
         {12, &CPU::JP_cc_nn},      // 0xda "JP C,NN"
-        { 0, &CPU::invalid_opcode},// 0xdb "IN A,(n)"
+        { 0, &CPU::invalid_opcode},// 0xdb
         {12, &CPU::CALL_cc_nn},    // 0xdc "CALL C,NN"
         { 0, &CPU::invalid_opcode},// 0xdd
         { 8, &CPU::SBC_n},         // 0xde "SBC N"
@@ -268,11 +268,11 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         { 8, &CPU::AND_n},          // 0xe6 "AND N"
         {16, &CPU::RST},            // 0xe7 "RST 20h"
         {16, &CPU::ADD_SP_s8},      // 0xe8 "RET PE"
-        { 4, &CPU::JP_pHL},      // 0xe9 "JP (HL)"
+        { 4, &CPU::JP_pHL},         // 0xe9 "JP (HL)"
         {16, &CPU::LD_pnn_A},       // 0xea "LD (nn),A"
-        { 0, &CPU::invalid_opcode}, // 0xeb "EX DH,HL"
-        { 0, &CPU::invalid_opcode}, // 0xec "CALL PE,NN"
-        { 0, &CPU::invalid_opcode}, // 0xed Extended instructions
+        { 0, &CPU::invalid_opcode}, // 0xeb
+        { 0, &CPU::invalid_opcode}, // 0xec
+        { 0, &CPU::invalid_opcode}, // 0xed
         { 8, &CPU::XOR_n},          // 0xee "XOR N"
         {16, &CPU::RST},            // 0xef "RST 28h"
 
@@ -280,7 +280,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         {12, &CPU::pop_qq},            // 0xf1 "POP AF"
         { 8, &CPU::LD_A_ff00C},        // 0xf2 "JP P,NN"
         { 4, &CPU::disable_interrupts},// 0xf3 "DI"
-        { 0, &CPU::invalid_opcode},    // 0xf4 "CALL P,NN"
+        { 0, &CPU::invalid_opcode},    // 0xf4
         {16, &CPU::push_af},           // 0xf5 "PUSH AF"
         { 8, &CPU::OR_n},              // 0xf6 "OR N"
         {16, &CPU::RST},               // 0xf7 "RST 30h"
@@ -288,7 +288,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         { 8, &CPU::ld_sp_hl},          // 0xf9 "LD SP,HL"
         {16, &CPU::LD_A_pnn},          // 0xfa "JP M,NN"
         { 4, &CPU::enable_interrupts}, // 0xfb "EI"
-        { 0, &CPU::invalid_opcode},    // 0xfc "CALL M,NN"
+        { 0, &CPU::invalid_opcode},    // 0xfc
         { 0, &CPU::invalid_opcode},    // 0xfd
         { 8, &CPU::CP_n},              // 0xfe "CP N"
         {16, &CPU::RST}                // 0xff "RST 38h"
@@ -320,12 +320,23 @@ void CPU::reset()
     regs.HL = 0;
      */
     // Test to match cpu_instr.gb in gb emu
+
     regs.AF = 0x1180;
     regs.BC = 0;
     regs.DE = 0xff56;
     regs.SP = 0xfffe;
     regs.HL = 0x000d;
 
+    regs.PC = 0x100;
+
+/*
+    regs.SP = 0xFFFE;
+    regs.PC = 0x0100;
+    regs.AF = 0x01B0;
+    regs.BC = 0x0013;
+    regs.DE = 0x00D8;
+    regs.HL = 0x014D;
+*/
 }
 
 void CPU::AddDebugLog(const char* fmt, ...)
@@ -394,7 +405,7 @@ void CPU::set_INC_operation_flags( uint8_t result )
 void CPU::set_DEC_operation_flags( uint8_t result )
 {
     setFlag( FlagBitmaskZero, result == 0 );   // Set if result is zero
-    setFlag( FlagBitmaskHalfCarry, (result & 0b00001111) == 0b00001111 ); // Set if carry over from bit 3
+    //setFlag( FlagBitmaskHalfCarry, (result & 0b00010000) == 0b00001111 ); // Set if carry over from bit 3
     setFlag( FlagBitmaskN, true); // set
 }
 

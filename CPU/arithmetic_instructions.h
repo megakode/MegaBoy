@@ -16,25 +16,25 @@ void CPU::add( uint8_t srcValue, bool carry ){
     setFlag(FlagBitmaskC,result > 0xff);
     setFlag(FlagBitmaskZero, (result&0xff) == 0);
     setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
-    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskN, false);
 
     regs.A = static_cast<uint8_t>(result);
 }
 
 //  add 16 bit register pair
-void CPU::add16( uint16_t& regPair, uint16_t value_to_add , bool carry )
+void CPU::add16( uint16_t& regPair, uint16_t value_to_add  )
 {
     uint32_t result = regPair + value_to_add;
-    if ( regs.F & FlagBitmaskC ) {
+    /*if ( regs.F & FlagBitmaskC ) {
         result++;
-    }
+    }*/
 
     setFlag(FlagBitmaskC,result > 0xffff);
     setFlag(FlagBitmaskZero, (result&0xffff) == 0);
-    setFlag(FlagBitmaskHalfCarry, (regPair & 0x0fffu) > (result & 0x0fffu));
-    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry, ((regPair & 0x0fffu) + (value_to_add & 0x0fffu)) > 0x0FFF);
+    setFlag(FlagBitmaskN, false);
 
-    regPair = result;
+    regPair = result & 0xffff;
 }
 
 /**
@@ -45,20 +45,33 @@ void CPU::add16( uint16_t& regPair, uint16_t value_to_add , bool carry )
  */
 void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
 
-    uint16_t result = (0xff00 | regs.A) - srcValue;
+    uint16_t result = regs.A - srcValue;
     if ( carry && (regs.F & FlagBitmaskC) ) {
         result--;
     }
-    setFlag(FlagBitmaskZero, srcValue == regs.A);
+    setFlag(FlagBitmaskZero, (result & 0xff) == 0);
+    setFlag(FlagBitmaskC, result & 0xff00);
     setFlag(FlagBitmaskN,true);
-    setFlag(FlagBitmaskC, ((result&0xff00) < 0xff00) );
-    setFlag(FlagBitmaskHalfCarry, (0x0f & regs.A) < (srcValue & 0x0f) );
+    //setFlag(FlagBitmaskHalfCarry, (0x0f & regs.A) < (srcValue & 0x0f) );
+    setFlag(FlagBitmaskHalfCarry, ((regs.A^srcValue^result) & 0x10) != 0);
 
     if(!onlySetFlagsForComparison){
-        regs.A = static_cast<uint8_t>(result);
+        regs.A = result & 0xff; //static_cast<uint8_t>(result);
     }
-}
 
+    /*
+     * Fra GIIBIIAdvance emu:
+     * #define gb_sbc_a_r8(reg8)
+    {
+        u32 result = regs.A - val - ((regs.F & F_CARRY) ? 1 : 0);
+        cpu->R8.F = ((result & ~0xFF) ? F_CARRY : 0)
+                    | ((result & 0xFF) ? 0 : F_ZERO) | F_SUBTRACT;
+        cpu->F.H = ((regs.A ^ val ^ result) & 0x10) != 0;
+        regs.A = temp;
+        GB_CPUClockCounterAdd(4);
+    }
+     */
+}
 
 void CPU::INC_r(uint8_t &reg)
 {
@@ -66,13 +79,13 @@ void CPU::INC_r(uint8_t &reg)
     set_INC_operation_flags(reg);
 }
 
+
 void CPU::DEC_r(uint8_t &reg)
 {
     uint8_t oldval = reg;
     reg--;
-    uint8_t newval = reg;
     set_DEC_operation_flags(reg);
-    setFlag( FlagBitmaskHalfCarry, (oldval & 0b11110000) > (newval & 0b11110000) ); // Set if carry over from bit 3
+    setFlag( FlagBitmaskHalfCarry, (oldval & 0xf) == 0xf );
 }
 
 
@@ -89,7 +102,7 @@ void CPU::CP_r()
 
     #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("CP %s",regName);
+    AddDebugLog("CP %s",regName.c_str());
     #endif
 }
 
@@ -118,6 +131,9 @@ void CPU::CP_n()
 // flags: C H N
 void CPU::ADD_HL_HL(){
     add16(regs.HL,regs.HL);
+#ifdef DEBUG_LOG
+    AddDebugLog("ADD HL,HL");
+#endif
 }
 
 
@@ -156,12 +172,20 @@ void CPU::ADD_A_r(){
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     add(srcRegValue,false);
+
+#ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog("ADD A,%s",regName.c_str());
+#endif
 }
 
 // cycles: 7
 void CPU::ADD_A_n(){
     uint8_t srcRegValue = fetch8BitValue();
     add(srcRegValue,false);
+#ifdef DEBUG_LOG
+    AddDebugLog("ADD A,%x",srcRegValue);
+#endif
 }
 
 void CPU::ADC_A_r(){
@@ -169,13 +193,21 @@ void CPU::ADC_A_r(){
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
 
     add(srcRegValue,true);
+#ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog("ADC A,%s",regName.c_str());
+#endif
 }
 
 // ADC A,N
 // opcode: 0xce
 // cycles: 7
 void CPU::ADC_A_n(){
-    add(fetch8BitValue(),true);
+    auto value = fetch8BitValue();
+    add(value,true);
+#ifdef DEBUG_LOG
+    AddDebugLog("ADC A,%x",value);
+#endif
 }
 
 
@@ -195,12 +227,19 @@ void CPU::SUB_r(){
 void CPU::SUB_n(){
     uint8_t srcRegValue = fetch8BitValue();
     sub(srcRegValue,false, false);
+#ifdef DEBUG_LOG
+    AddDebugLog("SUB A,%x",srcRegValue);
+#endif
 }
 
 void CPU::SBC_r(){
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = reg_from_regcode(srcRegCode);
     sub(srcRegValue,true, false);
+#ifdef DEBUG_LOG
+    auto regName = reg_name_from_regcode(srcRegCode);
+    AddDebugLog("SBC A,%s",regName.c_str());
+#endif
 }
 
 // SBC N
@@ -209,6 +248,9 @@ void CPU::SBC_r(){
 void CPU::SBC_n(){
     uint8_t srcRegValue = fetch8BitValue();
     sub(srcRegValue,true, false);
+#ifdef DEBUG_LOG
+    AddDebugLog("SBC A,%x",srcRegValue);
+#endif
 }
 
 
@@ -231,7 +273,7 @@ void CPU::AND_r()
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("AND %s",regName);
+    AddDebugLog("AND %s",regName.c_str());
 #endif
 }
 
@@ -263,7 +305,7 @@ void CPU::XOR_r()
 
     #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("XOR %s",regName);
+    AddDebugLog("XOR %s",regName.c_str());
     #endif
 }
 
@@ -284,9 +326,9 @@ void CPU::xor_a_with_value( uint8_t value )
     regs.A ^= value;
 
     setFlag(FlagBitmaskZero, regs.A == 0);
-    setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskC,0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskC,false);
 }
 
 // *********************************************************************************
@@ -297,8 +339,6 @@ void CPU::xor_a_with_value( uint8_t value )
 // or r 4
 // or n 7
 // or (hl) 7
-// or (IX+d) 19
-// or (IY+d) 19
 void CPU::OR_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
@@ -592,5 +632,5 @@ void CPU::ADD_SP_s8()
     uint32_t result = regs.SP + value;
     regs.F = 0;
     setFlag(FlagBitmaskC, result & 0xff0000);
-    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0x0fffu) > (result & 0x0fffu));
+    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
 }

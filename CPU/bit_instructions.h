@@ -19,9 +19,10 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         uint8_t carry = reg & 0x80;
         reg = reg << 1;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero, reg == 0);
 
         reg |= (carry ? 1 : 0);
 #ifdef DEBUG_LOG
@@ -44,6 +45,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero, reg == 0);
 
         reg |= (carry ? 0x80 : 0);
 #ifdef DEBUG_LOG
@@ -57,7 +59,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // cycles:
     // RL r: 8
     // RL (hl): 15
-    // flags: S Z H PV N C
+    // flags: Z H N C
     if( op2 >= 0x10 && op2 <= 0x17 )
     {
         uint8_t carry = reg & 0x80;
@@ -65,9 +67,10 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         reg = reg << 1;
         reg |= (regs.F & FlagBitmaskC) ? 1 : 0;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero,reg == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("RL r");
 #endif
@@ -79,7 +82,7 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // cycles:
     // RR r: 8
     // RR (hl): 15
-    // flags: S Z H PV N C
+        // flags: Z H N C
     if( (op2 & 0b11111000) == 0b00011000)
     {
         uint8_t carry = reg & 0x01;
@@ -87,9 +90,10 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         reg = reg >> 1;
         reg |= (regs.F & FlagBitmaskC) ? 0x80 : 0;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero,reg == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("RR r");
 #endif
@@ -105,9 +109,10 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 
         reg = reg << 1;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero, reg == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("SLA r");
 #endif
@@ -127,16 +132,18 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         signedValue = signedValue >> 1;
         reg = signedValue;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero, reg == 0);
 #ifdef DEBUG_LOG
         auto regName = reg_name_from_regcode(regCode);
-        AddDebugLog("SRA %s",regName);
+        AddDebugLog("SRA %s",regName.c_str());
 #endif
         return 8;
     } else
 
+    // SWAP r
     // opcode: 0x30 - 0x37
     if( op2 >= 0x30 && op2 <= 0x37 ){
 
@@ -155,13 +162,14 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 
         reg = reg >> 1;
 
-        setFlag(FlagBitmaskHalfCarry,0);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,false);
+        setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
+        setFlag(FlagBitmaskZero, reg == 0);
 #ifdef DEBUG_LOG
         uint8_t regCode = op2 & 0b00000111;
         auto regName = reg_name_from_regcode(regCode);
-        AddDebugLog("SRL %s",regName);
+        AddDebugLog("SRL %s",regName.c_str());
 #endif
         return 8;
     } else
@@ -177,8 +185,8 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t result = reg & (1 << bitNumber);
         setFlag(FlagBitmaskZero, result == 0);
-        setFlag(FlagBitmaskHalfCarry,1);
-        setFlag(FlagBitmaskN,0);
+        setFlag(FlagBitmaskHalfCarry,true);
+        setFlag(FlagBitmaskN,false);
 #ifdef DEBUG_LOG
         AddDebugLog("BIT b,r");
 #endif
@@ -228,8 +236,9 @@ void CPU::RLCA()
 {
     bool carry = regs.A & 0b10000000;
     setFlag(FlagBitmaskC,carry);
-    setFlag(FlagBitmaskHalfCarry,0);
-    setFlag(FlagBitmaskN,0);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskN,false);
 
     regs.A <<= 1;
     if(carry)regs.A |= 1;
@@ -267,6 +276,7 @@ void CPU::RLA()
     uint8_t newcarry = regs.A & 0x80;
     regs.A <<= 1;
     regs.A |= getFlag(FlagBitmaskC) ? 1 : 0;
+    setFlag(FlagBitmaskZero,false);
     setFlag(FlagBitmaskHalfCarry,false);
     setFlag(FlagBitmaskN,false);
     setFlag(FlagBitmaskC,newcarry);
@@ -287,8 +297,9 @@ void CPU::RLA()
 void CPU::RRA()
 {
     uint8_t carry = regs.A & 1;
-    setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskHalfCarry,0);
+    setFlag(FlagBitmaskZero, false); // Doubt: Most emulators zero this flag, but according to gbcpuman.pdf it should be set if result is zero?!
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskHalfCarry,false);
     regs.A >>= 1;
     // Set bit 7 to previous carry flag
     if(getFlag(FlagBitmaskC)){
@@ -298,6 +309,7 @@ void CPU::RRA()
     }
 
     setFlag(FlagBitmaskC, carry); // Set new carry flag
+
 #ifdef DEBUG_LOG
     AddDebugLog("RRA");
 #endif
@@ -338,6 +350,6 @@ void CPU::SWAP_r(uint8_t regCode)
 
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(regCode);
-    AddDebugLog("SWAP %s",regName);
+    AddDebugLog("SWAP %s",regName.c_str());
 #endif
 }
