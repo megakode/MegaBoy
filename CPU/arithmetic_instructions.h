@@ -15,7 +15,12 @@ void CPU::add( uint8_t srcValue, bool carry ){
 
     setFlag(FlagBitmaskC,result > 0xff);
     setFlag(FlagBitmaskZero, (result&0xff) == 0);
-    setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
+
+    if(carry) {
+        setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) + (srcValue & 0xf) + (getFlag(FlagBitmaskC) ? 1 : 0) > 0x0f);
+    } else {
+        setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
+    }
     setFlag(FlagBitmaskN, false);
 
     regs.A = static_cast<uint8_t>(result);
@@ -25,13 +30,9 @@ void CPU::add( uint8_t srcValue, bool carry ){
 void CPU::add16( uint16_t& regPair, uint16_t value_to_add  )
 {
     uint32_t result = regPair + value_to_add;
-    /*if ( regs.F & FlagBitmaskC ) {
-        result++;
-    }*/
 
     setFlag(FlagBitmaskC,result > 0xffff);
-    setFlag(FlagBitmaskZero, (result&0xffff) == 0);
-    setFlag(FlagBitmaskHalfCarry, ((regPair & 0x0fffu) + (value_to_add & 0x0fffu)) > 0x0FFF);
+    setFlag(FlagBitmaskHalfCarry, ((regPair & 0x0fff) + (value_to_add & 0x0fff)) > 0x0FFF);
     setFlag(FlagBitmaskN, false);
 
     regPair = result & 0xffff;
@@ -85,7 +86,7 @@ void CPU::DEC_r(uint8_t &reg)
     uint8_t oldval = reg;
     reg--;
     set_DEC_operation_flags(reg);
-    setFlag( FlagBitmaskHalfCarry, (oldval & 0xf) == 0xf );
+
 }
 
 
@@ -466,9 +467,7 @@ void CPU::DEC_pHL()
 {
     uint8_t result = mem.Read(regs.HL);
     mem.Write(regs.HL,--result);
-    setFlag(FlagBitmaskZero, result == 0);
-    setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00001111 );
-    setFlag(FlagBitmaskN,1);
+    set_DEC_operation_flags(result);
 }
 
 // INC BC
@@ -629,8 +628,10 @@ void CPU::DEC_E(){
 void CPU::ADD_SP_s8()
 {
     auto value = static_cast<int8_t>(fetch8BitValue());
-    uint32_t result = regs.SP + value;
+    uint16_t result = regs.SP + value;
     regs.F = 0;
-    setFlag(FlagBitmaskC, result & 0xff0000);
+    setFlag(FlagBitmaskC,(regs.SP & 0xFF) + value > 0xFF);
     setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
+    regs.SP = result & 0xffff;
+
 }

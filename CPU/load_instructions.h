@@ -282,16 +282,24 @@ void CPU::LD_A_ff00C()
 }
 
 
+// Opcode: 0xf8
 /// LD HL,SP+dd
 /// HL = SP +/- dd ; dd is 8-bit signed number
 /// cycles: 12
+/// test rom: ok
 void CPU::LD_HL_SPs8()
 {
     auto value = static_cast<int8_t>(fetch8BitValue());
+
     regs.HL = regs.SP + value;
-    #ifdef DEBUG_LOG
+    regs.F = 0;
+    setFlag(FlagBitmaskC,(regs.SP & 0xFF) + value > 0xFF);
+    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
+
+#ifdef DEBUG_LOG
     AddDebugLog("LD HL,SP+%+i",value);
     #endif
+
 }
 
 /// LD A,(nn)

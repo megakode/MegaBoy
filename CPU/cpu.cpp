@@ -284,7 +284,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         {16, &CPU::push_af},           // 0xf5 "PUSH AF"
         { 8, &CPU::OR_n},              // 0xf6 "OR N"
         {16, &CPU::RST},               // 0xf7 "RST 30h"
-        {12, &CPU::LD_HL_SPs8},        // 0xf8 "RET M"
+        {12, &CPU::LD_HL_SPs8},        // 0xf8 "LD HL,SP+s8"
         { 8, &CPU::ld_sp_hl},          // 0xf9 "LD SP,HL"
         {16, &CPU::LD_A_pnn},          // 0xfa "JP M,NN"
         { 4, &CPU::enable_interrupts}, // 0xfb "EI"
@@ -364,17 +364,25 @@ void CPU::AddDebugLog(const char *text, va_list args)
 
 uint8_t CPU::step()
 {
-    // M1: OP Code fetch
-    current_pc = regs.PC;
-    current_opcode = fetch8BitValue();
+    uint8_t cycles_spent = 0;
+
+    if(!is_halted)
+    {
+        // M1: OP Code fetch
+        current_pc = regs.PC;
+        current_opcode = fetch8BitValue();
 
 #ifdef DEBUG_LOG
-    //std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
+        //std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
 #endif
-    (this->*instructions[current_opcode].code)();
+        (this->*instructions[current_opcode].code)();
 
-    // Cycles spent in this step = base instruction cycles + additional cycles spent (i.e. jumps and conditions taking longer depending on outcome)
-    uint8_t cycles_spent = this->instructions[current_opcode].cycles + additional_cycles_spent;
+        // Cycles spent in this step = base instruction cycles + additional cycles spent (i.e. jumps and conditions taking longer depending on outcome)
+        cycles_spent = this->instructions[current_opcode].cycles + additional_cycles_spent;
+    } else {
+        // just do a NOP when halted
+        cycles_spent = 1;
+    }
 
     additional_cycles_spent = 0;
     // TODO: wait `cycles_spent` number of cycles
@@ -398,14 +406,14 @@ void CPU::set_AND_operation_flags()
 void CPU::set_INC_operation_flags( uint8_t result )
 {
     setFlag( FlagBitmaskZero, result == 0 );   // Set if result is zero
-    setFlag( FlagBitmaskHalfCarry, (result & 0b00001111) == 0 ); // Set if carry over from bit 3
+    setFlag( FlagBitmaskHalfCarry, (result & 0x0f) == 0 ); // Set if carry over from bit 3
     setFlag( FlagBitmaskN, false); // reset
 }
 
 void CPU::set_DEC_operation_flags( uint8_t result )
 {
     setFlag( FlagBitmaskZero, result == 0 );   // Set if result is zero
-    //setFlag( FlagBitmaskHalfCarry, (result & 0b00010000) == 0b00001111 ); // Set if carry over from bit 3
+    setFlag( FlagBitmaskHalfCarry, (result & 0xf) == 0xf );
     setFlag( FlagBitmaskN, true); // set
 }
 

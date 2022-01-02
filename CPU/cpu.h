@@ -105,6 +105,8 @@ class CPU {
     /// and the step method waits this number of cycles after a step, and resets it to 0 afterwards.
     uint16_t additional_cycles_spent;
 
+    bool is_halted = false;
+
     // *************************************************************************************
     // Fetching instruction bytes
     // *************************************************************************************

@@ -22,7 +22,6 @@ https://github.com/embox/embox
 Gameboy docs
 
 https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
-https://github.com/retrio/gb-test-roms/tree/master/cpu_instrs
 
 - https://gbdev.io/pandocs/
 - https://gbdev.io/pandocs/CPU_Comparison_with_Z80.html
@@ -36,5 +35,7 @@ Other GB emulators:
 
 Test Roms:
 
+- https://github.com/retrio/gb-test-roms/tree/master/cpu_instrs
 - https://github.com/mattcurrie/dmg-acid2
 - https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM
+- https://github.com/pinobatch/numism/blob/main/docs/gb_emu_testing.md

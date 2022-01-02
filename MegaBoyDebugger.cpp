@@ -33,16 +33,17 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/DRMARIO.GB";
     //std::filesystem::path filename = "../tests/TETRIS.GB";
-    //std::filesystem::path filename = "../tests/01-special.gb";
+    //std::filesystem::path filename = "../tests/01-special.gb"; // PASSED
     //std::filesystem::path filename = "../tests/02-interrupts.gb";
-    //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; (fail)
-    std::filesystem::path filename = "../tests/04-op r,imm.gb";
-    //std::filesystem::path filename = "../tests/05-op rp.gb";
+    //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; //(fail 08 08)
+    std::filesystem::path filename = "../tests/04-op r,imm.gb"; // (fail 0e)
+    // std::filesystem::path filename = "../tests/05-op rp.gb"; // (fail 09 09 09)
     //std::filesystem::path filename = "../tests/06-ld r,r.gb"; (PASSED!)
-    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb";
-    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // (failed)
-    //std::filesystem::path filename = "../tests/09-op r,r.gb";
-    //std::filesystem::path filename = "../tests/";
+    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb"; (PASSED!)
+    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // (PASSED!)
+    //std::filesystem::path filename = "../tests/09-op r,r.gb"; // (FAIL)
+    //std::filesystem::path filename = "../tests/10-bit ops.gb"; // (PASSED!)
+    //std::filesystem::path filename = "../tests/11-op a,(hl).gb";
 
 
 
@@ -87,11 +88,14 @@ void MegaBoyDebugger::UpdateUI()
         //int first_index = std::max(0,gb->cpu.debug_log_entries.size() - number_of_lines);
 
         int lines = std::min(10,(int)gb->cpu.debug_log_entries.size());
-        //for( int index = 0 ; index < gb->cpu.debug_log_entries.size() ; index++ )
-        for(auto it = gb->cpu.debug_log_entries.end() - lines; it != std::end(gb->cpu.debug_log_entries); ++it)
+        int max_line_index = (int)gb->cpu.debug_log_entries.size();
+        for( int index = max_line_index-lines ; index < max_line_index ; index++ )
+        //for(auto it = gb->cpu.debug_log_entries.end() - lines; it != std::end(gb->cpu.debug_log_entries); ++it)
         {
-                    auto& entry = *it; // gb->cpu.debug_log_entries[i];
-                    if(it==gb->cpu.debug_log_entries.end()-1){
+                    // Intentionally copy the entry here, as otherwise a sigsegv might occur when we print it further down
+                    //auto entry = *it; // gb->cpu.debug_log_entries[i];
+                    auto entry = gb->cpu.debug_log_entries[index];
+                    if(index == max_line_index-1){
                         ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,">0x%04x ",entry.PC);
                     } else {
                         ImGui::TextColored(UIConfig::COLOR_VALUE_HEX," 0x%04x ",entry.PC);

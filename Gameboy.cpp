@@ -47,6 +47,7 @@ void Gameboy::HandleInterrupts() {
         {
             if(mem.InterruptEnabled() & mem.GetInterruptFlag(flags[i]) )
             {
+                cpu.is_halted = false;
                 cpu.push_pc();
                 // Clear the given interrupt flag again
                 mem.SetInterruptFlag(flags[i],false);

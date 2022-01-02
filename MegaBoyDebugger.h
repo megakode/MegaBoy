@@ -20,7 +20,7 @@ private:
     bool scroll_to_bottom = false;
 
     bool is_running = false;
-    uint16_t run_to = 0;
+    uint16_t run_to = 0xffff;
 
 public:
 

@@ -219,8 +219,7 @@ void CPU::RST()
     uint8_t location[] = { 0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38};
     uint8_t locationCode = (current_opcode & 0b00111000) >> 3;
 
-    mem.Write(--regs.SP, regs.PC >> 8);
-    mem.Write(--regs.SP, static_cast<uint8_t>(regs.PC));
+    push_pc();
 
     regs.PC = location[locationCode];
 

@@ -38,6 +38,7 @@ void CPU::enable_interrupts()
 }
 
 void CPU::halt(){
+    is_halted = true;
     // TODO: implement this
 #ifdef DEBUG_LOG
     AddDebugLog("HALT");
@@ -47,13 +48,19 @@ void CPU::halt(){
 // DAA
 // opcode: 0x27
 // cycles: 4
-// flags: S Z H PV C
+// flags: Z H C
 void CPU::daa(){
 
-    bool c_before_daa = (regs.F & FlagBitmaskC);
-    bool h_before_daa = (regs.F & FlagBitmaskHalfCarry);
-    uint8_t hexValueInUpper = regs.A >> 4;
-    uint8_t hexValueInLower = regs.A & 0x0f;
+    if (!getFlag(FlagBitmaskN)) {  // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+        if (getFlag(FlagBitmaskC) || regs.A > 0x99) { regs.A += 0x60; setFlag(FlagBitmaskC,true); }
+        if (getFlag(FlagBitmaskHalfCarry) || (regs.A & 0x0f) > 0x09) { regs.A += 0x6; }
+    } else {  // after a subtraction, only adjust if (half-)carry occurred
+        if (getFlag(FlagBitmaskC)) { regs.A -= 0x60; }
+        if (getFlag(FlagBitmaskHalfCarry)) { regs.A -= 0x6; }
+    }
+
+    setFlag(FlagBitmaskZero, (regs.A == 0) ); // the usual z flag
+    setFlag(FlagBitmaskHalfCarry,false); // h flag is always cleared
 
     // Implemented according to the truth-table in the Z80 Technical manual p.141
     // test with:
@@ -69,69 +76,6 @@ void CPU::daa(){
     // inc a    ; a now contains $0a (not a valid BCD number)
     // daa      ; a now contains $10, representing 10 (decimal) = 9+1
 
-    if(regs.F & FlagBitmaskN){ // a SUB instruction was performed previously
-        if( c_before_daa == 0 ) {
-            if( hexValueInUpper <= 0x09 && h_before_daa == 0 && hexValueInLower <= 0x09){
-                regs.A += 0x00;
-                setFlag(FlagBitmaskC,false);
-            } else
-            if( hexValueInUpper <= 0x08 && h_before_daa == 1 && hexValueInLower >= 0x06){
-                regs.A += 0xFA;
-                setFlag(FlagBitmaskC,false);
-            }
-        }else{
-            if( hexValueInUpper >= 0x07 && h_before_daa == 0 && hexValueInLower <= 0x09){
-                regs.A += 0xA0;
-                setFlag(FlagBitmaskC,true);
-            } else
-            if( hexValueInUpper >= 0x06 && h_before_daa == 1 && hexValueInLower <= 0x06){
-                regs.A += 0x9A;
-                setFlag(FlagBitmaskC,true);
-            }
-        }
-    } else { // an ADD instruction was performed previously
-        if( c_before_daa == 0 ) {
-            if( hexValueInUpper <= 0x09 && h_before_daa == 0 && hexValueInLower <= 0x09){
-                regs.A += 0x00;
-                setFlag(FlagBitmaskC,false);
-            } else
-            if( hexValueInUpper <= 0x08 && h_before_daa == 0 && hexValueInLower >= 0x0a){
-                regs.A += 0x06;
-                setFlag(FlagBitmaskC,false);
-            } else
-            if( hexValueInUpper <= 0x09 && h_before_daa == 1 && hexValueInLower <= 0x03){
-                regs.A += 0x06;
-                setFlag(FlagBitmaskC,false);
-            } else
-            if( hexValueInUpper >= 0x0a && h_before_daa == 0 && hexValueInLower <= 0x09){
-                regs.A += 0x60;
-                setFlag(FlagBitmaskC,true);
-            } else
-            if( hexValueInUpper >= 0x09 && h_before_daa == 0 && hexValueInLower >= 0x0a){
-                regs.A += 0x66;
-                setFlag(FlagBitmaskC,true);
-            } else
-            if ( hexValueInUpper >= 0x0a && h_before_daa == 1 && hexValueInLower <= 0x03){
-                regs.A += 0x66;
-                setFlag(FlagBitmaskC,true);
-            }
-        } else {
-            if( hexValueInUpper <= 0x02 && h_before_daa == 0 && hexValueInLower <= 0x09){
-                regs.A += 0x60;
-                setFlag(FlagBitmaskC,true);
-            } else
-            if( hexValueInUpper <= 0x02 && h_before_daa == 0 && hexValueInLower >= 0x0a){
-                regs.A += 0x66;
-                setFlag(FlagBitmaskC,true);
-            } else
-            if( hexValueInUpper <= 0x03 && h_before_daa == 1 && hexValueInLower <= 0x03){
-                regs.A += 0x66;
-                setFlag(FlagBitmaskC,true);
-            }
-        }
-    }
-
-    setFlag( FlagBitmaskZero, regs.A == 0);
 
 #ifdef DEBUG_LOG
     AddDebugLog("DAA");
