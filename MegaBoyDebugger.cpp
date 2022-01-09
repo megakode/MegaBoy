@@ -35,15 +35,15 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/TETRIS.GB";
     //std::filesystem::path filename = "../tests/01-special.gb"; // PASSED
     //std::filesystem::path filename = "../tests/02-interrupts.gb";
-    //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; //(fail 08 08)
-    std::filesystem::path filename = "../tests/04-op r,imm.gb"; // (fail 0e)
-    // std::filesystem::path filename = "../tests/05-op rp.gb"; // (fail 09 09 09)
-    //std::filesystem::path filename = "../tests/06-ld r,r.gb"; (PASSED!)
-    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb"; (PASSED!)
-    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // (PASSED!)
-    //std::filesystem::path filename = "../tests/09-op r,r.gb"; // (FAIL)
-    //std::filesystem::path filename = "../tests/10-bit ops.gb"; // (PASSED!)
-    //std::filesystem::path filename = "../tests/11-op a,(hl).gb";
+    //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/04-op r,imm.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/05-op rp.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/06-ld r,r.gb"; PASSED
+    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb"; PASSED
+    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/09-op r,r.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/10-bit ops.gb"; // PASSED
+    std::filesystem::path filename = "../tests/11-op a,(hl).gb"; // PASSED
 
 
 

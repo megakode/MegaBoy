@@ -19,7 +19,8 @@ void Gameboy::Step() {
 
     if (cpu.mem[0xff02] == 0x81) {
         char c = cpu.mem[0xff01];
-        std::cout << c << std::endl; // printf("%c", c);
+        printf("%c", c);
+        //std::cout << c << std::endl; //
         cpu.mem[0xff02] = 0x0;
     }
 

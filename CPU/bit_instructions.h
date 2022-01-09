@@ -18,13 +18,13 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     {
         uint8_t carry = reg & 0x80;
         reg = reg << 1;
+        reg |= (carry ? 1 : 0);
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
         setFlag(FlagBitmaskZero, reg == 0);
 
-        reg |= (carry ? 1 : 0);
 #ifdef DEBUG_LOG
         AddDebugLog("RLC r");
 #endif
@@ -39,15 +39,17 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // RRC (HL) : 15
     if( op2 >= 0x08 && op2 <= 0xf )
     {
-        uint8_t carry = reg & 0x01;
+        bool carry = (reg & 0x01) != 0;
         reg = reg >> 1;
+
+        reg |= (carry ? 0x80 : 0);
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
         setFlag(FlagBitmaskZero, reg == 0);
 
-        reg |= (carry ? 0x80 : 0);
+
 #ifdef DEBUG_LOG
         AddDebugLog("RRC r");
 #endif
@@ -235,10 +237,11 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
 void CPU::RLCA()
 {
     bool carry = regs.A & 0b10000000;
+    regs.F = 0;
     setFlag(FlagBitmaskC,carry);
-    setFlag(FlagBitmaskHalfCarry,false);
-    setFlag(FlagBitmaskN,false);
-    setFlag(FlagBitmaskN,false);
+    //setFlag(FlagBitmaskHalfCarry,false);
+    //setFlag(FlagBitmaskN,false);
+    //setFlag(FlagBitmaskZero,false);
 
     regs.A <<= 1;
     if(carry)regs.A |= 1;
@@ -252,14 +255,15 @@ void CPU::RLCA()
 /// RRCA - Rotate right with carry A
 /// opcode: 0x0f
 /// cycles: 4
-/// flags: C N H
+/// flags: C N H Z
 void CPU::RRCA()
 {
-    uint8_t carry = regs.A & 1;
+    bool carry = regs.A & 1;
     setFlag(FlagBitmaskC,carry);
-    setFlag(FlagBitmaskN,0);
-    setFlag(FlagBitmaskHalfCarry,0);
-    regs.A >>= 1;
+    setFlag(FlagBitmaskN,false);
+    setFlag(FlagBitmaskHalfCarry,false);
+    setFlag(FlagBitmaskZero,false);
+    regs.A = (regs.A >> 1);
     regs.A |= (carry<<7);
 #ifdef DEBUG_LOG
     AddDebugLog("RRCA");
@@ -344,7 +348,7 @@ void CPU::SWAP_r(uint8_t regCode)
     uint8_t& reg = reg_from_regcode(regCode);
     uint8_t temp = (reg & 0xf) << 4;
     reg >>= 4;
-    reg &= temp;
+    reg |= temp;
     regs.F = 0;
     setFlag(FlagBitmaskZero,reg == 0);
 

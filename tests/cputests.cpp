@@ -20,6 +20,60 @@ TEST_CASE("fetchxxBitValue")
     REQUIRE(value16 == 0x2211); // If this fails, it's probably because you are running this on a big-endian system.
 }
 
+TEST_CASE("LD r,n")
+{
+    HostMemory mem;
+    CPU cpu(mem);
+
+    cpu.regs.PC = 0;
+    cpu.regs.HL = 0x100;
+
+    cpu.mem.Write(0x0,0x06); // ld B,11
+    cpu.mem.Write(0x1,0x11);
+    cpu.mem.Write(0x2,0x0e); // ld C,12
+    cpu.mem.Write(0x3,0x12);
+    cpu.mem.Write(0x4,0x16); // ld D,11
+    cpu.mem.Write(0x5,0x13);
+    cpu.mem.Write(0x6,0x1e); // ld E,11
+    cpu.mem.Write(0x7,0x14);
+    cpu.mem.Write(0x8,0x36); // ld (hl),n
+    cpu.mem.Write(0x9,0x15);
+
+    cpu.mem.Write(0xa,0x26); // ld H,n
+    cpu.mem.Write(0xb,0x16);
+    cpu.mem.Write(0xc,0x2e); // ld L,n
+    cpu.mem.Write(0xd,0x17);
+
+
+    cpu.step();
+    cpu.step();
+    cpu.step();
+    cpu.step();
+    cpu.step();
+    cpu.step();
+    cpu.step();
+
+
+    REQUIRE(cpu.regs.B == 0x11);
+    REQUIRE(cpu.regs.C == 0x12);
+    REQUIRE(cpu.regs.D == 0x13);
+    REQUIRE(cpu.regs.E == 0x14);
+    REQUIRE(cpu.mem.Read(0x100) == 0x15);
+    REQUIRE(cpu.regs.H == 0x16);
+    REQUIRE(cpu.regs.L == 0x17);
+
+}
+
+TEST_CASE("SWAP r")
+{
+    HostMemory mem;
+    CPU cpu(mem);
+
+    cpu.regs.B = 0x0f;
+    cpu.do_bit_instruction(0x30,cpu.regs.B);
+    REQUIRE(cpu.regs.B == 0xf0);
+}
+
 TEST_CASE("RRA")
 {
     HostMemory mem;

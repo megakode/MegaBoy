@@ -293,7 +293,7 @@ void CPU::LD_HL_SPs8()
 
     regs.HL = regs.SP + value;
     regs.F = 0;
-    setFlag(FlagBitmaskC,(regs.SP & 0xFF) + value > 0xFF);
+    setFlag(FlagBitmaskC,(regs.SP & 0xFF) + (value & 0xff) > 0xFF);
     setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
 
 #ifdef DEBUG_LOG

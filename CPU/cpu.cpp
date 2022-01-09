@@ -21,7 +21,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         {12, &CPU::LD_BC_nn},   // 0x01 LD BC,NN
         { 8, &CPU::LD_pBC_A},   // 0x02 "LD (BC),A"
         { 8, &CPU::INC_BC},     // 0x03 "INC BC"
-        { 4, &CPU::INC_B},// 0x04 "INC B"
+        { 4, &CPU::INC_B},      // 0x04 "INC B"
         { 4, &CPU::DEC_B},      // 0x05 "DEC B"
         { 8, &CPU::LD_r_n},     // 0x06 "LD B,N"
         { 4, &CPU::RLCA},       // 0x07 "RLCA"
@@ -397,9 +397,8 @@ void CPU::set_AND_operation_flags()
 {
 
     setFlag(FlagBitmaskZero, regs.A == 0);
-    setFlag(FlagBitmaskHalfCarry, 1);
-
     setFlag(FlagBitmaskN, 0);
+    setFlag(FlagBitmaskHalfCarry, 1);
     setFlag(FlagBitmaskC, 0);
 }
 

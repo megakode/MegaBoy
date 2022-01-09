@@ -13,14 +13,14 @@ void CPU::add( uint8_t srcValue, bool carry ){
         result++;
     }
 
-    setFlag(FlagBitmaskC,result > 0xff);
-    setFlag(FlagBitmaskZero, (result&0xff) == 0);
-
     if(carry) {
         setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) + (srcValue & 0xf) + (getFlag(FlagBitmaskC) ? 1 : 0) > 0x0f);
     } else {
-        setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) > (result & 0x0f));
+        setFlag(FlagBitmaskHalfCarry, (regs.A & 0x0f) + (srcValue & 0xf) > 0x0f);
     }
+
+    setFlag(FlagBitmaskZero, (result&0xff) == 0);
+    setFlag(FlagBitmaskC,result > 0xff);
     setFlag(FlagBitmaskN, false);
 
     regs.A = static_cast<uint8_t>(result);
@@ -31,9 +31,9 @@ void CPU::add16( uint16_t& regPair, uint16_t value_to_add  )
 {
     uint32_t result = regPair + value_to_add;
 
-    setFlag(FlagBitmaskC,result > 0xffff);
-    setFlag(FlagBitmaskHalfCarry, ((regPair & 0x0fff) + (value_to_add & 0x0fff)) > 0x0FFF);
     setFlag(FlagBitmaskN, false);
+    setFlag(FlagBitmaskHalfCarry, ((regPair & 0x0fff) + (value_to_add & 0x0fff)) > 0x0FFF);
+    setFlag(FlagBitmaskC,result > 0xffff);
 
     regPair = result & 0xffff;
 }
@@ -51,10 +51,9 @@ void CPU::sub( uint8_t srcValue, bool carry, bool onlySetFlagsForComparison ){
         result--;
     }
     setFlag(FlagBitmaskZero, (result & 0xff) == 0);
-    setFlag(FlagBitmaskC, result & 0xff00);
     setFlag(FlagBitmaskN,true);
-    //setFlag(FlagBitmaskHalfCarry, (0x0f & regs.A) < (srcValue & 0x0f) );
-    setFlag(FlagBitmaskHalfCarry, ((regs.A^srcValue^result) & 0x10) != 0);
+    setFlag(FlagBitmaskHalfCarry, ((regs.A ^ srcValue ^ result) & 0x10) != 0);
+    setFlag(FlagBitmaskC, (result & 0xff00));
 
     if(!onlySetFlagsForComparison){
         regs.A = result & 0xff; //static_cast<uint8_t>(result);
@@ -158,7 +157,7 @@ void CPU::ADD_HL_DE() {
 // ADD HL,SP
 // opcode: 0x39
 // cycles: 11
-// flags: C N H
+// flags: - 0 H C
 void CPU::ADD_HL_SP()
 {
     add16(regs.HL,regs.SP);
@@ -451,14 +450,12 @@ void CPU::INC_SP()
 
 // INC (HL)
 // opcode: 0x34
-// N PV H S Z
+// Z 0 H -
 void CPU::INC_pHL()
 {
     uint8_t result = mem.Read(regs.HL);
     mem.Write(regs.HL,++result);
-    setFlag(FlagBitmaskZero, result == 0);
-    setFlag(FlagBitmaskHalfCarry, (result & 0b00011111) == 0b00010000 );
-    setFlag(FlagBitmaskN,0);
+    set_INC_operation_flags(result);
 }
 
 // DEC (HL)
@@ -630,8 +627,8 @@ void CPU::ADD_SP_s8()
     auto value = static_cast<int8_t>(fetch8BitValue());
     uint16_t result = regs.SP + value;
     regs.F = 0;
-    setFlag(FlagBitmaskC,(regs.SP & 0xFF) + value > 0xFF);
-    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
+    setFlag(FlagBitmaskC,(regs.SP & 0x00FF) + (value & 0xff) > 0x00FF);
+    setFlag(FlagBitmaskHalfCarry, (regs.SP & 0x000f) + (value & 0x000f) > 0x000f);
     regs.SP = result & 0xffff;
 
 }
