@@ -32,14 +32,42 @@ void CPU::disable_interrupts()
 void CPU::enable_interrupts()
 {
     interrupt_master_enabled = true;
+    ime_just_enabled = true;
 #ifdef DEBUG_LOG
     AddDebugLog("EI");
 #endif
 }
 
-void CPU::halt(){
-    is_halted = true;
-    // TODO: implement this
+void CPU::halt()
+{
+    do_halt_bug = false;
+
+    if(interrupt_master_enabled)
+    {
+        // Halt is executed normally
+        is_halted = true;
+        just_halted = true;
+    }
+    else
+    {
+        if( ( mem.Read(IOAddress::InterruptEnabled) & mem.Read(IOAddress::InterruptFlag) & 0b11111 ) == 0)
+        {
+            // HALT mode is entered. It works like the IME = 1 case, but when a IF flag is set and
+            // the corresponding IE flag is also set, the CPU doesn't jump to the interrupt vector, it
+            // just continues executing instructions. The IF flags aren't cleared.
+            is_halted = true;
+            just_halted = true;
+        }
+        else
+        {
+            // HALT mode is not entered. HALT bug occurs: The CPU fails to increase PC when
+            // executing the next instruction. The IF flags aren't cleared. This results on weird
+            // behaviour. For example:
+            is_halted = false;
+            do_halt_bug = true;
+        }
+    }
+
 #ifdef DEBUG_LOG
     AddDebugLog("HALT");
 #endif

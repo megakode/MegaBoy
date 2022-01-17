@@ -41,14 +41,14 @@ private:
 
 public:
 
-    std::function<void()> overflow_delegate = nullptr;
+    std::function<void()> didOverflow = nullptr;
 
     Timer() = default;
 
     void Step(uint16_t ticks) {
 
+        // divider is ALWAYS increasing, regardless of TimerEnabled state in control register
         uint16_t previous_divider_value = divider_register;
-
         divider_register += ticks;
 
         if(!(timer_control_register & TimerEnabledBitmask))
@@ -56,20 +56,25 @@ public:
             return;
         }
 
+
+
         bool increase_timer = false;
 
         switch (timer_control_register & TimerMultiplierBitmask) {
             case 0b00: // CPU Clock / 1024 = detect overflow from bits 8-0 in divider register
-                increase_timer = (divider_register & 0b111111111) < (previous_divider_value & 0b111111111);
+                increase_timer = (previous_divider_value & 1023) + ticks > (1023);
                 break;
             case 0b01: // CPU Clock / 16 = detect overflow from bits 2-0 in divider register
-                increase_timer = (divider_register & 0b111) < (previous_divider_value & 0b111);
+                //increase_timer = (divider_register & 0b111) < (previous_divider_value & 0b111);
+                increase_timer = (previous_divider_value & 15) + ticks > (15);
                 break;
             case 0b10: // CPU Clock / 64 = detect overflow from bits 4-0 in divider register
-                increase_timer = (divider_register & 0b11111) < (previous_divider_value & 0b11111);
+                //increase_timer = (divider_register & 0b11111) < (previous_divider_value & 0b11111);
+                increase_timer = (previous_divider_value & 63) + ticks > (63);
                 break;
             case 0b11: // CPU Clock / 256 = detect overflow from bits 6-0 in divider register
-                increase_timer = (divider_register & 0b1111111) < (previous_divider_value & 0b1111111);
+                //increase_timer = (divider_register & 0b1111111) < (previous_divider_value & 0b1111111);
+                increase_timer = (previous_divider_value & 255) + ticks > (255);
                 break;
         }
 
@@ -81,13 +86,36 @@ public:
             if(timer_counter < last_timer_counter){
                 timer_counter = timer_modulo;
                 // Set timer interrupt flag (Request timer interrupt)
-                if(overflow_delegate != nullptr)
+                if(didOverflow != nullptr)
                 {
-                    overflow_delegate();
+                    didOverflow();
                 }
             }
         }
 
+    }
+
+    /// FF05: TIMA - Timer counter (R/W)
+    void SetCounter(uint8_t value)
+    {
+        timer_counter = value;
+    }
+
+    /// FF05: TIMA - Timer counter (R/W)
+    uint8_t GetCounter()
+    {
+        return timer_counter;
+    }
+
+    /// FF06: TMA - Timer Modulo (R/W)
+    void SetModulo(uint8_t value){
+        timer_modulo = value;
+    }
+
+    /// FF06: TMA - Timer Modulo (R/W)
+    uint8_t GetModulo()
+    {
+        return timer_modulo;
     }
 
     [[nodiscard]] uint8_t GetDividerRegister() const

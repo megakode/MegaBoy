@@ -171,6 +171,7 @@ void CPU::RET()
 // flags: -
 void CPU::RETI()
 {
+    interrupt_master_enabled = true;
     RET();
 #ifdef DEBUG_LOG
     AddDebugLog("RETI");

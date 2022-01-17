@@ -4,16 +4,45 @@
 
 #include "Gameboy.h"
 
+Gameboy::Gameboy() : cpu(mem), lcd(mem)
+{
+    // Set interrupt flag when timer overflows
+    timer.didOverflow = [&](){
+        mem.SetInterruptFlag(Interrupt_Flag_Timer,true);
+    };
+
+    mem.didWriteToIOAddress = [&](uint16_t addr,uint8_t value){
+        switch (addr) {
+            case (uint16_t )IOAddress::TimerControl:
+                timer.SetTimerControl(value);
+                break;
+            case (uint16_t )IOAddress::TimerDivider:
+                timer.SetDividerRegister();
+                break;
+            case (uint16_t )IOAddress::TimerModule:
+                timer.SetModulo(value);
+                break;
+
+            default:
+                break;
+        }
+    };
+}
+
 void Gameboy::Step() {
+
+    mem[static_cast<uint8_t>(IOAddress::TimerModule)] = timer.GetModulo();
+    mem[static_cast<uint8_t>(IOAddress::TimerDivider)] = timer.GetDividerRegister();
+    mem[static_cast<uint8_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
+    mem[static_cast<uint8_t>(IOAddress::TimerCounter)] = timer.GetCounter();
+
+    // handle interrupts
+    HandleInterrupts();
 
     uint16_t cycles = cpu.step();
 
     timer.Step(cycles);
     lcd.Step(cycles);
-
-    // handle interrupts
-
-    HandleInterrupts();
 
     // print debug rom output
 
@@ -35,8 +64,6 @@ void Gameboy::HandleInterrupts() {
     // Interrupt handling should take ~5 cycles
     // TODO: wait some cycles
 
-    if(cpu.interrupt_master_enabled)
-    {
         // Priority:
         // Bit 0: VBlank   Interrupt Enable  (INT $40)  (1=Enable)
         // Bit 1: LCD STAT Interrupt Enable  (INT $48)  (1=Enable)
@@ -46,25 +73,29 @@ void Gameboy::HandleInterrupts() {
 
         for(uint8_t i = 0 ; i < 5 ; i++ )
         {
-            if(mem.InterruptEnabled() & mem.GetInterruptFlag(flags[i]) )
+            if(mem.Read(IOAddress::InterruptEnabled) & mem.Read(IOAddress::InterruptFlag) & flags[i] )
             {
                 cpu.is_halted = false;
-                cpu.push_pc();
-                // Clear the given interrupt flag again
-                mem.SetInterruptFlag(flags[i],false);
-                cpu.regs.PC = irqJumpAddrs[i];
+                // TODO: maybe the one-instruction delay here (with !ime_just_enabled) must not there when an IRQ is waking up the cpu from HALT mode?
+                if (cpu.interrupt_master_enabled && !cpu.ime_just_enabled)
+                {
+                    cpu.interrupt_master_enabled = false;
+                    cpu.push_pc();
+                    // Clear the given interrupt flag again
+                    mem.SetInterruptFlag(flags[i], false);
+                    cpu.regs.PC = irqJumpAddrs[i];
+                }
+                break;
             }
         }
 
-    }
 
+
+    if(cpu.ime_just_enabled){
+        cpu.ime_just_enabled = false;
+    }
 }
 
 void Gameboy::Start() {
-
-    // Set interrupt flag when timer overflows
-    timer.overflow_delegate = [&](){
-        mem.SetInterruptFlag(Interrupt_Flag_Timer,true);
-    };
 
 }

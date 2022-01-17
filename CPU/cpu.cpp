@@ -259,7 +259,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
         { 8, &CPU::SBC_n},         // 0xde "SBC N"
         {16, &CPU::RST},           // 0xdf "RST 18h"
 
-        {12, &CPU::LD_ff00n_A},     // 0xe0 "RET PO"
+        {12, &CPU::LD_ff00n_A},     // 0xe0 LD_ff00 + n, A
         {12, &CPU::pop_qq},         // 0xe1 "POP HL"
         { 8, &CPU::LD_ff00C_A},     // 0xe2 "JP PO,NN"
         { 0, &CPU::invalid_opcode}, // 0xe3 -
@@ -386,6 +386,13 @@ uint8_t CPU::step()
 
     additional_cycles_spent = 0;
     // TODO: wait `cycles_spent` number of cycles
+
+    // Halt bug - don't increase the PC
+    if(do_halt_bug){
+        do_halt_bug = false;
+        regs.PC = current_pc;
+    }
+
     return cycles_spent;
 };
 

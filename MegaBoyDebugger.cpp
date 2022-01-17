@@ -30,11 +30,11 @@ MegaBoyDebugger::~MegaBoyDebugger()
 void MegaBoyDebugger::LoadTestRom()
 {
     //std::filesystem::path filename = "../tests/cpu_instrs.gb";
-    //std::filesystem::path filename = "../tests/BOBBLE.GB";
+    std::filesystem::path filename = "../tests/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/DRMARIO.GB";
     //std::filesystem::path filename = "../tests/TETRIS.GB";
     //std::filesystem::path filename = "../tests/01-special.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/02-interrupts.gb";
+    //std::filesystem::path filename = "../tests/02-interrupts.gb"; // PASSED
     //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; // PASSED
     //std::filesystem::path filename = "../tests/04-op r,imm.gb"; // PASSED
     //std::filesystem::path filename = "../tests/05-op rp.gb"; // PASSED
@@ -43,7 +43,8 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // PASSED
     //std::filesystem::path filename = "../tests/09-op r,r.gb"; // PASSED
     //std::filesystem::path filename = "../tests/10-bit ops.gb"; // PASSED
-    std::filesystem::path filename = "../tests/11-op a,(hl).gb"; // PASSED
+    //std::filesystem::path filename = "../tests/11-op a,(hl).gb"; // PASSED
+    //std::filesystem::path filename = "../tests/halt_bug.gb"; // PASSED
 
 
 

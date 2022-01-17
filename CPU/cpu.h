@@ -94,6 +94,9 @@ class CPU {
     GeneralRegisters regs;
 
     bool interrupt_master_enabled = true;
+    bool ime_just_enabled = false;
+    bool do_halt_bug = false;
+    bool just_halted = false;
 
     /// The address of the opcode currently being decoded.
     /// Contrary to the program counter (PC) which increases throughout decoding of a multi-byte instruction,

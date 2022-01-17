@@ -23,8 +23,17 @@ uint8_t HostMemory::Read( uint16_t address ) const
 void HostMemory::Write( const uint16_t address, const uint8_t value )
 {
     memory[address] = value;
+
+    if(address >= 0xff00 )
+    {
+        if(didWriteToIOAddress!= nullptr)
+        {
+            didWriteToIOAddress(address,value);
+        }
+    }
 }
 
-
-// TODO split into mem_read and mem_write functions.
-//    blarggs test - serial output
+void HostMemory::Write(IOAddress address, uint8_t value )
+{
+    Write(static_cast<uint16_t>(address), value );
+}
