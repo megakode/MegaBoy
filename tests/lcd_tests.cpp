@@ -9,6 +9,15 @@
 #include "../LCD/lcd.h"
 
 
+TEST_CASE("GetTileDataAddr")
+{
+    HostMemory mem;
+    LCD lcd(mem);
+
+    lcd.Step()
+
+}
+
 TEST_CASE("LCD_Control_Register flags")
 {
     HostMemory mem;

@@ -9,6 +9,7 @@
 #include "MegaBoyDebugger.h"
 #include "imgui.h"
 #include "UI/UIConfig.h"
+#include "UI/DisassemblyWindow.h"
 #include <thread>
 
 MegaBoyDebugger::MegaBoyDebugger() {
@@ -27,24 +28,55 @@ MegaBoyDebugger::~MegaBoyDebugger()
     }
 }
 
+void MegaBoyDebugger::LoadBIOSRom()
+{
+    std::filesystem::path filename = "../DMG_ROM.bin";
+    auto path = std::filesystem::absolute(filename);
+    auto size = std::filesystem::file_size(path);
+
+    if(exists(path)){
+        std::cout << "file exists! :)";
+    } else {
+        std::cout << "file DOES NOT exist!";
+    }
+    std::ifstream z80file (path, std::ios::in | std::ios::binary);
+    if (!z80file) {
+        std::cout << "could not read " << path;
+    } else
+    {
+        std::cout << "Reading " << path;
+        z80file.read ((char*)&gb->cpu.mem[0], size );
+        z80file.close();
+    }
+
+    gb->cpu.regs.PC = 0;
+}
+
 void MegaBoyDebugger::LoadTestRom()
 {
-    //std::filesystem::path filename = "../tests/cpu_instrs.gb";
-    std::filesystem::path filename = "../tests/BOBBLE.GB";
-    //std::filesystem::path filename = "../tests/DRMARIO.GB";
-    //std::filesystem::path filename = "../tests/TETRIS.GB";
-    //std::filesystem::path filename = "../tests/01-special.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/02-interrupts.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/03-op sp,hl.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/04-op r,imm.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/05-op rp.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/06-ld r,r.gb"; PASSED
-    //std::filesystem::path filename = "../tests/07-jr,jp,call,ret,rst.gb"; PASSED
-    //std::filesystem::path filename = "../tests/08-misc instrs.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/09-op r,r.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/10-bit ops.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/11-op a,(hl).gb"; // PASSED
-    //std::filesystem::path filename = "../tests/halt_bug.gb"; // PASSED
+
+    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
+    //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
+    //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+    //std::filesystem::path filename = "../tests/game_roms/Adventures of Lolo (Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/After Burst (Japan).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Alien 3 (USA, Europe).gb";
+    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Bust-A-Move 2 - Arcade Edition (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
+    //std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/03-op sp,hl.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/04-op r,imm.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/05-op rp.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/06-ld r,r.gb"; PASSED
+    //std::filesystem::path filename = "../tests/test_roms/07-jr,jp,call,ret,rst.gb"; PASSED
+    //std::filesystem::path filename = "../tests/test_roms/08-misc instrs.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/09-op r,r.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
 
 
 
@@ -77,83 +109,37 @@ void MegaBoyDebugger::LoadTestRom()
 
 void MegaBoyDebugger::UpdateUI() 
 {
-    RegisterWindow::UpdateUI(gb->cpu);
 
-    ImGui::Begin("Disassembly");
+    if(!is_running) {
+        RegisterWindow::UpdateUI(gb->cpu);
+        DisassemblyWindow::UpdateUI(gb->cpu);
 
-   static int item_current_idx = 0;
-
-    if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
-
-        int number_of_lines = 10;
-        //int first_index = std::max(0,gb->cpu.debug_log_entries.size() - number_of_lines);
-
-        int lines = std::min(10,(int)gb->cpu.debug_log_entries.size());
-        int max_line_index = (int)gb->cpu.debug_log_entries.size();
-        for( int index = max_line_index-lines ; index < max_line_index ; index++ )
-        //for(auto it = gb->cpu.debug_log_entries.end() - lines; it != std::end(gb->cpu.debug_log_entries); ++it)
-        {
-                    // Intentionally copy the entry here, as otherwise a sigsegv might occur when we print it further down
-                    //auto entry = *it; // gb->cpu.debug_log_entries[i];
-                    auto entry = gb->cpu.debug_log_entries[index];
-                    if(index == max_line_index-1){
-                        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,">0x%04x ",entry.PC);
-                    } else {
-                        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX," 0x%04x ",entry.PC);
-                    }
+    ImGui::Begin("PPU");
 
 
-                    for (unsigned char opcode : entry.opcodes) {
-                        if (opcode != 0) {
-                            ImGui::SameLine();
-                            ImGui::Text("%02x", opcode);
-                        } else {
-                            ImGui::SameLine();
-                            ImGui::Text("  ");
-                        }
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("%s", entry.text.c_str());
-        }
 
-        //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
-        /*
-        {
-            ImGuiListClipper clipper;
-            clipper.Begin(gb->cpu.debug_log_entries.size());
-            while (clipper.Step())
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
-                    auto& entry = gb->cpu.debug_log_entries[i];
-                    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
+    ImGui::Text("FF42 - SCY:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xFF42]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xFF42]);
 
-                    for (unsigned char opcode : entry.opcodes) {
-                        if (opcode != 0) {
-                            ImGui::SameLine();
-                            ImGui::Text("%02x", opcode);
-                        } else {
-                            ImGui::SameLine();
-                            ImGui::Text("  ");
-                        }
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("%s", entry.text.c_str());
+    ImGui::Text("FF43 - SCX:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xFF43]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xFF43]);
 
-                    if( i == clipper.DisplayEnd-1){
-                        if(scroll_to_bottom){
-                            ImGui::SetScrollHereY();
-                            scroll_to_bottom = false;
-                        }
-                    }
-                }
-        }
-*/
-    }
-    ImGui::EndListBox();
+    ImGui::Text("FF44 - LY :"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xff44]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xff44]);
+
+    ImGui::Text("FF45 - LYC:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xff45]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xff45]);
+
 
     ImGui::End();
 
+    }
 
-
+    ImGui::Begin("Debugging controls");
 
    if (ImGui::Button("Step"))
    {
@@ -161,29 +147,20 @@ void MegaBoyDebugger::UpdateUI()
        Step();
    }
 
-
     ImGui::SameLine();
-
 
     if(is_running){
        if(ImGui::Button("Stop")){
            is_running = false;
-           if(gb_thread.joinable()) {
-               gb_thread.join();
-           }
-
        }
    } else {
        if (ImGui::Button("Run"))
        {
            is_running = true;
-           gb_thread = std::thread(&MegaBoyDebugger::Run,this);
        }
    }
 
-
     ImGui::SameLine();
-
 
     if (ImGui::Button("Reset") )
     {
@@ -200,27 +177,34 @@ void MegaBoyDebugger::UpdateUI()
         unsigned int addr_int = std::stoul(addr_string, nullptr, 16);
         run_to = addr_int;
         is_running = true;
-        if(gb_thread.joinable()) {
-            gb_thread.join();
-        }
-        gb_thread = std::thread(&MegaBoyDebugger::Run,this);
     };
 
     ImGui::End();
+
+    if(is_running) {
+        Run();
+    }
 
 }
 
 void MegaBoyDebugger::Run()
 {
-    int steps = 0;
-    while(is_running && gb->cpu.regs.PC != run_to){
+    int cycles = 0;
 
-        gb->Step();
-        steps++;
-        // std::this_thread::sleep_for(std::chrono::seconds(2));
+    //std::this_thread::sleep_for(std::chrono::nanoseconds (1/4194304));
+    // The CPU clock rate is fixed at 2MHz, so a single clock cycle is 1/2000000s = 0.5µs. The frametime is the inverse of the refresh rate; so if the refresh rate is 60Hz, the frame time is 1/60s or ~16ms. The ratio is 16ms/0.5µs ~~ 33000.
+    // 67108 cycles pr frame
+    constexpr int CYCLES_PR_FRAME = 67108;
+    while(cycles < CYCLES_PR_FRAME)
+    {
+        cycles +=gb->Step();
+
+        if(gb->cpu.regs.PC == run_to ){
+            is_running = false;
+            break;
+        }
     }
-    is_running = false;
-    std::cout << "steps = " << steps << std::endl;
+
 }
 
 void MegaBoyDebugger::Step()

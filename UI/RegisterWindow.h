@@ -10,14 +10,10 @@
 
 class RegisterWindow {
 
-    //CPU& cpu;
+    static void DrawRegisterTable(CPU &cpu);
+    static void DrawFlagsTable(CPU &cpu);
 
 public:
-/*
-    explicit RegisterWindow(CPU &cpu) : cpu(cpu) {
-    }
-*/
-    //RegisterWindow();
 
     static void UpdateUI(CPU &cpu);
 

@@ -39,4 +39,6 @@ public:
     uint8_t *screenData;
 
     void Run();
+
+    void LoadBIOSRom();
 };

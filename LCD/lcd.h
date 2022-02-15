@@ -28,6 +28,7 @@ private:
         uint8_t R = 0;
         uint8_t G = 0;
         uint8_t B = 0;
+        uint8_t A = 0xff;
     };
 
     HostMemory& mem;
@@ -99,6 +100,7 @@ public:
     RGB rgbBuffer[BUFFER_WIDTH * BUFFER_HEIGHT] = {};
 
     uint8_t& current_scanline;
+    bool redraw = true;
     uint8_t current_mode_index = 0;
     uint16_t accumulated_cycles = 0;
 
@@ -114,7 +116,7 @@ public:
     void Step( uint16_t delta_cycles )
     {
         static bool is_hblank_irq_already_triggered_on_this_line = false;
-
+        static bool is_scanline_irq_flag_just_set = false;
         // Scanline cycles
         // Make current_scanline iterate between 0..153 each lasting 456 cycles
 
@@ -124,14 +126,22 @@ public:
             current_scanline++;
 
             // Trigger VBlank IRQ on line 144
+
             if(current_scanline == 144){
-                mem.SetInterruptFlag(Interrupt_Flag_VBlank,true);
+                if(!is_scanline_irq_flag_just_set) {
+                    mem.SetInterruptFlag(Interrupt_Flag_VBlank, true);
+                    is_scanline_irq_flag_just_set = true;
+                }
+            } else {
+                is_scanline_irq_flag_just_set = false;
             }
 
             if(current_scanline == 154){
                 current_scanline = 0;
             }
         }
+
+        mem[LCD_Y_Register] = current_scanline;
 
         accumulated_cycles += delta_cycles;
 
@@ -157,8 +167,13 @@ public:
 
             if(LCD_Mode_Order[current_mode_index] == LCD_Mode_HBlank){
                 if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_HBlank){
-                    mem.SetInterruptFlag(Interrupt_Flag_LCD_Stat,true);
+                    if(!is_hblank_irq_already_triggered_on_this_line) {
+                        mem.SetInterruptFlag(Interrupt_Flag_LCD_Stat, true);
+                        is_hblank_irq_already_triggered_on_this_line = true;
+                    }
                 }
+            } else {
+                is_hblank_irq_already_triggered_on_this_line = false;
             }
 
             if(LCD_Mode_Order[current_mode_index] == LCD_Mode_VBlank){
@@ -173,27 +188,33 @@ public:
 
         // LY Compare
 
+        static bool lyc_just_triggered = false;
+
         if( mem[LCD_Y_Register] == mem[LCD_Y_Compare_Register])
         {
             // Trigger Stat IRQ from LYC (if enabled in the stat register)
-            if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_LYC){
+            if((mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_LYC) && !lyc_just_triggered ){
                 mem.SetInterruptFlag(Interrupt_Flag_LCD_Stat,true);
+                lyc_just_triggered = true;
             }
             mem[LCD_Stat_Register] |= LCD_Stat_LY_EQ_LYC;
         } else {
             mem[LCD_Stat_Register] &= ~LCD_Stat_LY_EQ_LYC;
+            lyc_just_triggered = false;
         }
 
         // Draw BG tiles
 
         // TODO: Hack to only redraw display on line 0
-        if(current_scanline != 0){
+        if(current_scanline != 0 || !redraw){
+            redraw = true;
             return;
         }
 
+        redraw = false;
 
         uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
-
+    // 38912 = 0x9800
         for(uint8_t y = 0; y < Tile_Map_Width; y++){
             for(uint8_t x = 0; x < Tile_Map_Width; x++) {
                 uint16_t index = (y*Tile_Map_Width)+x;
@@ -209,7 +230,7 @@ public:
         // Draw window
 
         uint16_t window_tile_map_addr = IsFlagSet(LCDCBitmask::Window_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
-
+/*
         if(IsFlagSet(LCDCBitmask::Window_Enabled)){
             for (uint8_t y = 0; y < Tile_Map_Width; y++) {
                 for (uint8_t x = 0; x < Tile_Map_Width; x++) {
@@ -221,23 +242,16 @@ public:
                 }
             }
         }
-
+*/
         RenderRGBBuffer();
     }
 
     void RenderRGBBuffer()
     {
+        constexpr RGB rgb[4] = { {20,50,00} , {20,128,20}, {50,192,50}, {100,255,100} };
         for(int i = 0 ; i < BUFFER_HEIGHT*BUFFER_WIDTH; i++) {
             uint8_t colorIndex = renderBuffer[i];
-            RGB rgb;
-            switch (colorIndex) {
-                case 0: rgb = {20,50,00};break;
-                case 1: rgb = {20,128,20};break;
-                case 2: rgb = {50,192,50};break;
-                case 3: rgb = {100,255,100};break;
-                default: rgb = {255,0,0};
-            }
-            rgbBuffer[i] = rgb;
+            rgbBuffer[i] = rgb[colorIndex];
         }
     }
 

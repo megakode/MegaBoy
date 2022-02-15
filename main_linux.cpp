@@ -103,6 +103,7 @@ int main(int, char**)
 
     MegaBoyDebugger debugger;
     debugger.LoadTestRom();
+    //debugger.LoadBIOSRom();
 
     // Create a texture
     GLuint textureId;
@@ -115,9 +116,7 @@ int main(int, char**)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
-
-
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
 
 
     // Main loop
@@ -161,7 +160,7 @@ int main(int, char**)
 
             debugger.screenData[255*3] = 0xff;
 
-            glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
+            glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
 
             ImGui::Image((void*)(intptr_t)textureId, ImVec2(MegaBoyDebugger::GB_SCREEN_WIDTH*2, MegaBoyDebugger::GB_SCREEN_HEIGHT*2));
 

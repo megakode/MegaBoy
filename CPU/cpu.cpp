@@ -430,6 +430,13 @@ void CPU::set_DEC_operation_flags( uint8_t result )
 void CPU::invalid_opcode()
 {
 #ifdef DEBUG_LOG
-    std::cout << "INVALID OPCODE: " << (int)current_opcode << std::endl;
+    std::cout << std::endl << "INVALID OPCODE: " << (int)current_opcode << std::endl;
+    // print stacktrace
+    constexpr int number_of_entries_to_print = 50;
+
+    for (int index = debug_log_entries.size() - number_of_entries_to_print; index < debug_log_entries.size(); index++ )
+    {
+        std::cout << std::hex << debug_log_entries[index].PC << ": " << debug_log_entries[index].text << std::endl;
+    }
 #endif
 }

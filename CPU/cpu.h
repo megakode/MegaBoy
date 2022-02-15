@@ -143,6 +143,7 @@ class CPU {
 
         switch (regCode) {
             case RegisterCode::HLPtr:
+                // TODO: writes to the returned reference slips by the mem.Write method. Might not be a problem as most are also polled in gameboy.step().
                 return mem[regs.HL];
             case RegisterCode::A:
                 return regs.A;

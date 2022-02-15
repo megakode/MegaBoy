@@ -45,7 +45,7 @@ endif()
 # Testing ###################################
 find_package(Catch2 REQUIRED)
 # enable_testing()
-add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/jump_tests.h tests/lcd_tests.cpp tests/timer_tests.cpp)
+add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/lcd_tests.cpp tests/timer_tests.cpp tests/dma_controller_tests.cpp)
 target_link_libraries(cputests Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -54,7 +54,7 @@ include(Catch)
 catch_discover_tests(cputests)
 
 
-add_executable(MegaBoy ${MainFile} LCD/lcd.cpp CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp)
+add_executable(MegaBoy ${MainFile} LCD/lcd.cpp CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp DMAController.cpp DMAController.h UI/DisassemblyWindow.cpp UI/DisassemblyWindow.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})

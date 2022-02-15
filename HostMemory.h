@@ -68,7 +68,16 @@ enum class IOAddress : uint16_t
     /// Bit 2: Timer    Interrupt Enable  (INT $50)  (1=Enable)
     /// Bit 3: Serial   Interrupt Enable  (INT $58)  (1=Enable)
     /// Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
-    InterruptEnabled = 0xffff
+    InterruptEnabled = 0xffff,
+
+    /// Writing to this register launches a DMA transfer from ROM or RAM to OAM (Object Attribute Memory).
+    /// The written value specifies the transfer source address divided by $100, that is, source and destination are:
+    ///
+    /// Source:      $XX00-$XX9F   ;XX = $00 to $DF
+    /// Destination: $FE00-$FE9F
+    DMATransferStartAddress = 0xff46
+
+
 };
 
 class HostMemory {

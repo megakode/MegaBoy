@@ -4,7 +4,7 @@
 
 #include "Gameboy.h"
 
-Gameboy::Gameboy() : cpu(mem), lcd(mem)
+Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem)
 {
     // Set interrupt flag when timer overflows
     timer.didOverflow = [&](){
@@ -22,6 +22,10 @@ Gameboy::Gameboy() : cpu(mem), lcd(mem)
             case (uint16_t )IOAddress::TimerModule:
                 timer.SetModulo(value);
                 break;
+            case (uint16_t)IOAddress::DMATransferStartAddress:
+                // Initiate DMA transfer
+                dma.RequestTransfer(value);
+                break;
 
             default:
                 break;
@@ -29,12 +33,14 @@ Gameboy::Gameboy() : cpu(mem), lcd(mem)
     };
 }
 
-void Gameboy::Step() {
+///
+/// \return Number of cycles the step took
+uint16_t Gameboy::Step() {
 
-    mem[static_cast<uint8_t>(IOAddress::TimerModule)] = timer.GetModulo();
-    mem[static_cast<uint8_t>(IOAddress::TimerDivider)] = timer.GetDividerRegister();
-    mem[static_cast<uint8_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
-    mem[static_cast<uint8_t>(IOAddress::TimerCounter)] = timer.GetCounter();
+    mem[static_cast<uint16_t>(IOAddress::TimerModule)] = timer.GetModulo();
+    mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = timer.GetDividerRegister();
+    mem[static_cast<uint16_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
+    mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = timer.GetCounter();
 
     // handle interrupts
     HandleInterrupts();
@@ -43,6 +49,7 @@ void Gameboy::Step() {
 
     timer.Step(cycles);
     lcd.Step(cycles);
+    dma.Step(cycles);
 
     // print debug rom output
 
@@ -53,6 +60,7 @@ void Gameboy::Step() {
         cpu.mem[0xff02] = 0x0;
     }
 
+    return cycles;
 
 }
 

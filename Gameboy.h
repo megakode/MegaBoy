@@ -8,6 +8,7 @@
 #include "HostMemory.h"
 #include "Timer.h"
 #include "LCD/lcd.h"
+#include "DMAController.h"
 
 class Gameboy {
 
@@ -19,6 +20,7 @@ public:
     CPU cpu;
     Timer timer;
     LCD lcd;
+    DMAController dma;
 
     /*
     enum InterruptFlag : uint8_t
@@ -34,7 +36,7 @@ public:
 
     void Start();
 
-    void Step();
+    uint16_t Step();
     void HandleInterrupts();
 
 };
