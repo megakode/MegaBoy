@@ -6,12 +6,14 @@
 #include <iostream>
 #include "HostMemory.h"
 
-uint8_t& HostMemory::operator[] (int index)
+uint8_t& HostMemory::operator[] (uint16_t index)
 {
+    /*
     if (index > (UINT16_MAX+1)) {
         std::cout << "Array index out of bound, exiting";
         exit(0);
     }
+     */
     return memory[index];
 }
 

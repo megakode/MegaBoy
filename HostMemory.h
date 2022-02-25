@@ -75,8 +75,15 @@ enum class IOAddress : uint16_t
     ///
     /// Source:      $XX00-$XX9F   ;XX = $00 to $DF
     /// Destination: $FE00-$FE9F
-    DMATransferStartAddress = 0xff46
+    DMATransferStartAddress = 0xff46,
 
+    /// FF4A - Window Y Position
+    /// The Window is visible (if enabled) when both coordinates are in the ranges WX=0..166, WY=0..143 respectively.
+    /// Values WX=7, WY=0 place the Window at the top left of the screen, completely covering the background.
+    Window_Y_Position = 0xff4a,
+
+    /// FF4B - Window X Position (+7)
+    Window_X_Position = 0xff4b
 
 };
 
@@ -87,7 +94,7 @@ public:
     /// Called when a value is written to an memory mapped io address (0xff00 - 0xffff)
     std::function<void(uint16_t,uint8_t)> didWriteToIOAddress = nullptr;
 
-    uint8_t& operator[] (int index);
+    uint8_t& operator[] (uint16_t index);
 
     /// Read a byte from the bus
     [[nodiscard]] uint8_t Read(uint16_t address) const;
@@ -112,7 +119,9 @@ public:
         }
     }
 
+    uint8_t memory[UINT16_MAX+1];
+
 private:
 
-    uint8_t memory[UINT16_MAX+1];
+
 };

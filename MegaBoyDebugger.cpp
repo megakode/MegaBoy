@@ -77,6 +77,7 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
 
 
 

@@ -12,6 +12,15 @@ enum class LCDCBitmask: uint8_t {
     BG_And_Window_Enable = 1               // 0	BG and Window enable/priority	0=Off, 1=On
 };
 
+enum class OAM_Sprite_Attributes : uint8_t {
+    BG_And_Window_Over_OBJ = 1 << 7, // Bit7: BG and Window over OBJ (0=No, 1=BG and Window colors 1-3 over the OBJ)
+    Y_Flip = 1 << 6,                 // Bit6: Y flip          (0=Normal, 1=Vertically mirrored)
+    X_Flip = 1 << 5,                 // Bit5: X flip          (0=Normal, 1=Horizontally mirrored)
+    Palette_Number = 1 << 4,         // Bit4: Palette number  **Non CGB Mode Only** (0=OBP0, 1=OBP1)
+    CGB_Tile_VRAM_Bank = 1 << 3,     // Bit3: Tile VRAM-Bank  **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
+    CGB_PAlette_Number = 0b111       // Bit2-0 Palette number  **CGB Mode Only**     (OBP0-7)
+};
+
 class LCD
 {
 private:
@@ -25,10 +34,22 @@ private:
     static constexpr uint16_t Tile_Data_Block_2 = 0x9000;
 
     struct RGB {
-        uint8_t R = 0;
-        uint8_t G = 0;
-        uint8_t B = 0;
-        uint8_t A = 0xff;
+        union {
+            struct {
+                uint8_t R = 0;
+                uint8_t G = 0;
+                uint8_t B = 0;
+                uint8_t A = 0xff;
+            };
+            uint32_t RGBA;
+        };
+    };
+
+    struct OAM_Sprite {
+        uint8_t x_position;
+        uint8_t y_position;
+        uint8_t tile_index;
+        uint8_t attributes;
     };
 
     HostMemory& mem;
@@ -100,7 +121,7 @@ public:
     RGB rgbBuffer[BUFFER_WIDTH * BUFFER_HEIGHT] = {};
 
     uint8_t& current_scanline;
-    bool redraw = true;
+    bool draw_scanline = true;
     uint8_t current_mode_index = 0;
     uint16_t accumulated_cycles = 0;
 
@@ -139,6 +160,8 @@ public:
             if(current_scanline == 154){
                 current_scanline = 0;
             }
+
+            draw_scanline = true;
         }
 
         mem[LCD_Y_Register] = current_scanline;
@@ -205,14 +228,40 @@ public:
 
         // Draw BG tiles
 
-        // TODO: Hack to only redraw display on line 0
-        if(current_scanline != 0 || !redraw){
-            redraw = true;
+        if(!draw_scanline){
             return;
         }
 
-        redraw = false;
+        draw_scanline = false;
 
+        uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
+
+        uint8_t tilemap_y = current_scanline >> 3;
+        uint8_t tile_y_line = current_scanline & 0b111;
+        uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH];
+
+        for( uint8_t tilemap_x = 0 ; tilemap_x < 32 ; tilemap_x++)
+        {
+            uint16_t index = (tilemap_y*Tile_Map_Width)+tilemap_x;
+            uint8_t tile_id = mem.Read(bg_tile_map_addr + index);
+            // Find the tile address, and add offset to the tile line we want to draw
+            uint16_t tile_data_addr = GetTileDataAddr(tile_id) + (tile_y_line<<1);
+
+            uint8_t lobits = mem.memory[tile_data_addr++];
+            uint8_t hibits = mem.memory[tile_data_addr++];
+            for (int x = 0; x < TILE_WIDTH; x++) {
+                // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
+                // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
+                uint8_t bit_number = 7-x;
+                uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
+                *dst_ptr = color;
+                dst_ptr++;
+                //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
+            }
+
+        }
+
+/*
         uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
     // 38912 = 0x9800
         for(uint8_t y = 0; y < Tile_Map_Width; y++){
@@ -226,33 +275,82 @@ public:
                 DrawTile(current_tile_data_addr, x*8, y*8);
             }
         }
-
+*/
         // Draw window
 
-        uint16_t window_tile_map_addr = IsFlagSet(LCDCBitmask::Window_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
+        if(IsFlagSet(LCDCBitmask::Window_Enabled)){
+
+            uint8_t wx = mem.Read(IOAddress::Window_X_Position);
+            uint8_t wy = mem.Read(IOAddress::Window_Y_Position);
+
+            if(current_scanline >= wy){
+
+                uint16_t window_tile_map_addr = IsFlagSet(LCDCBitmask::Window_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
+                uint8_t *window_dst_ptr = &renderBuffer[wy * BUFFER_WIDTH + wx];
+                uint8_t window_line_to_draw = current_scanline - wy;
+                uint8_t line_in_window_tiles_to_draw = window_line_to_draw;
+
+                window_tile_map_addr += (window_line_to_draw >> 3)*Tile_Map_Width;
+
+                // TODO: lav denne her window tegn-en-linie-ad-gangen funktion færdig. Jeg er for træt nu!
+                for(int window_x_tile_index = 0 ; window_x_tile_index < Tile_Map_Width ; window_x_tile_index++ ){
+
+                    uint8_t tile_id = mem.Read(bg_tile_map_addr + window_x_tile_index);
+                    // Find the tile address, and add offset to the tile line we want to draw
+                    uint16_t tile_data_addr = GetTileDataAddr(tile_id) + (line_in_window_tiles_to_draw<<1); // *2 because each line is 2 bytes
+
+                    uint8_t lobits = mem.memory[tile_data_addr++];
+                    uint8_t hibits = mem.memory[tile_data_addr++];
+                    for (int x = 0; x < TILE_WIDTH; x++) {
+                        // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
+                        // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
+                        uint8_t bit_number = 7-x;
+                        uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
+                        *window_dst_ptr = color;
+                        window_dst_ptr++;
+                        //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
+                    }
+                }
+
+            }
+        }
+
 /*
         if(IsFlagSet(LCDCBitmask::Window_Enabled)){
             for (uint8_t y = 0; y < Tile_Map_Width; y++) {
                 for (uint8_t x = 0; x < Tile_Map_Width; x++) {
-                    uint8_t current_tile_id = mem.Read(window_tile_map_addr + (y * Tile_Map_Width) + x);
+                    uint16_t index = (y * Tile_Map_Width) + x;
+                    uint8_t current_tile_id = mem.Read(window_tile_map_addr + index);
                     uint16_t current_tile_data_addr = GetTileDataAddr(current_tile_id);
-                    // TODO: Factor in WX and WY registers.
+                    // Factor in WX and WY registers.
+                    uint8_t wx = mem.Read(IOAddress::Window_X_Position);
+                    uint8_t wy = mem.Read(IOAddress::Window_Y_Position);
                     // https://gbdev.io/pandocs/Scrolling.html#ff4a---wy-window-y-position-rw-ff4b---wx-window-x-position--7-rw
-                    DrawTile(current_tile_data_addr, x, y);
+                    DrawTile(current_tile_data_addr, wx + x*8, wy + y*8);
                 }
             }
         }
 */
-        RenderRGBBuffer();
+        RenderRGBBuffer(current_scanline);
     }
 
-    void RenderRGBBuffer()
+    void RenderRGBBuffer( uint8_t line_number )
     {
         constexpr RGB rgb[4] = { {20,50,00} , {20,128,20}, {50,192,50}, {100,255,100} };
+        uint16_t offset = line_number * BUFFER_WIDTH;
+        uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer[offset]);
+        //uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer);
+        for(int i = offset ; i < offset+BUFFER_WIDTH; i++) {
+            uint8_t colorIndex = renderBuffer[i];
+            //rgbBuffer[i] = rgb[colorIndex];
+            *dst_ptr++ = rgb[colorIndex].RGBA;
+        }
+        /*
         for(int i = 0 ; i < BUFFER_HEIGHT*BUFFER_WIDTH; i++) {
             uint8_t colorIndex = renderBuffer[i];
-            rgbBuffer[i] = rgb[colorIndex];
-        }
+            //rgbBuffer[i] = rgb[colorIndex];
+            *dst_ptr++ = rgb[colorIndex].RGBA;
+        }*/
     }
 
     bool IsFlagSet(LCDCBitmask flag)
@@ -285,19 +383,34 @@ public:
         }
     }
 
+    void DrawTileLine( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y)
+    {
+
+    }
+
     /// Render a tile from GB memory to an internal renderBuffer, and translate the GB 2BPP format to an index color.
     /// \param tile_data_addr Address in GB memory where tile data for this tile is located
     /// \param dst_x Destination X on screen (0-255)
     /// \param dst_y Destination Y on screen (0-255)
     void DrawTile( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y ) {
+
+        uint8_t *dst_ptr = &renderBuffer[(dst_y) * BUFFER_WIDTH + (dst_x)];
+
         for (int y = 0; y < TILE_HEIGHT; y++) {
-            uint8_t lobits = mem.Read(tile_data_addr++);
-            uint8_t hibits = mem.Read(tile_data_addr++);
+            uint8_t lobits = mem.memory[tile_data_addr++]; //mem.Read(tile_data_addr++);
+            uint8_t hibits = mem.memory[tile_data_addr++];
             for (int x = 0; x < TILE_WIDTH; x++) {
+                // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
+                // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
                 uint8_t bit_number = 7-x;
                 uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
-                renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
+                *dst_ptr = color;
+                dst_ptr++;
+                //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
             }
+
+            dst_ptr += BUFFER_WIDTH-TILE_WIDTH;
+
         }
     }
 
