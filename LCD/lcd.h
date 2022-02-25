@@ -226,24 +226,23 @@ public:
             lyc_just_triggered = false;
         }
 
-        // Draw BG tiles
-
         if(!draw_scanline){
             return;
         }
 
         draw_scanline = false;
 
-        uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
+        // Draw BG tiles
 
-        uint8_t tilemap_y = current_scanline >> 3;
+        uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
+        uint8_t tilemap_y_index = current_scanline >> 3;
         uint8_t tile_y_line = current_scanline & 0b111;
         uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH];
 
         for( uint8_t tilemap_x = 0 ; tilemap_x < 32 ; tilemap_x++)
         {
-            uint16_t index = (tilemap_y*Tile_Map_Width)+tilemap_x;
-            uint8_t tile_id = mem.Read(bg_tile_map_addr + index);
+            uint16_t index = (tilemap_y_index * Tile_Map_Width) + tilemap_x;
+            uint8_t tile_id = mem.memory[bg_tile_map_addr + index];
             // Find the tile address, and add offset to the tile line we want to draw
             uint16_t tile_data_addr = GetTileDataAddr(tile_id) + (tile_y_line<<1);
 
@@ -256,26 +255,10 @@ public:
                 uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
                 *dst_ptr = color;
                 dst_ptr++;
-                //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
             }
 
         }
 
-/*
-        uint16_t bg_tile_map_addr = IsFlagSet(LCDCBitmask::BG_Tile_Map_Area) ? Tile_Map_Block_1 : Tile_Map_Block_0;
-    // 38912 = 0x9800
-        for(uint8_t y = 0; y < Tile_Map_Width; y++){
-            for(uint8_t x = 0; x < Tile_Map_Width; x++) {
-                uint16_t index = (y*Tile_Map_Width)+x;
-                uint8_t current_tile_id = mem.Read(bg_tile_map_addr + index);
-                uint16_t current_tile_data_addr = GetTileDataAddr(current_tile_id);
-                //uint16_t current_tile_data_addr = GetTileDataAddr(index); // Test which draws the tiles in order
-                // TODO: Factor in BG scroll registers
-                // https://gbdev.io/pandocs/Scrolling.html#ff4a---wy-window-y-position-rw-ff4b---wx-window-x-position--7-rw
-                DrawTile(current_tile_data_addr, x*8, y*8);
-            }
-        }
-*/
         // Draw window
 
         if(IsFlagSet(LCDCBitmask::Window_Enabled)){
@@ -290,12 +273,12 @@ public:
                 uint8_t window_line_to_draw = current_scanline - wy;
                 uint8_t line_in_window_tiles_to_draw = window_line_to_draw;
 
+                // Offset into the window tilemap to find the line we want to draw
                 window_tile_map_addr += (window_line_to_draw >> 3)*Tile_Map_Width;
 
-                // TODO: lav denne her window tegn-en-linie-ad-gangen funktion færdig. Jeg er for træt nu!
                 for(int window_x_tile_index = 0 ; window_x_tile_index < Tile_Map_Width ; window_x_tile_index++ ){
 
-                    uint8_t tile_id = mem.Read(bg_tile_map_addr + window_x_tile_index);
+                    uint8_t tile_id = mem.memory[bg_tile_map_addr + window_x_tile_index];
                     // Find the tile address, and add offset to the tile line we want to draw
                     uint16_t tile_data_addr = GetTileDataAddr(tile_id) + (line_in_window_tiles_to_draw<<1); // *2 because each line is 2 bytes
 
@@ -308,49 +291,34 @@ public:
                         uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
                         *window_dst_ptr = color;
                         window_dst_ptr++;
-                        //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
                     }
                 }
 
             }
         }
 
-/*
-        if(IsFlagSet(LCDCBitmask::Window_Enabled)){
-            for (uint8_t y = 0; y < Tile_Map_Width; y++) {
-                for (uint8_t x = 0; x < Tile_Map_Width; x++) {
-                    uint16_t index = (y * Tile_Map_Width) + x;
-                    uint8_t current_tile_id = mem.Read(window_tile_map_addr + index);
-                    uint16_t current_tile_data_addr = GetTileDataAddr(current_tile_id);
-                    // Factor in WX and WY registers.
-                    uint8_t wx = mem.Read(IOAddress::Window_X_Position);
-                    uint8_t wy = mem.Read(IOAddress::Window_Y_Position);
-                    // https://gbdev.io/pandocs/Scrolling.html#ff4a---wy-window-y-position-rw-ff4b---wx-window-x-position--7-rw
-                    DrawTile(current_tile_data_addr, wx + x*8, wy + y*8);
-                }
-            }
-        }
-*/
         RenderRGBBuffer(current_scanline);
     }
 
     void RenderRGBBuffer( uint8_t line_number )
     {
-        constexpr RGB rgb[4] = { {20,50,00} , {20,128,20}, {50,192,50}, {100,255,100} };
+        constexpr RGB paletteColors[4] = { {20,50,00} , {20,128,20}, {50,192,50}, {100,255,100} };
+        RGB rgb[4] = {};
+
+        uint8_t paletteMapping = mem.memory[static_cast<uint16_t>(IOAddress::BG_Palette_Data)];
+
+        rgb[0] = paletteColors[paletteMapping & 0b11];
+        rgb[1] = paletteColors[(paletteMapping>>2) & 0b11];
+        rgb[2] = paletteColors[(paletteMapping>>4) & 0b11];
+        rgb[3] = paletteColors[(paletteMapping>>6) & 0b11];
+
         uint16_t offset = line_number * BUFFER_WIDTH;
         uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer[offset]);
         //uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer);
         for(int i = offset ; i < offset+BUFFER_WIDTH; i++) {
             uint8_t colorIndex = renderBuffer[i];
-            //rgbBuffer[i] = rgb[colorIndex];
             *dst_ptr++ = rgb[colorIndex].RGBA;
         }
-        /*
-        for(int i = 0 ; i < BUFFER_HEIGHT*BUFFER_WIDTH; i++) {
-            uint8_t colorIndex = renderBuffer[i];
-            //rgbBuffer[i] = rgb[colorIndex];
-            *dst_ptr++ = rgb[colorIndex].RGBA;
-        }*/
     }
 
     bool IsFlagSet(LCDCBitmask flag)

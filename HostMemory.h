@@ -77,6 +77,20 @@ enum class IOAddress : uint16_t
     /// Destination: $FE00-$FE9F
     DMATransferStartAddress = 0xff46,
 
+    /// FF47 - BG Palette Data
+    ///
+    /// Bit 7-6 - Color for index 3
+    /// Bit 5-4 - Color for index 2
+    /// Bit 3-2 - Color for index 1
+    /// Bit 1-0 - Color for index 0
+    ///
+    /// Value	Color
+    /// 0	    White
+    /// 1	    Light gray
+    /// 2	    Dark gray
+    /// 3	    Black
+    BG_Palette_Data = 0xff47,
+
     /// FF4A - Window Y Position
     /// The Window is visible (if enabled) when both coordinates are in the ranges WX=0..166, WY=0..143 respectively.
     /// Values WX=7, WY=0 place the Window at the top left of the screen, completely covering the background.
