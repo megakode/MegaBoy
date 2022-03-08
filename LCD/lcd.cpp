@@ -70,7 +70,7 @@ void LCD::DrawBackground()
     //uint8_t scroll_x = mem.memory[(int)IOAddress::Scroll_X];
     uint8_t scroll_y = mem.memory[(int)IOAddress::Scroll_Y];
     uint8_t line_buffer[256];
-    uint8_t line_x = mem.memory[(int)IOAddress::Scroll_X];
+    uint8_t line_x = 0 - mem.memory[(int)IOAddress::Scroll_X];
     //uint8_t tile_pixel_scroll_x = scroll_x & 0b111; // how many pixels to scroll the line
     //uint8_t tile_index_scroll_x = scroll_x >> 3; // How many tile map tiles to scroll
 
@@ -108,9 +108,6 @@ void LCD::DrawWindow()
         uint8_t wx = mem.Read(IOAddress::Window_X_Position);
         uint8_t wy = mem.Read(IOAddress::Window_Y_Position);
 
-        if(current_scanline >= wy ){
-
-        }
         // The Window is visible (if enabled) when both coordinates are in the ranges WX=0..166, WY=0..143
         bool window_is_visible = wx < 167 && wy < 144;
 
