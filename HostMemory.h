@@ -70,6 +70,14 @@ enum class IOAddress : uint16_t
     /// Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
     InterruptEnabled = 0xffff,
 
+    /// FF42 - SCY (Scroll Y) (R/W),
+    /// The top coordinate of the visible 160×144 pixel area within the 256×256 pixels BG map. Values in the range 0–255 may be used. wraps around.
+    Scroll_Y = 0xff42,
+
+    /// FF43 - SCX (Scroll X) (R/W)
+    /// The top coordinate of the visible 160×144 pixel area within the 256×256 pixels BG map. Values in the range 0–255 may be used. wraps around.
+    Scroll_X = 0xff43,
+
     /// Writing to this register launches a DMA transfer from ROM or RAM to OAM (Object Attribute Memory).
     /// The written value specifies the transfer source address divided by $100, that is, source and destination are:
     ///

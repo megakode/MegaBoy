@@ -55,15 +55,17 @@ void MegaBoyDebugger::LoadBIOSRom()
 void MegaBoyDebugger::LoadTestRom()
 {
 
-    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
+    //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+
+    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/game_roms/Adventures of Lolo (Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/After Burst (Japan).gb";
     //std::filesystem::path filename = "../tests/game_roms/Alien 3 (USA, Europe).gb";
-    //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/Bust-A-Move 2 - Arcade Edition (USA, Europe).gb";
+
     //std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
     //std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
