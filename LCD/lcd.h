@@ -178,4 +178,13 @@ public:
     /// \param dst_y Destination Y on screen (0-255)
     void DrawTile( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y );
 
+private:
+
+    uint8_t window_internal_line_counter = 0;
+
+    void DrawWindow();
+
+    void DrawBackground();
+
+    void DrawScanline();
 };
