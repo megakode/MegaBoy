@@ -99,6 +99,14 @@ enum class IOAddress : uint16_t
     /// 3	    Black
     BG_Palette_Data = 0xff47,
 
+    /// Object palette 0.
+    /// Works exactly like BG palette data, except that color 0 is ignored because index 0 is transparent on objects.
+    OBJ_Palette_0_Data = 0xff48,
+
+    /// Object palette 1.
+    /// Works exactly like BG palette data, except that color 0 is ignored because index 0 is transparent on objects.
+    OBJ_Palette_1_Data = 0xff49,
+
     /// FF4A - Window Y Position
     /// The Window is visible (if enabled) when both coordinates are in the ranges WX=0..166, WY=0..143 respectively.
     /// Values WX=7, WY=0 place the Window at the top left of the screen, completely covering the background.

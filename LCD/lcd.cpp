@@ -5,6 +5,7 @@
 
 void LCD::DrawScanline()
 {
+    // All the drawing functions below only renders the current scanline
 
     if(IsFlagSet(LCDCBitmask::BG_And_Window_Enable) )
     {
@@ -15,54 +16,134 @@ void LCD::DrawScanline()
             DrawWindow();
         }
 
-    } else
+    }
+    else
     {
         uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH];
         memset(dst_ptr,0,BUFFER_WIDTH);
     }
 
-    // Render objects
-
-    // Sprite attributes reside in the Sprite Attribute Table (OAM - Object Attribute Memory) at $FE00-FE9F. Each of the 40 entries consists of four bytes with the following meanings:
-
-    // TODO: finish sprite drawing
-
     if(IsFlagSet(LCDCBitmask::OBJ_Enable))
     {
-        OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]);
-        uint8_t sprites_drawn_on_scanline = 0;
+        DrawSprites();
+    }
 
-        for(int sprIndex = 0 ; sprIndex < 40; sprIndex++) {
-            if(spr->x_position == 0 || spr->y_position == 0 ) {
-                continue;
+    RenderRGBBuffer(current_scanline);
+}
+
+void LCD::DrawSprites()
+{
+    // Sprite attributes reside in the Sprite Attribute Table (OAM - Object Attribute Memory) at $FE00-FE9F.
+
+    OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]); // NOLINT
+    uint8_t sprites_drawn_on_scanline = 0;
+
+    // Convert object palettes from the compact format in the two IO registers to two index lists for ease of use
+    uint8_t palette_0[4] = { 0 };
+    uint8_t palette_1[4] = { 0 };
+
+    uint8_t palette_bits = mem.memory[(int)IOAddress::OBJ_Palette_0_Data];
+    palette_0[1] = (palette_bits>>2) & 0b11;
+    palette_0[2] = (palette_bits>>4) & 0b11;
+    palette_0[3] = (palette_bits>>6) & 0b11;
+
+    palette_bits = mem.memory[(int)IOAddress::OBJ_Palette_1_Data];
+    palette_1[1] = (palette_bits>>2) & 0b11;
+    palette_1[2] = (palette_bits>>4) & 0b11;
+    palette_1[3] = (palette_bits>>6) & 0b11;
+
+    // Perform OAM scan to determine visible sprites
+    /*
+    OAM_Sprite* visible_sprites[10];
+    for(int sprIndex = 0; sprIndex < NUMBER_OF_SPRITES; sprIndex++, spr++){
+
+    }
+*/
+    for (int sprIndex = 0; sprIndex < NUMBER_OF_SPRITES; sprIndex++, spr++){
+
+        // Only draw 10 sprites per scanline
+        if (sprites_drawn_on_scanline == 10) {
+            break;
+        }
+
+        // TODO: https://gbdev.io/pandocs/OAM.html#object-priority-and-conflicts
+
+        uint8_t ypos = spr->y_position - 16;
+        uint8_t sprite_height;
+        bool sprite_is_visible_on_current_scanline;
+
+        if (IsFlagSet(LCDCBitmask::OBJ_Size)) {
+            // 8x16 sprite
+            sprite_height = 16;
+            sprite_is_visible_on_current_scanline = spr->y_position != 0
+                                                    && ypos <= current_scanline
+                                                    && ypos + sprite_height > current_scanline;
+        } else {
+            // 8x8 sprite
+            sprite_height = 8;
+            sprite_is_visible_on_current_scanline = spr->y_position > 8
+                                                    && ypos <= current_scanline
+                                                    && ypos + sprite_height > current_scanline;
+        }
+
+        if (sprite_is_visible_on_current_scanline){
+
+            uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH + (spr->x_position - 8)];
+            uint16_t spr_data_addr = Tile_Data_Block_0;
+
+            if(sprite_height==16){
+                spr_data_addr += (spr->tile_index&0b11111110) << 4; // 16 = size of sprite data (8x8)
+            }else{
+                spr_data_addr += spr->tile_index << 4; // 16 = size of sprite data (8x8)
             }
 
-            // Only draw 10 sprites per scanline
-            if(sprites_drawn_on_scanline == 10){
-                break;
+            uint8_t spr_line_being_draw;
+
+            if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::Y_Flip ) {
+                spr_line_being_draw = sprite_height-1 - (current_scanline - ypos);
+            } else {
+                spr_line_being_draw = (current_scanline - ypos);
+            }
+            spr_data_addr += (spr_line_being_draw<<1); // index 2 bytes into the sprite data for each line offset
+            sprites_drawn_on_scanline++;
+
+            // Palette
+
+            uint8_t *palette;
+
+            if(spr->attributes & (uint8_t)OAM_Sprite_Attributes::Palette_Number){
+                palette = palette_1;
+            } else {
+                palette = palette_0;
             }
 
-            if(IsFlagSet(LCDCBitmask::OBJ_Size))
-            {
-                // 8x16 sprites
-                sprites_drawn_on_scanline++;
-            } else
-            {
-                // 8x8 sprites
-                bool sprite_is_visible_on_current_scanline = spr->y_position <= current_scanline && spr->y_position+8 > current_scanline;
+            // Transform pixels from bitplanes to chunky
 
-                if(sprite_is_visible_on_current_scanline){
+            uint8_t lobits = mem.memory[spr_data_addr++];
+            uint8_t hibits = mem.memory[spr_data_addr];
 
+            if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::X_Flip )
+            {
+                for (int x = 0; x < TILE_WIDTH; x++) {
+                    uint8_t bit_number = x; // Only difference between x-flipped and not is the order of the bits we blit here (bit_number)
+                    uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
+                    if (color != 0) { *dst_ptr = palette[color]; }
+                    dst_ptr++;
                 }
-                uint8_t *spr_tile_data = reinterpret_cast<uint8_t *>(mem.memory[Tile_Data_Block_0]);
-                spr_tile_data += spr->tile_index << 4; // 16 = size of sprite struct
-                sprites_drawn_on_scanline++;
+            }
+            else
+            {
+                for (int x = 0; x < TILE_WIDTH; x++) {
+                    uint8_t bit_number = 7 - x;
+                    uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
+                    if (color != 0) { *dst_ptr = palette[color]; }
+                    dst_ptr++;
+                }
             }
 
         }
     }
 
-    RenderRGBBuffer(current_scanline);
 }
 
 void LCD::DrawBackground()
@@ -87,15 +168,15 @@ void LCD::DrawBackground()
         uint16_t tile_data_addr = GetTileDataAddr(tile_id) + (tile_y_line<<1);
 
         uint8_t lobits = mem.memory[tile_data_addr++];
-        uint8_t hibits = mem.memory[tile_data_addr++];
+        uint8_t hibits = mem.memory[tile_data_addr];
         for (int x = 0; x < TILE_WIDTH; x++) {
             // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
             // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
             uint8_t bit_number = 7-x;
             uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
             line_buffer[line_x++] = color;
-            //*dst_ptr = color;
-            //dst_ptr++;
+            *dst_ptr = color;
+            dst_ptr++;
         }
 
     }
@@ -124,7 +205,7 @@ void LCD::DrawWindow()
             uint8_t window_line_to_draw = window_internal_line_counter;
             uint8_t line_in_window_tiles_to_draw = window_line_to_draw & 0b111;
             uint8_t window_tilemap_line_to_draw = (window_line_to_draw >> 3);
-            // Offset into the window tilemap to find the line we want to draw
+            // Offset into the window tile map to find the line we want to draw
             window_tile_map_addr += window_tilemap_line_to_draw*Tile_Map_Width;
 
             for(int window_x_tile_index = 0 ; wx < 160 ; window_x_tile_index++ ){
@@ -134,7 +215,7 @@ void LCD::DrawWindow()
                 uint16_t tile_data_addr = GetTileDataAddr(tile_id) + line_in_window_tiles_to_draw*2; // *2 because each line is 2 bytes
 
                 uint8_t lobits = mem.memory[tile_data_addr++];
-                uint8_t hibits = mem.memory[tile_data_addr++];
+                uint8_t hibits = mem.memory[tile_data_addr];
                 for (int x = 0; x < TILE_WIDTH; x++) {
                     // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
                     // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
@@ -189,7 +270,7 @@ void LCD::Step( uint16_t delta_cycles )
 
     accumulated_cycles += delta_cycles;
 
-    // If enough cycles has passed, switch to next mode..
+    // If enough cycles has passed: switch to next mode
 
     if( accumulated_cycles >= LCD_Mode_Cycles[LCD_Mode_Order[current_mode_index]] )
     {
@@ -268,7 +349,7 @@ void LCD::RenderRGBBuffer( uint8_t line_number )
     rgb[3] = paletteColors[(paletteMapping>>6) & 0b11];
 
     uint16_t offset = line_number * BUFFER_WIDTH;
-    uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer[offset]);
+    uint32_t *dst_ptr = reinterpret_cast<uint32_t *>(&rgbBuffer[offset]);  // NOLINT
     for(int i = offset ; i < offset+BUFFER_WIDTH; i++) {
         uint8_t colorIndex = renderBuffer[i];
         *dst_ptr++ = rgb[colorIndex].RGBA;

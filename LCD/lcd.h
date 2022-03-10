@@ -49,8 +49,8 @@ private:
     };
 
     struct OAM_Sprite {
-        uint8_t x_position;
         uint8_t y_position;
+        uint8_t x_position;
         uint8_t tile_index;
         uint8_t attributes;
     };
@@ -115,6 +115,7 @@ public:
 
     static constexpr int BUFFER_WIDTH = 256;
     static constexpr int BUFFER_HEIGHT = 256;
+    static constexpr int NUMBER_OF_SPRITES = 40;
     static constexpr int Tile_Map_Width = 32;
 
     /// A index-color based render buffer. Every time `Step` is called all tiles and sprites are rendered to this buffer based on OAM, tile maps and tile data.
@@ -187,4 +188,6 @@ private:
     void DrawBackground();
 
     void DrawScanline();
+
+    void DrawSprites();
 };
