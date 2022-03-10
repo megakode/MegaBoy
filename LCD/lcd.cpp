@@ -35,9 +35,6 @@ void LCD::DrawSprites()
 {
     // Sprite attributes reside in the Sprite Attribute Table (OAM - Object Attribute Memory) at $FE00-FE9F.
 
-    OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]); // NOLINT
-    uint8_t sprites_drawn_on_scanline = 0;
-
     // Convert object palettes from the compact format in the two IO registers to two index lists for ease of use
     uint8_t palette_0[4] = { 0 };
     uint8_t palette_1[4] = { 0 };
@@ -53,94 +50,104 @@ void LCD::DrawSprites()
     palette_1[3] = (palette_bits>>6) & 0b11;
 
     // Perform OAM scan to determine visible sprites
-    /*
-    OAM_Sprite* visible_sprites[10];
-    for(int sprIndex = 0; sprIndex < NUMBER_OF_SPRITES; sprIndex++, spr++){
 
-    }
-*/
-    for (int sprIndex = 0; sprIndex < NUMBER_OF_SPRITES; sprIndex++, spr++){
+    OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]); // NOLINT
+    OAM_Sprite* visible_sprites[10] = {nullptr };
+    uint8_t number_of_sprites_visible_on_scanline = 0;
 
-        // Only draw 10 sprites per scanline
-        if (sprites_drawn_on_scanline == 10) {
-            break;
-        }
+    bool sprite_is_visible_on_current_scanline;
 
-        // TODO: https://gbdev.io/pandocs/OAM.html#object-priority-and-conflicts
-
-        uint8_t ypos = spr->y_position - 16;
-        uint8_t sprite_height;
-        bool sprite_is_visible_on_current_scanline;
-
-        if (IsFlagSet(LCDCBitmask::OBJ_Size)) {
-            // 8x16 sprite
-            sprite_height = 16;
+    if (IsFlagSet(LCDCBitmask::OBJ_Size)) {
+        // 8x16 sprite
+        constexpr uint8_t sprite_height = 16;
+        for (int sprIndex = 0; (sprIndex < NUMBER_OF_SPRITES) && (number_of_sprites_visible_on_scanline < 10) ; sprIndex++, spr++) {
+            uint8_t ypos = spr->y_position - 16;
             sprite_is_visible_on_current_scanline = spr->y_position != 0
                                                     && ypos <= current_scanline
                                                     && ypos + sprite_height > current_scanline;
-        } else {
-            // 8x8 sprite
-            sprite_height = 8;
+            if(sprite_is_visible_on_current_scanline){
+                visible_sprites[number_of_sprites_visible_on_scanline++] = spr;
+            }
+        }
+    } else {
+        // 8x8 sprite
+        constexpr uint8_t sprite_height = 8;
+        for (int sprIndex = 0; (sprIndex < NUMBER_OF_SPRITES) && (number_of_sprites_visible_on_scanline < 10); sprIndex++, spr++) {
+            uint8_t ypos = spr->y_position - 16;
             sprite_is_visible_on_current_scanline = spr->y_position > 8
                                                     && ypos <= current_scanline
                                                     && ypos + sprite_height > current_scanline;
+            if(sprite_is_visible_on_current_scanline){
+                visible_sprites[number_of_sprites_visible_on_scanline++] = spr;
+            }
+        }
+    }
+
+    uint8_t sprite_height = 8;
+    bool is_tall_sprites = false;
+
+    if(IsFlagSet(LCDCBitmask::OBJ_Size)){
+        is_tall_sprites = true;
+        sprite_height = 16;
+    }
+
+    for (int sprIndex = 0; sprIndex < number_of_sprites_visible_on_scanline; sprIndex++){
+
+        spr = visible_sprites[sprIndex];
+
+        uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH + (spr->x_position - 8)];
+        uint16_t spr_data_addr = Tile_Data_Block_0;
+        uint8_t ypos = spr->y_position - 16;
+
+        // TODO: https://gbdev.io/pandocs/OAM.html#object-priority-and-conflicts
+
+        if (is_tall_sprites) {
+            spr_data_addr += (spr->tile_index&0b11111110) << 4; // 16 = size of sprite data. In 16 byte height the last bit is ignored (test for this even exists in DMG-ACID2)
+        } else {
+            spr_data_addr += spr->tile_index << 4; // 16 = size of sprite data
         }
 
-        if (sprite_is_visible_on_current_scanline){
+        uint8_t spr_line_being_draw;
 
-            uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH + (spr->x_position - 8)];
-            uint16_t spr_data_addr = Tile_Data_Block_0;
+        if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::Y_Flip ) {
+            spr_line_being_draw = sprite_height-1 - (current_scanline - ypos);
+        } else {
+            spr_line_being_draw = (current_scanline - ypos);
+        }
+        spr_data_addr += (spr_line_being_draw<<1); // index 2 bytes into the sprite data for each line offset
 
-            if(sprite_height==16){
-                spr_data_addr += (spr->tile_index&0b11111110) << 4; // 16 = size of sprite data (8x8)
-            }else{
-                spr_data_addr += spr->tile_index << 4; // 16 = size of sprite data (8x8)
+        // Palette
+
+        uint8_t *palette;
+
+        if(spr->attributes & (uint8_t)OAM_Sprite_Attributes::Palette_Number){
+            palette = palette_1;
+        } else {
+            palette = palette_0;
+        }
+
+        // Transform pixels from bitplanes to chunky
+
+        uint8_t lobits = mem.memory[spr_data_addr++];
+        uint8_t hibits = mem.memory[spr_data_addr];
+
+        if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::X_Flip )
+        {
+            for (int x = 0; x < TILE_WIDTH; x++) {
+                uint8_t bit_number = x; // Only difference between x-flipped and not is the order of the bits we blit here (bit_number)
+                uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
+                if (color != 0) { *dst_ptr = palette[color]; }
+                dst_ptr++;
             }
-
-            uint8_t spr_line_being_draw;
-
-            if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::Y_Flip ) {
-                spr_line_being_draw = sprite_height-1 - (current_scanline - ypos);
-            } else {
-                spr_line_being_draw = (current_scanline - ypos);
+        }
+        else
+        {
+            for (int x = 0; x < TILE_WIDTH; x++) {
+                uint8_t bit_number = 7 - x;
+                uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
+                if (color != 0) { *dst_ptr = palette[color]; }
+                dst_ptr++;
             }
-            spr_data_addr += (spr_line_being_draw<<1); // index 2 bytes into the sprite data for each line offset
-            sprites_drawn_on_scanline++;
-
-            // Palette
-
-            uint8_t *palette;
-
-            if(spr->attributes & (uint8_t)OAM_Sprite_Attributes::Palette_Number){
-                palette = palette_1;
-            } else {
-                palette = palette_0;
-            }
-
-            // Transform pixels from bitplanes to chunky
-
-            uint8_t lobits = mem.memory[spr_data_addr++];
-            uint8_t hibits = mem.memory[spr_data_addr];
-
-            if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::X_Flip )
-            {
-                for (int x = 0; x < TILE_WIDTH; x++) {
-                    uint8_t bit_number = x; // Only difference between x-flipped and not is the order of the bits we blit here (bit_number)
-                    uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
-                    if (color != 0) { *dst_ptr = palette[color]; }
-                    dst_ptr++;
-                }
-            }
-            else
-            {
-                for (int x = 0; x < TILE_WIDTH; x++) {
-                    uint8_t bit_number = 7 - x;
-                    uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
-                    if (color != 0) { *dst_ptr = palette[color]; }
-                    dst_ptr++;
-                }
-            }
-
         }
     }
 
