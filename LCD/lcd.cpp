@@ -52,7 +52,7 @@ void LCD::DrawSprites()
     // Perform OAM scan to determine visible sprites
 
     OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]); // NOLINT
-    OAM_Sprite* visible_sprites[10] = {nullptr };
+    std::array<OAM_Sprite*,10> visible_sprites = { NULL };
     uint8_t number_of_sprites_visible_on_scanline = 0;
 
     bool sprite_is_visible_on_current_scanline;
@@ -82,6 +82,11 @@ void LCD::DrawSprites()
             }
         }
     }
+
+    // Sort visible sprites according to X coordinate
+    std::sort(visible_sprites.begin(),visible_sprites.begin()+number_of_sprites_visible_on_scanline, [](OAM_Sprite* spr_a,OAM_Sprite* spr_b){
+        return spr_a->x_position >= spr_b->x_position;
+    });
 
     uint8_t sprite_height = 8;
     bool is_tall_sprites = false;
