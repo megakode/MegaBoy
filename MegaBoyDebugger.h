@@ -14,7 +14,6 @@ class MegaBoyDebugger {
 private:
 
     std::thread gb_thread;
-    std::unique_ptr<Gameboy> gb;
 
     /// Scroll to the lates entry in the disassembly
     bool scroll_to_bottom = false;
@@ -37,6 +36,8 @@ public:
     static constexpr uint16_t GB_SCREEN_HEIGHT = 256;
     /// RGB screen data
     uint8_t *screenData;
+
+    std::unique_ptr<Gameboy> gb;
 
     void Run();
 

@@ -9,6 +9,7 @@
 #include "Timer.h"
 #include "LCD/lcd.h"
 #include "DMAController.h"
+#include "Joypad.h"
 
 class Gameboy {
 
@@ -21,6 +22,7 @@ public:
     Timer timer;
     LCD lcd;
     DMAController dma;
+    Joypad joypad;
 
     /*
     enum InterruptFlag : uint8_t

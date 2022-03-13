@@ -73,7 +73,9 @@ target_sources(MegaBoy PRIVATE
         DMAController.cpp
         DMAController.h
         UI/DisassemblyWindow.cpp
-        UI/DisassemblyWindow.h)
+        UI/DisassemblyWindow.h
+        Joypad.cpp
+        Joypad.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})

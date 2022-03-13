@@ -136,23 +136,33 @@ void LCD::DrawSprites()
         uint8_t lobits = mem.memory[spr_data_addr++];
         uint8_t hibits = mem.memory[spr_data_addr];
 
-        if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::X_Flip )
-        {
-            for (int x = 0; x < TILE_WIDTH; x++) {
-                uint8_t bit_number = x; // Only difference between x-flipped and not is the order of the bits we blit here (bit_number)
-                uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
-                if (color != 0) { *dst_ptr = palette[color]; }
-                dst_ptr++;
+        // Draw the actual pixels of a sprite line
+
+        for (int x = 0; x < TILE_WIDTH; x++) {
+
+            uint8_t bit_number; // Only difference between x-flipped and not is the order of the bits we blit here (bit_number)
+
+            if( spr->attributes & (uint8_t) OAM_Sprite_Attributes::X_Flip ) {
+                bit_number = x; // X Flipped
+            } else {
+                bit_number = 7 - x; // Regular
             }
-        }
-        else
-        {
-            for (int x = 0; x < TILE_WIDTH; x++) {
-                uint8_t bit_number = 7 - x;
-                uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
-                if (color != 0) { *dst_ptr = palette[color]; }
-                dst_ptr++;
+
+            uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
+
+            if (color != 0) {
+                if(!(spr->attributes & (uint8_t)OAM_Sprite_Attributes::BG_And_Window_Over_OBJ)){
+                    *dst_ptr = palette[color];
+                } else {
+                    // If "BG & Window over OBJ" is set on the sprite,
+                    // only blit a sprite pixel if no bg or window pixel is at the current location.
+                    if(*dst_ptr == 0 ){
+                        *dst_ptr = palette[color];
+                    }
+                }
+
             }
+            dst_ptr++;
         }
     }
 

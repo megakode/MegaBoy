@@ -43,7 +43,7 @@ enum class IOAddress : uint16_t
     /// Bit 2 - P12 Input: Up    or Select   (0=Pressed) (Read Only)
     /// Bit 1 - P11 Input: Left  or B        (0=Pressed) (Read Only)
     /// Bit 0 - P10 Input: Right or A        (0=Pressed) (Read Only)
-    Controller = 0xff00,
+    Joypad = 0xff00,
     /// DIV
     TimerDivider = 0xFF04,
     /// FF05: TIMA - Timer counter (R/W)

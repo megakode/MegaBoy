@@ -1,13 +1,8 @@
-
-// Dear ImGui: standalone example application for SDL2 + OpenGL
-// (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
-// If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
-// Read online: https://github.com/ocornut/imgui/tree/master/docs
+#include <stdio.h>
 
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_sdl.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
-#include <stdio.h>
 #include "SDL.h"
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <SDL_opengles2.h>
@@ -136,6 +131,45 @@ int main(int, char**)
                 done = true;
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
                 done = true;
+            if(event.type == SDL_KEYDOWN){
+                switch (event.key.keysym.sym) {
+                    case SDLK_LEFT: debugger.gb->joypad.SetButtonState(Joypad::Button::Left,true); break;
+                    case SDLK_RIGHT: debugger.gb->joypad.SetButtonState(Joypad::Button::Right,true); break;
+                    case SDLK_UP: debugger.gb->joypad.SetButtonState(Joypad::Button::Up,true); break;
+                    case SDLK_DOWN: debugger.gb->joypad.SetButtonState(Joypad::Button::Down,true); break;
+                    case SDLK_z: debugger.gb->joypad.SetButtonState(Joypad::Button::A,true); break;
+                    case SDLK_x: debugger.gb->joypad.SetButtonState(Joypad::Button::B,true); break;
+                    case SDLK_s: debugger.gb->joypad.SetButtonState(Joypad::Button::Start,true); break;
+                    case SDLK_a: debugger.gb->joypad.SetButtonState(Joypad::Button::Select,true); break;
+                }
+            } else if (event.type == SDL_KEYUP){
+                switch(event.key.keysym.sym) {
+                    case SDLK_LEFT:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Left,false);
+                        break;
+                    case SDLK_RIGHT:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Right,false);
+                        break;
+                    case SDLK_UP:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Up,false);
+                        break;
+                    case SDLK_DOWN:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Down,false);
+                        break;
+                    case SDLK_s:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Start,false);
+                        break;
+                    case SDLK_a:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::Select,false);
+                        break;
+                    case SDLK_z:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::A,false);
+                        break;
+                    case SDLK_x:
+                        debugger.gb->joypad.SetButtonState(Joypad::Button::B,false);
+                        break;
+                }
+            }
         }
 
         // Start the Dear ImGui frame
@@ -157,9 +191,6 @@ int main(int, char**)
             ImGui::Begin("Gameboy screen:");                          // Create a window called "Hello, world!" and append into it.
 
             // Update Texture
-
-            debugger.screenData[255*3] = 0xff;
-
             glTexSubImage2D(GL_TEXTURE_2D, 0 ,0, 0, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
 
             ImGui::Image((void*)(intptr_t)textureId, ImVec2(MegaBoyDebugger::GB_SCREEN_WIDTH*2, MegaBoyDebugger::GB_SCREEN_HEIGHT*2));

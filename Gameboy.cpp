@@ -4,7 +4,7 @@
 
 #include "Gameboy.h"
 
-Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem)
+Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem), joypad(mem)
 {
     // Set interrupt flag when timer overflows
     timer.didOverflow = [&](){
@@ -26,7 +26,9 @@ Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem)
                 // Initiate DMA transfer
                 dma.RequestTransfer(value);
                 break;
-
+            case (uint16_t)IOAddress::Joypad:
+                joypad.WriteRegisterData(value);
+                break;
             default:
                 break;
         }
@@ -41,6 +43,7 @@ uint16_t Gameboy::Step() {
     mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = timer.GetDividerRegister();
     mem[static_cast<uint16_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
     mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = timer.GetCounter();
+    mem[static_cast<uint16_t>(IOAddress::Joypad)] = joypad.ReadRegisterData();
 
     // handle interrupts
     HandleInterrupts();

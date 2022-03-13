@@ -2,7 +2,6 @@
 // Created by sbeam on 04/12/2021.
 //
 #include <iostream>
-#include <vector>
 #include <string>
 #include <fstream>
 #include <filesystem>
@@ -10,7 +9,6 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 #include "UI/DisassemblyWindow.h"
-#include <thread>
 
 MegaBoyDebugger::MegaBoyDebugger() {
 
@@ -58,6 +56,9 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
     //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+    //std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    //std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
 
     //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/game_roms/Adventures of Lolo (Europe).gb";
@@ -80,7 +81,6 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
     std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
-
 
 
     auto path = std::filesystem::absolute(filename);
