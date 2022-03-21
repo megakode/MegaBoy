@@ -43,7 +43,7 @@ enum class IOAddress : uint16_t
     /// Bit 2 - P12 Input: Up    or Select   (0=Pressed) (Read Only)
     /// Bit 1 - P11 Input: Left  or B        (0=Pressed) (Read Only)
     /// Bit 0 - P10 Input: Right or A        (0=Pressed) (Read Only)
-    Controller = 0xff00,
+    Joypad = 0xff00,
     /// DIV
     TimerDivider = 0xFF04,
     /// FF05: TIMA - Timer counter (R/W)
@@ -70,6 +70,14 @@ enum class IOAddress : uint16_t
     /// Bit 4: Joypad   Interrupt Enable  (INT $60)  (1=Enable)
     InterruptEnabled = 0xffff,
 
+    /// FF42 - SCY (Scroll Y) (R/W),
+    /// The top coordinate of the visible 160×144 pixel area within the 256×256 pixels BG map. Values in the range 0–255 may be used. wraps around.
+    Scroll_Y = 0xff42,
+
+    /// FF43 - SCX (Scroll X) (R/W)
+    /// The top coordinate of the visible 160×144 pixel area within the 256×256 pixels BG map. Values in the range 0–255 may be used. wraps around.
+    Scroll_X = 0xff43,
+
     /// Writing to this register launches a DMA transfer from ROM or RAM to OAM (Object Attribute Memory).
     /// The written value specifies the transfer source address divided by $100, that is, source and destination are:
     ///
@@ -90,6 +98,14 @@ enum class IOAddress : uint16_t
     /// 2	    Dark gray
     /// 3	    Black
     BG_Palette_Data = 0xff47,
+
+    /// Object palette 0.
+    /// Works exactly like BG palette data, except that color 0 is ignored because index 0 is transparent on objects.
+    OBJ_Palette_0_Data = 0xff48,
+
+    /// Object palette 1.
+    /// Works exactly like BG palette data, except that color 0 is ignored because index 0 is transparent on objects.
+    OBJ_Palette_1_Data = 0xff49,
 
     /// FF4A - Window Y Position
     /// The Window is visible (if enabled) when both coordinates are in the ranges WX=0..166, WY=0..143 respectively.
