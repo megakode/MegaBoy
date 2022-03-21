@@ -359,7 +359,8 @@ void LCD::Step( uint16_t delta_cycles )
 
 void LCD::RenderRGBBuffer( uint8_t line_number )
 {
-    constexpr RGB paletteColors[4] = { {20,50,00} , {20,128,20}, {50,192,50}, {100,255,100} };
+    // $00, $55, $AA, $FF.
+    constexpr RGB paletteColors[4] = { {0xff,0xff,0xff},{0xaa,0xaa,0xaa}, {0x55,0x55,0x55}, {0,0,00} };
     RGB rgb[4] = {};
 
     uint8_t paletteMapping = mem.memory[static_cast<uint16_t>(IOAddress::BG_Palette_Data)];

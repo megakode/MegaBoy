@@ -138,19 +138,6 @@ public:
 
     LCD() = delete;
 
-    inline void DrawTileLine( uint16_t src_tile_data_address, uint8_t *dst_pixel_data_buffer ){
-        uint8_t lobits = mem.memory[src_tile_data_address++];
-        uint8_t hibits = mem.memory[src_tile_data_address++];
-        for (int x = 0; x < TILE_WIDTH; x++) {
-            // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
-            // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
-            uint8_t bit_number = 7-x;
-            uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
-            *dst_pixel_data_buffer = color;
-            dst_pixel_data_buffer++;
-        }
-    }
-
     void Step( uint16_t delta_cycles );
 
     void RenderRGBBuffer( uint8_t line_number );
