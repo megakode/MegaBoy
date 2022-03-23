@@ -44,6 +44,7 @@ uint16_t Gameboy::Step() {
     mem[static_cast<uint16_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
     mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = timer.GetCounter();
     mem[static_cast<uint16_t>(IOAddress::Joypad)] = joypad.ReadRegisterData();
+    mem[static_cast<uint16_t>(IOAddress::DMATransferStartAddress)] = dma.LastRequestedSourceAddress();
 
     // handle interrupts
     HandleInterrupts();
