@@ -16,10 +16,10 @@ class DMAController {
     HostMemory& mem;
 
     /// The high-byte of the last requested source address. Returned when reading the DMA transfer 0xff46 address.
-    uint8_t last_requested_source_addr;
+    uint8_t last_requested_source_addr = 0;
     uint8_t current_bytes_transferred = 0;
     uint16_t current_source_address = 0;
-    bool transfer_in_progress;
+    bool transfer_in_progress = false;
 
 public:
 
@@ -27,6 +27,10 @@ public:
 
     }
 
+    [[nodiscard]] uint8_t LastRequestedSourceAddress() const
+    {
+        return last_requested_source_addr;
+    }
 
     void RequestTransfer( uint8_t addr_hibyte )
     {
@@ -41,7 +45,7 @@ public:
         current_source_address = addr_hibyte << 8;
     }
 
-    bool IsTransferInProgress() const
+    [[nodiscard]] bool IsTransferInProgress() const
     {
         return transfer_in_progress;
     }

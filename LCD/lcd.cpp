@@ -100,7 +100,8 @@ void LCD::DrawSprites()
 
         spr = visible_sprites[sprIndex];
 
-        uint8_t *dst_ptr = &renderBuffer[current_scanline * BUFFER_WIDTH + (spr->x_position - 8)];
+        uint16_t dst_index = current_scanline * BUFFER_WIDTH + (spr->x_position - 8);
+        uint8_t *dst_ptr = &renderBuffer[dst_index];
         uint16_t spr_data_addr = Tile_Data_Block_0;
         uint8_t ypos = spr->y_position - 16;
 
@@ -294,19 +295,20 @@ void LCD::Step( uint16_t delta_cycles )
 
     // If enough cycles has passed: switch to next mode
 
+
     if( accumulated_cycles >= LCD_Mode_Cycles[LCD_Mode_Order[current_mode_index]] )
     {
         accumulated_cycles -= LCD_Mode_Cycles[LCD_Mode_Order[current_mode_index]];
         current_mode_index++;
 
+        if(current_mode_index == 4) { // VBlank is done, restart mode order
+            current_mode_index = 0;
+        }
+
         if( current_scanline < 144 && LCD_Mode_Order[current_mode_index] == LCD_Mode_VBlank){
             current_mode_index = 0;
         }
 
-        if(current_mode_index == 4) { // VBlank is done, restart mode order
-            current_mode_index = 0;
-        }
-        
         if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Searching_OAM){
             if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_OAM){
                 mem.SetInterruptFlag(Interrupt_Flag_LCD_Stat,true);
