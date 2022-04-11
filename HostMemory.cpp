@@ -4,7 +4,14 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <cstring>
 #include "HostMemory.h"
+#include "DMG_ROM.h"
+
+HostMemory::HostMemory() noexcept{
+    //memcpy(memory,DMG_ROM_bin,DMG_ROM_bin_len);
+    Write(IOAddress::Boot_ROM_Disabled,0);
+}
 
 uint8_t& HostMemory::operator[] (uint16_t index)
 {
@@ -19,6 +26,10 @@ uint8_t& HostMemory::operator[] (uint16_t index)
 
 uint8_t HostMemory::Read( uint16_t address ) const
 {
+    if(!memory[static_cast<uint16_t>(IOAddress::Boot_ROM_Disabled)] && address <= 0xff){
+        return DMG_ROM_bin[address];
+    }
+
     return memory[address];
 }
 

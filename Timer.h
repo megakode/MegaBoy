@@ -7,6 +7,7 @@
 #include <chrono>
 #include <mutex>
 #include <functional>
+#include "HostMemory.h"
 
 #pragma once
 
@@ -39,11 +40,17 @@ private:
     constexpr static uint8_t TimerEnabledBitmask    = 0b100;
     constexpr static uint8_t TimerMultiplierBitmask = 0b011;
 
+    HostMemory& mem;
+
 public:
 
     std::function<void()> didOverflow = nullptr;
 
-    Timer() = default;
+    Timer() = delete;
+
+    explicit Timer( HostMemory &mem ) : mem(mem) {
+
+    }
 
     void Step(uint16_t ticks) {
 
@@ -51,12 +58,15 @@ public:
         uint16_t previous_divider_value = divider_register;
         divider_register += ticks;
 
+        mem[static_cast<uint16_t>(IOAddress::TimerModule)] = GetModulo();
+        mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = GetDividerRegister();
+        mem[static_cast<uint16_t>(IOAddress::TimerControl)] = GetTimerControl();
+        mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = GetCounter();
+
         if(!(timer_control_register & TimerEnabledBitmask))
         {
             return;
         }
-
-
 
         bool increase_timer = false;
 
@@ -92,6 +102,12 @@ public:
                 }
             }
         }
+
+        mem[static_cast<uint16_t>(IOAddress::TimerModule)] = GetModulo();
+        mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = GetDividerRegister();
+        mem[static_cast<uint16_t>(IOAddress::TimerControl)] = GetTimerControl();
+        mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = GetCounter();
+
 
     }
 

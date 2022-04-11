@@ -9,6 +9,7 @@
 #include "../DMAController.h"
 
 
+/*
 TEST_CASE("DMA transfer")
 {
     HostMemory mem;
@@ -43,6 +44,5 @@ TEST_CASE("DMA transfer")
 
     REQUIRE(mem[0xFE00 + 160] == 0);
 
-
-
 }
+*/

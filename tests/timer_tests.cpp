@@ -12,7 +12,7 @@ TEST_CASE("timer")
 {
     HostMemory mem;
     CPU cpu(mem);
-    Timer timer;
+    Timer timer(mem);
     bool didOverflow = false;
     constexpr uint8_t TimerEnabled = 0b100;
     constexpr uint8_t TimerDisabled = 0b000;

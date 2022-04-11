@@ -9,6 +9,7 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 #include "UI/DisassemblyWindow.h"
+#include "cartridge/Cartridge.h"
 
 MegaBoyDebugger::MegaBoyDebugger() {
 
@@ -57,9 +58,9 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
 
     //std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
-    //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
-    std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    //std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     //std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
     //std::filesystem::path filename = "../tests/game_roms/Pipe Dream (USA).gb";
     //std::filesystem::path filename = "../tests/game_roms/Heiankyo Alien (USA).gb";
@@ -89,12 +90,6 @@ void MegaBoyDebugger::LoadTestRom()
 
 
     auto path = std::filesystem::absolute(filename);
-    auto size = std::filesystem::file_size(path);
-
-    if( size > 0xffff ){
-        std::cout << "Warning: ROM file size is larger than 64k! will only read first 64k" << std::endl;
-        size = 0xffff;
-    }
 
     std::cout << "path: " << path << std::endl;
     if(exists(path)){
@@ -107,12 +102,20 @@ void MegaBoyDebugger::LoadTestRom()
         std::cout << "could not read " << path;
     } else
     {
-        std::cout << "Reading " << path;
-        z80file.read ((char*)&gb->cpu.mem[0], size );
+        auto size = std::filesystem::file_size(path);
+        std::cout << "Reading " << path << "size=" << size;
+        auto *buffer = new uint8_t[size];
+        z80file.read ((char*)buffer, size );
+
+        // TODO:
+        //  - Create instance of Cartridge on HostMemory.
+        //  - load buffer into Cartridge
+        memcpy(&gb->mem[0],buffer, size);
+        delete[] buffer;
         z80file.close();
     }
 
-    gb->cpu.regs.PC = 0x100;
+    gb->cpu.regs.PC = 0x000;
 }
 
 void MegaBoyDebugger::UpdateUI() 

@@ -25,7 +25,7 @@ public:
 
     HostMemory &memory;
 
-    Joypad( HostMemory &memory ) : memory(memory) {
+    explicit Joypad( HostMemory &memory ) : memory(memory) {
 
     };
 

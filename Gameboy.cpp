@@ -4,7 +4,7 @@
 
 #include "Gameboy.h"
 
-Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem), joypad(mem)
+Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem), joypad(mem), timer(mem)
 {
     // Set interrupt flag when timer overflows
     timer.didOverflow = [&](){
@@ -39,12 +39,7 @@ Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem), joypad(mem)
 /// \return Number of cycles the step took
 uint16_t Gameboy::Step() {
 
-    mem[static_cast<uint16_t>(IOAddress::TimerModule)] = timer.GetModulo();
-    mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = timer.GetDividerRegister();
-    mem[static_cast<uint16_t>(IOAddress::TimerControl)] = timer.GetTimerControl();
-    mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = timer.GetCounter();
     mem[static_cast<uint16_t>(IOAddress::Joypad)] = joypad.ReadRegisterData();
-    mem[static_cast<uint16_t>(IOAddress::DMATransferStartAddress)] = dma.LastRequestedSourceAddress();
 
     // handle interrupts
     HandleInterrupts();
@@ -87,9 +82,9 @@ void Gameboy::HandleInterrupts() {
         {
             if(mem.Read(IOAddress::InterruptEnabled) & mem.Read(IOAddress::InterruptFlag) & flags[i] )
             {
-                cpu.is_halted = false;
+
                 // TODO: maybe the one-instruction delay here (with !ime_just_enabled) must not there when an IRQ is waking up the cpu from HALT mode?
-                if (cpu.interrupt_master_enabled && !cpu.ime_just_enabled)
+                if (cpu.interrupt_master_enabled && !cpu.ime_just_enabled && !cpu.is_halted)
                 {
                     cpu.interrupt_master_enabled = false;
                     cpu.push_pc();
@@ -97,6 +92,8 @@ void Gameboy::HandleInterrupts() {
                     mem.SetInterruptFlag(flags[i], false);
                     cpu.regs.PC = irqJumpAddrs[i];
                 }
+
+                cpu.is_halted = false;
                 break;
             }
         }

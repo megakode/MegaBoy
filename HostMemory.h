@@ -113,13 +113,18 @@ enum class IOAddress : uint16_t
     Window_Y_Position = 0xff4a,
 
     /// FF4B - Window X Position (+7)
-    Window_X_Position = 0xff4b
+    Window_X_Position = 0xff4b,
+
+    /// Set to non-zero to disable boot ROM
+    Boot_ROM_Disabled = 0xff50
 
 };
 
 class HostMemory {
 
 public:
+
+    HostMemory() noexcept;
 
     /// Called when a value is written to an memory mapped io address (0xff00 - 0xffff)
     std::function<void(uint16_t,uint8_t)> didWriteToIOAddress = nullptr;
@@ -149,7 +154,8 @@ public:
         }
     }
 
-    uint8_t memory[UINT16_MAX+1];
+    uint8_t memory[UINT16_MAX+1]{};
+
 
 private:
 
