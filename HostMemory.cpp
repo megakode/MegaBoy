@@ -8,8 +8,8 @@
 #include "HostMemory.h"
 #include "DMG_ROM.h"
 
-HostMemory::HostMemory() noexcept{
-    //memcpy(memory,DMG_ROM_bin,DMG_ROM_bin_len);
+HostMemory::HostMemory( Cartridge &cartridge ) noexcept : cartridge(cartridge) {
+    std::cout << "HostMemory()";
     Write(IOAddress::Boot_ROM_Disabled,0);
 }
 
@@ -21,13 +21,22 @@ uint8_t& HostMemory::operator[] (uint16_t index)
         exit(0);
     }
      */
+
+    if(index <= 0x7fff && memory[static_cast<uint16_t>(IOAddress::Boot_ROM_Disabled)] ) {
+        return memory[index];
+    }
     return memory[index];
+
 }
 
 uint8_t HostMemory::Read( uint16_t address ) const
 {
     if(!memory[static_cast<uint16_t>(IOAddress::Boot_ROM_Disabled)] && address <= 0xff){
         return DMG_ROM_bin[address];
+    }
+
+    if(address <= 0x7fff) {
+        return cartridge.read(address);
     }
 
     return memory[address];

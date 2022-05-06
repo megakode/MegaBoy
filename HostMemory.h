@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <functional>
+#include "cartridge/Cartridge.h"
 
 enum Interrupt_Flag: uint8_t
 {
@@ -124,7 +125,9 @@ class HostMemory {
 
 public:
 
-    HostMemory() noexcept;
+    explicit HostMemory( Cartridge &cartridge ) noexcept;
+
+    HostMemory() = delete;
 
     /// Called when a value is written to an memory mapped io address (0xff00 - 0xffff)
     std::function<void(uint16_t,uint8_t)> didWriteToIOAddress = nullptr;
@@ -158,6 +161,8 @@ public:
 
 
 private:
+
+    Cartridge &cartridge;
 
 
 };

@@ -83,12 +83,16 @@ include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})
 
 # profilling
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -Og -fsanitize=address")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -Og ") # -fsanitize=address
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -O0")
+
+#set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
+#set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
 
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx9.h"

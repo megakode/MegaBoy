@@ -17,7 +17,9 @@ public:
 
     bool IsDoubleSpeedMode = false;
 
-    HostMemory mem{};
+
+    Cartridge cartridge;    // ORDER DEPENDENCY
+    HostMemory mem;         // ORDER DEPENDENCY
     CPU cpu;
     Timer timer;
     LCD lcd;

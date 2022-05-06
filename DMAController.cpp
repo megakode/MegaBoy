@@ -10,7 +10,7 @@ DMAController::DMAController(HostMemory &mem) : mem(mem) {
 
 void DMAController::Step( uint16_t cycles ){
 
-    mem[static_cast<uint16_t>(IOAddress::DMATransferStartAddress)] = last_requested_source_addr;
+    mem.Write( static_cast<uint16_t>(IOAddress::DMATransferStartAddress) , last_requested_source_addr);
 
     if(!transfer_in_progress){
         return;
@@ -18,7 +18,7 @@ void DMAController::Step( uint16_t cycles ){
 
     while(current_bytes_transferred<160 && cycles > 0)
     {
-        mem[DestinationBaseAddress+current_bytes_transferred] = mem[current_source_address];
+        mem.Write( DestinationBaseAddress+current_bytes_transferred, mem.Read(current_source_address) );
         current_source_address++;
         current_bytes_transferred++;
         cycles--;

@@ -4,7 +4,7 @@
 
 #include "Gameboy.h"
 
-Gameboy::Gameboy() : cpu(mem), lcd(mem), dma(mem), joypad(mem), timer(mem)
+Gameboy::Gameboy() : mem( cartridge), cpu(mem), lcd(mem), dma(mem), joypad(mem), timer(mem)
 {
     // Set interrupt flag when timer overflows
     timer.didOverflow = [&](){
