@@ -54,15 +54,41 @@ include(Catch)
 catch_discover_tests(cputests)
 
 
-add_executable(MegaBoy ${MainFile} LCD/lcd.cpp CPU/cpu.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h Gameboy.cpp Gameboy.h HostMemory.cpp HostMemory.h Timer.cpp Timer.h LCD/lcd.cpp DMAController.cpp DMAController.h UI/DisassemblyWindow.cpp UI/DisassemblyWindow.h)
+add_executable(MegaBoy ${MainFile})
+target_sources(MegaBoy PRIVATE
+        LCD/lcd.cpp
+        CPU/cpu.cpp
+        imgui/imgui.cpp
+        MegaBoyDebugger.cpp
+        UI/RegisterWindow.cpp
+        UI/RegisterWindow.h
+        UI/UIConfig.h
+        Gameboy.cpp
+        Gameboy.h
+        HostMemory.cpp
+        HostMemory.h
+        Timer.cpp
+        Timer.h
+        LCD/lcd.cpp
+        DMAController.cpp
+        DMAController.h
+        UI/DisassemblyWindow.cpp
+        UI/DisassemblyWindow.h
+        Joypad.cpp
+        Joypad.h
+        cartridge/Cartridge.cpp
+        cartridge/Cartridge.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})
 
 # profilling
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg -O2")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -Og -fsanitize=address")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
 SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
 
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx9.h"

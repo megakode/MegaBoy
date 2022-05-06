@@ -2,7 +2,6 @@
 // Created by sbeam on 04/12/2021.
 //
 #include <iostream>
-#include <vector>
 #include <string>
 #include <fstream>
 #include <filesystem>
@@ -10,7 +9,7 @@
 #include "imgui.h"
 #include "UI/UIConfig.h"
 #include "UI/DisassemblyWindow.h"
-#include <thread>
+#include "cartridge/Cartridge.h"
 
 MegaBoyDebugger::MegaBoyDebugger() {
 
@@ -55,15 +54,25 @@ void MegaBoyDebugger::LoadBIOSRom()
 void MegaBoyDebugger::LoadTestRom()
 {
 
-    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
     //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+
+    //std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
+    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    //std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Pipe Dream (USA).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Heiankyo Alien (USA).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Missile Command (USA, Europe).gb";
+
+    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
     //std::filesystem::path filename = "../tests/game_roms/Adventures of Lolo (Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/After Burst (Japan).gb";
     //std::filesystem::path filename = "../tests/game_roms/Alien 3 (USA, Europe).gb";
-    //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/Bust-A-Move 2 - Arcade Edition (USA, Europe).gb";
+
     //std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
     //std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
@@ -77,17 +86,10 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
-    std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
-
+    //std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
 
 
     auto path = std::filesystem::absolute(filename);
-    auto size = std::filesystem::file_size(path);
-
-    if( size > 0xffff ){
-        std::cout << "Warning: ROM file size is larger than 64k! will only read first 64k" << std::endl;
-        size = 0xffff;
-    }
 
     std::cout << "path: " << path << std::endl;
     if(exists(path)){
@@ -100,12 +102,20 @@ void MegaBoyDebugger::LoadTestRom()
         std::cout << "could not read " << path;
     } else
     {
-        std::cout << "Reading " << path;
-        z80file.read ((char*)&gb->cpu.mem[0], size );
+        auto size = std::filesystem::file_size(path);
+        std::cout << "Reading " << path << "size=" << size;
+        auto *buffer = new uint8_t[size];
+        z80file.read ((char*)buffer, size );
+
+        // TODO:
+        //  - Create instance of Cartridge on HostMemory.
+        //  - load buffer into Cartridge
+        memcpy(&gb->mem[0],buffer, size);
+        delete[] buffer;
         z80file.close();
     }
 
-    gb->cpu.regs.PC = 0x100;
+    gb->cpu.regs.PC = 0x000;
 }
 
 void MegaBoyDebugger::UpdateUI() 

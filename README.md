@@ -28,14 +28,20 @@ https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 - https://github.com/AntonioND/giibiiadvance/ (GB/GBC/GBA emulator)
 - https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf (cycle accurate docs)
 
+Gameboy Emulator development guide:
+https://hacktixme.ga/GBEDG/ppu/
+
 Other GB emulators:
 
 - https://github.com/LIJI32/SameBoy/blob/master/Core/sm83_cpu.c
 - https://github.com/AntonioND/giibiiadvance/blob/master/source/gb_core/cpu.c
 
-Test Roms:
+**Test Roms**
 
 - https://github.com/retrio/gb-test-roms/tree/master/cpu_instrs
 - https://github.com/mattcurrie/dmg-acid2
 - https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM
 - https://github.com/pinobatch/numism/blob/main/docs/gb_emu_testing.md
+
+PPU timing tests
+https://github.com/mattcurrie/mealybug-tearoom-tests
