@@ -116,7 +116,6 @@ void MegaBoyDebugger::LoadTestRom()
         z80file.close();
     }
 
-    gb->cpu.regs.PC = 0x000;
 }
 
 void MegaBoyDebugger::UpdateUI() 
@@ -181,6 +180,12 @@ void MegaBoyDebugger::UpdateUI()
         gb->cpu.reset();
         //Step();
     }
+
+
+    if(ImGui::Button("Dump debug log") ){
+        gb->cpu.DumpDebugLog();
+    }
+
 
     static char addr_input[5] = {"100"}; ImGui::InputText("hexadecimal", addr_input, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
     ImGui::SameLine();

@@ -97,7 +97,7 @@ void CPU::DEC_r(uint8_t &reg)
 void CPU::CP_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     sub(srcRegValue,false, true);
 
     #ifdef DEBUG_LOG
@@ -169,7 +169,7 @@ void CPU::ADD_HL_SP()
 // flags: s z h pv n c
 void CPU::ADD_A_r(){
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
 
     add(srcRegValue,false);
 
@@ -190,7 +190,7 @@ void CPU::ADD_A_n(){
 
 void CPU::ADC_A_r(){
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
 
     add(srcRegValue,true);
 #ifdef DEBUG_LOG
@@ -217,7 +217,7 @@ void CPU::ADC_A_n(){
 
 void CPU::SUB_r(){
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     sub(srcRegValue,false, false);
 }
 
@@ -234,7 +234,7 @@ void CPU::SUB_n(){
 
 void CPU::SBC_r(){
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     sub(srcRegValue,true, false);
 #ifdef DEBUG_LOG
     auto regName = reg_name_from_regcode(srcRegCode);
@@ -268,7 +268,7 @@ void CPU::and_a_with_value( uint8_t value )
 void CPU::AND_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     and_a_with_value(srcRegValue);
 
 #ifdef DEBUG_LOG
@@ -300,7 +300,7 @@ void CPU::AND_n()
 void CPU::XOR_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     xor_a_with_value(srcRegValue);
 
     #ifdef DEBUG_LOG
@@ -342,7 +342,7 @@ void CPU::xor_a_with_value( uint8_t value )
 void CPU::OR_r()
 {
     uint8_t srcRegCode = current_opcode & 0b111;
-    uint8_t srcRegValue = reg_from_regcode(srcRegCode);
+    uint8_t srcRegValue = read_from_register(srcRegCode);
     or_a_with_value(srcRegValue);
 
 #ifdef DEBUG_LOG

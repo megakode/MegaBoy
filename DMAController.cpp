@@ -18,7 +18,7 @@ void DMAController::Step( uint16_t cycles ){
 
     while(current_bytes_transferred<160 && cycles > 0)
     {
-        mem.Write( DestinationBaseAddress+current_bytes_transferred, mem.Read(current_source_address) );
+        mem.memory[DestinationBaseAddress+current_bytes_transferred] = mem.Read(current_source_address);
         current_source_address++;
         current_bytes_transferred++;
         cycles--;

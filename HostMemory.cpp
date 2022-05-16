@@ -44,7 +44,14 @@ uint8_t HostMemory::Read( uint16_t address ) const
 
 void HostMemory::Write( const uint16_t address, const uint8_t value )
 {
-    memory[address] = value;
+    if(address <= 0x7fff) {
+        cartridge.write(value,address);
+    } else {
+        memory[address] = value;
+    }
+
+
+    // todo:
 
     if(address >= 0xff00 )
     {

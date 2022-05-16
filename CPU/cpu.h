@@ -134,17 +134,51 @@ class CPU {
     // Helper functions
     // *********************************************************************************
 
-    /// Returns a reference to a register based on a 3bit register code, which is encoded in all opcodes which deals with registers.
-    /// \param regCode Register code
-    /// \return Reference to register
-    inline uint8_t& reg_from_regcode( uint8_t regCode , bool force_ix_ptr = false, bool force_iy_ptr = false )
+    /// Write to a register based on a register code.
+    inline void write_to_register( uint8_t regCode , uint8_t value )
     {
         regCode &= 0b00000111; // remove excess bits just in case
 
         switch (regCode) {
             case RegisterCode::HLPtr:
-                // TODO: writes to the returned reference slips by the mem.Write method. Might not be a problem as most are also polled in gameboy.step().
-                return mem[regs.HL];
+                mem.Write(regs.HL,value);
+                break;
+            case RegisterCode::A:
+                regs.A = value;
+                break;
+            case RegisterCode::B:
+                regs.B = value;
+                break;
+            case RegisterCode::C:
+                regs.C = value;
+                break;
+            case RegisterCode::D:
+                regs.D = value;
+                break;
+            case RegisterCode::E:
+                regs.E = value;
+                break;
+            case RegisterCode::L:
+                regs.L = value;
+                break;
+            case RegisterCode::H:
+                regs.H = value;
+                break;
+            default:
+                regs.A = value; // just to silence the compiler warning
+        }
+    }
+
+    /// Returns the value a register based on a 3bit register code, which is encoded in all opcodes which deals with registers.
+    /// \param regCode Register code
+    /// \return Reference to register
+    inline uint8_t read_from_register(uint8_t regCode ) const
+    {
+        regCode &= 0b00000111; // remove excess bits just in case
+
+        switch (regCode) {
+            case RegisterCode::HLPtr:
+                return mem.Read(regs.HL);
             case RegisterCode::A:
                 return regs.A;
             case RegisterCode::B:
@@ -386,4 +420,7 @@ public:
 
     void invalid_opcode();
 
+    void DumpDebugLog();
+
+    uint8_t do_bit_instruction(uint8_t op2);
 };
