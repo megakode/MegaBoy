@@ -22,10 +22,9 @@ void CPU::LD_r_r()
     uint8_t dstRegCode = (current_opcode >> 3) & 0b111;
     uint8_t srcRegCode = current_opcode & 0b111;
 
-    uint8_t& dst = reg_from_regcode(dstRegCode);
-    uint8_t& src = reg_from_regcode(srcRegCode);
+    uint8_t src_value = read_from_register(srcRegCode);
 
-    dst = src;
+    write_to_register( dstRegCode, src_value);
 
 #ifdef DEBUG_LOG
     AddDebugLog("LD %s,%s",reg_name_from_regcode(dstRegCode).c_str(),reg_name_from_regcode(srcRegCode).c_str());
@@ -36,9 +35,9 @@ void CPU::LD_r_r()
 void CPU::LD_r_n()
 {
     uint8_t dstRegCode = (current_opcode >> 3) & 0b111;
-    uint8_t& dstReg = reg_from_regcode(dstRegCode);
     uint8_t value = fetch8BitValue();
-    dstReg = value;
+
+    write_to_register(dstRegCode,value);
 
     #ifdef DEBUG_LOG
     AddDebugLog("LD %s,0x%02x",reg_name_from_regcode(dstRegCode).c_str(),value);
@@ -123,7 +122,7 @@ void CPU::LD_BC_nn()
     #ifdef DEBUG_LOG
     AddDebugLog("LD BC,0x%04x", regs.BC);
     #endif
-};
+}
 
 // ld (bc),a
 // Opcode: 02
@@ -160,7 +159,7 @@ void CPU::LD_DE_nn()
     #ifdef DEBUG_LOG
     AddDebugLog("LD DE,0x%04x", regs.DE);
     #endif
-};
+}
 
 // load (de),a
 // opcode: 0x12
@@ -361,7 +360,7 @@ void CPU::pop_qq()
             #endif
             break;
     }
-};
+}
 
 /// PUSH BC
 /// cycles: 11

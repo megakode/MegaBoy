@@ -8,6 +8,8 @@
 #include <SDL_opengles2.h>
 #else
 #include <SDL_opengl.h>
+#include <map>
+
 #endif
 
 #include "MegaBoyDebugger.h"
@@ -93,7 +95,7 @@ int main(int, char**)
     //IM_ASSERT(font != NULL);
 
     // Our state
-    bool show_demo_window = true;
+    bool show_demo_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     MegaBoyDebugger debugger;
@@ -113,6 +115,16 @@ int main(int, char**)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, MegaBoyDebugger::GB_SCREEN_WIDTH, MegaBoyDebugger::GB_SCREEN_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, (GLvoid*)debugger.screenData);
 
+    std::map<int,Joypad::Button> button_map = {
+            { SDLK_LEFT , Joypad::Button::Left },
+            { SDLK_RIGHT, Joypad::Button::Right},
+            { SDLK_UP, Joypad::Button::Up},
+            { SDLK_DOWN, Joypad::Button::Down},
+            {SDLK_z, Joypad::Button::A},
+            {SDLK_x, Joypad::Button::B},
+            {SDLK_s, Joypad::Button::Start},
+            {SDLK_a, Joypad::Button::Select},
+    };
 
     // Main loop
     bool done = false;
@@ -132,43 +144,23 @@ int main(int, char**)
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
                 done = true;
             if(event.type == SDL_KEYDOWN){
-                switch (event.key.keysym.sym) {
-                    case SDLK_LEFT: debugger.gb->joypad.SetButtonState(Joypad::Button::Left,true); break;
-                    case SDLK_RIGHT: debugger.gb->joypad.SetButtonState(Joypad::Button::Right,true); break;
-                    case SDLK_UP: debugger.gb->joypad.SetButtonState(Joypad::Button::Up,true); break;
-                    case SDLK_DOWN: debugger.gb->joypad.SetButtonState(Joypad::Button::Down,true); break;
-                    case SDLK_z: debugger.gb->joypad.SetButtonState(Joypad::Button::A,true); break;
-                    case SDLK_x: debugger.gb->joypad.SetButtonState(Joypad::Button::B,true); break;
-                    case SDLK_s: debugger.gb->joypad.SetButtonState(Joypad::Button::Start,true); break;
-                    case SDLK_a: debugger.gb->joypad.SetButtonState(Joypad::Button::Select,true); break;
+
+                auto search = button_map.find(event.key.keysym.sym);
+                if(search != button_map.end()){
+                    debugger.SetKeyState(button_map[event.key.keysym.sym],true);
+                } else {
+                    std::cout << "ERROR could not find button mapping for sdl keycode:" << event.key.keysym.sym;
                 }
+
             } else if (event.type == SDL_KEYUP){
-                switch(event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Left,false);
-                        break;
-                    case SDLK_RIGHT:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Right,false);
-                        break;
-                    case SDLK_UP:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Up,false);
-                        break;
-                    case SDLK_DOWN:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Down,false);
-                        break;
-                    case SDLK_s:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Start,false);
-                        break;
-                    case SDLK_a:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::Select,false);
-                        break;
-                    case SDLK_z:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::A,false);
-                        break;
-                    case SDLK_x:
-                        debugger.gb->joypad.SetButtonState(Joypad::Button::B,false);
-                        break;
+
+                auto search = button_map.find(event.key.keysym.sym);
+                if(search != button_map.end()){
+                    debugger.SetKeyState(button_map[event.key.keysym.sym], false);
+                } else {
+                    std::cout << "ERROR could not find button mapping for sdl keycode:" << event.key.keysym.sym;
                 }
+
             }
         }
 

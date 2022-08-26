@@ -300,9 +300,8 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
 void CPU::decode_bit_instruction()
 {
     uint8_t op2 = fetch8BitValue(); // fetch next opcode
-    uint8_t& reg = reg_from_regcode(op2 & 0b00000111);
     // Get the number of cycles that the bit instruction spent
-    additional_cycles_spent += do_bit_instruction(op2, reg);
+    additional_cycles_spent += do_bit_instruction(op2);
 }
 
 void CPU::reset()
@@ -327,7 +326,9 @@ void CPU::reset()
     regs.SP = 0xfffe;
     regs.HL = 0x000d;
 
-    regs.PC = 0x100;
+    regs.PC = 0;
+    //regs.PC = 0x100;
+    mem.Write(IOAddress::Boot_ROM_Disabled, 0);
 
 /*
     regs.SP = 0xFFFE;
@@ -361,6 +362,13 @@ void CPU::AddDebugLog(const char *text, va_list args)
 
 }
 
+void CPU::DumpDebugLog()
+{
+    for( DebugLogEntry& entry : debug_log_entries )
+    {
+        std::cout << std::hex << entry.PC << ":" << entry.text << std::endl;
+    }
+}
 
 
 uint8_t CPU::step()
@@ -372,6 +380,10 @@ uint8_t CPU::step()
         // M1: OP Code fetch
         current_pc = regs.PC;
         current_opcode = fetch8BitValue();
+        //if(current_pc < 0x100){
+        //    DumpDebugLog();
+         //   exit(1);
+       // }
 
 #ifdef DEBUG_LOG
         //std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";

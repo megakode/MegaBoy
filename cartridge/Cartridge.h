@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <array>
+#include <iostream>
 
 class Cartridge {
 
@@ -20,6 +21,8 @@ private:
     // 0xa00 - 0xbfff RAM
 
 public:
+
+    Cartridge(){ std::cout << "cartridge()"; }
 
     bool load( uint8_t *data, long size );
 

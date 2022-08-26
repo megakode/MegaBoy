@@ -21,6 +21,8 @@ private:
     bool is_running = false;
     uint16_t run_to = 0xffff;
 
+    std::unique_ptr<Gameboy> gb;
+
 public:
 
     MegaBoyDebugger();
@@ -37,9 +39,11 @@ public:
     /// RGB screen data
     uint8_t *screenData;
 
-    std::unique_ptr<Gameboy> gb;
+
 
     void Run();
 
     void LoadBIOSRom();
+
+    void SetKeyState(Joypad::Button button, bool pressed);
 };

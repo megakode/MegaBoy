@@ -103,19 +103,19 @@ void MegaBoyDebugger::LoadTestRom()
     } else
     {
         auto size = std::filesystem::file_size(path);
-        std::cout << "Reading " << path << "size=" << size;
+        std::cout << "Reading " << path << "size=" << size << std::endl;
         auto *buffer = new uint8_t[size];
         z80file.read ((char*)buffer, size );
 
         // TODO:
         //  - Create instance of Cartridge on HostMemory.
         //  - load buffer into Cartridge
-        memcpy(&gb->mem[0],buffer, size);
+        gb->cartridge.load(buffer,size);
+        //memcpy(&gb->mem[0],buffer, size);
         delete[] buffer;
         z80file.close();
     }
 
-    gb->cpu.regs.PC = 0x000;
 }
 
 void MegaBoyDebugger::UpdateUI() 
@@ -181,6 +181,12 @@ void MegaBoyDebugger::UpdateUI()
         //Step();
     }
 
+
+    if(ImGui::Button("Dump debug log") ){
+        gb->cpu.DumpDebugLog();
+    }
+
+
     static char addr_input[5] = {"100"}; ImGui::InputText("hexadecimal", addr_input, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
     ImGui::SameLine();
     if(ImGui::Button("Run to")){
@@ -196,6 +202,10 @@ void MegaBoyDebugger::UpdateUI()
         Run();
     }
 
+}
+
+void MegaBoyDebugger::SetKeyState( Joypad::Button button , bool pressed ){
+    gb->joypad.SetButtonState( button, pressed );
 }
 
 void MegaBoyDebugger::Run()

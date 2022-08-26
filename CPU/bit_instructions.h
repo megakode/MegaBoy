@@ -6,29 +6,31 @@
 
 /// Perform a bit instruction from the "bit opcode group"
 /// \param op2 The opcode which contains the information about the operation
-/// \param reg The register to operate on
 /// \returns number of CPU cycles spent
 
-uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
+uint8_t CPU::do_bit_instruction( uint8_t op2 )
 {
+    uint8_t reg_code = op2 & 0b00000111;
+    uint8_t invalue = read_from_register(reg_code);
+    uint8_t cycles_spend = 8;
+
     // RLC r
     // opcode: 0x00 - 0x07
     // cycles: 8
     if( op2 >= 0 && op2 <= 0x07 )
     {
-        uint8_t carry = reg & 0x80;
-        reg = reg << 1;
-        reg |= (carry ? 1 : 0);
+        uint8_t carry = invalue & 0x80;
+        invalue = invalue << 1;
+        invalue |= (carry ? 1 : 0);
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero, reg == 0);
+        setFlag(FlagBitmaskZero, invalue == 0);
 
 #ifdef DEBUG_LOG
         AddDebugLog("RLC r");
 #endif
-        return 8;
 
     } else
 
@@ -39,21 +41,21 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // RRC (HL) : 15
     if( op2 >= 0x08 && op2 <= 0xf )
     {
-        bool carry = (reg & 0x01) != 0;
-        reg = reg >> 1;
+        bool carry = (invalue & 0x01) != 0;
+        invalue = invalue >> 1;
 
-        reg |= (carry ? 0x80 : 0);
+        invalue |= (carry ? 0x80 : 0);
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero, reg == 0);
+        setFlag(FlagBitmaskZero, invalue == 0);
 
 
 #ifdef DEBUG_LOG
         AddDebugLog("RRC r");
 #endif
-        return 8;
+
     } else
 
     // RL r
@@ -64,19 +66,19 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // flags: Z H N C
     if( op2 >= 0x10 && op2 <= 0x17 )
     {
-        uint8_t carry = reg & 0x80;
+        uint8_t carry = invalue & 0x80;
 
-        reg = reg << 1;
-        reg |= (regs.F & FlagBitmaskC) ? 1 : 0;
+        invalue = invalue << 1;
+        invalue |= (regs.F & FlagBitmaskC) ? 1 : 0;
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero,reg == 0);
+        setFlag(FlagBitmaskZero,invalue == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("RL r");
 #endif
-        return 8;
+
     } else
 
     // RR r
@@ -87,19 +89,19 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         // flags: Z H N C
     if( (op2 & 0b11111000) == 0b00011000)
     {
-        uint8_t carry = reg & 0x01;
+        uint8_t carry = invalue & 0x01;
 
-        reg = reg >> 1;
-        reg |= (regs.F & FlagBitmaskC) ? 0x80 : 0;
+        invalue = invalue >> 1;
+        invalue |= (regs.F & FlagBitmaskC) ? 0x80 : 0;
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero,reg == 0);
+        setFlag(FlagBitmaskZero,invalue == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("RR r");
 #endif
-        return 8;
+
     } else
 
     // SLA r
@@ -107,18 +109,18 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // cycles: r:8 (hl):15
     if( op2 >= 0x20 && op2 <= 0x27 )
     {
-        uint8_t carry = reg & 0x80;
+        uint8_t carry = invalue & 0x80;
 
-        reg = reg << 1;
+        invalue = invalue << 1;
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero, reg == 0);
+        setFlag(FlagBitmaskZero, invalue == 0);
 #ifdef DEBUG_LOG
         AddDebugLog("SLA r");
 #endif
-        return 8;
+
     } else
 
     // SRA r
@@ -126,32 +128,40 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     // cycles: r:8 (hl):15 (ix+d):23
     if( op2 >= 0x28 && op2 <= 0x2f )
     {
-        uint8_t regCode = op2 & 0b00000111;
-        uint8_t &reg = reg_from_regcode(regCode);
-        uint8_t carry = reg & 0x01;
-        int8_t signedValue = reg;
+        uint8_t carry = invalue & 0x01;
+        int8_t signedValue = invalue;
         // TODO: page 210. Make sure this is an arithmetic shift that preserves bit 7
         signedValue = signedValue >> 1;
-        reg = signedValue;
+        invalue = signedValue;
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero, reg == 0);
+        setFlag(FlagBitmaskZero, invalue == 0);
 #ifdef DEBUG_LOG
-        auto regName = reg_name_from_regcode(regCode);
+        auto regName = reg_name_from_regcode(reg_code);
         AddDebugLog("SRA %s",regName.c_str());
 #endif
-        return 8;
+
     } else
 
     // SWAP r
-    // opcode: 0x30 - 0x37
+    // opcode: 0xCB 0x30-0x37
+    // SWAP r
+    // swap low/hi-nibble
+
     if( op2 >= 0x30 && op2 <= 0x37 ){
 
-        uint8_t regCode = op2 & 0b00000111;
-        SWAP_r(regCode);
-        return 8;
+        uint8_t temp = (invalue & 0xf) << 4;
+        invalue >>= 4;
+        invalue |= temp;
+        regs.F = 0;
+        setFlag(FlagBitmaskZero,invalue == 0);
+
+#ifdef DEBUG_LOG
+        auto regName = reg_name_from_regcode(reg_code);
+        AddDebugLog("SWAP %s",regName.c_str());
+#endif
 
     } else
 
@@ -160,20 +170,19 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
         // cycles: 8
     if( op2 >= 0x38 && op2 <= 0x3f)
     {
-        uint8_t carry = reg & 0x01;
+        uint8_t carry = invalue & 0x01;
 
-        reg = reg >> 1;
+        invalue = invalue >> 1;
 
         setFlag(FlagBitmaskHalfCarry,false);
         setFlag(FlagBitmaskN,false);
         setFlag(FlagBitmaskC, carry);
-        setFlag(FlagBitmaskZero, reg == 0);
+        setFlag(FlagBitmaskZero, invalue == 0);
 #ifdef DEBUG_LOG
-        uint8_t regCode = op2 & 0b00000111;
-        auto regName = reg_name_from_regcode(regCode);
+        auto regName = reg_name_from_regcode(reg_code);
         AddDebugLog("SRL %s",regName.c_str());
 #endif
-        return 8;
+
     } else
 
 
@@ -185,14 +194,14 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     if( op2 >= 0x40 && op2 <= 0x7f )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
-        uint8_t result = reg & (1 << bitNumber);
+        uint8_t result = invalue & (1 << bitNumber);
         setFlag(FlagBitmaskZero, result == 0);
         setFlag(FlagBitmaskHalfCarry,true);
         setFlag(FlagBitmaskN,false);
 #ifdef DEBUG_LOG
         AddDebugLog("BIT b,r");
 #endif
-        return 8;
+
     } else
 
     // RES b,r
@@ -204,11 +213,11 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = ~(1 << bitNumber);
-        reg &= bitMask;
+        invalue &= bitMask;
 #ifdef DEBUG_LOG
         AddDebugLog("RES b,r");
 #endif
-        return 8;
+
     } else
 
         // SET b,r
@@ -220,14 +229,16 @@ uint8_t CPU::do_bit_instruction( uint8_t op2, uint8_t& reg )
     {
         uint8_t bitNumber = (op2 & 0b00111000) >> 3;
         uint8_t bitMask = (1 << bitNumber);
-        reg |= bitMask;
+        invalue |= bitMask;
 #ifdef DEBUG_LOG
         AddDebugLog("SET b,r");
 #endif
-        return 8;
+
     }
 
-    return 8;
+    write_to_register(reg_code,invalue);
+
+    return cycles_spend;
 
 }
 
@@ -340,20 +351,3 @@ void CPU::RLD()
 #endif
 }
 
-/// opcode: 0xCB 0x30-0x37
-/// SWAP r
-/// swap low/hi-nibble
-void CPU::SWAP_r(uint8_t regCode)
-{
-    uint8_t& reg = reg_from_regcode(regCode);
-    uint8_t temp = (reg & 0xf) << 4;
-    reg >>= 4;
-    reg |= temp;
-    regs.F = 0;
-    setFlag(FlagBitmaskZero,reg == 0);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(regCode);
-    AddDebugLog("SWAP %s",regName.c_str());
-#endif
-}
