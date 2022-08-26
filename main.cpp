@@ -7,6 +7,7 @@
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_dx9.h"
 #include "imgui/backends/imgui_impl_win32.h"
+#include "Timer.h"
 #include <d3d9.h>
 #include <tchar.h>
 
@@ -78,11 +79,11 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     MegaBoyDebugger debugger;
-
     debugger.LoadTestRom();
 
     // Main loop
     bool done = false;
+
     while (!done)
     {
         // Poll and handle messages (inputs, window resize, etc.)

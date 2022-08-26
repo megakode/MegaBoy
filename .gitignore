@@ -3,3 +3,7 @@ main
 main.dSYM
 cmake-build-debug
 .idea/
+.vs/
+
+_deps/
+/tests/game_roms/

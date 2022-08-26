@@ -2,25 +2,94 @@
 // Created by sbeam on 04/12/2021.
 //
 #include <iostream>
-#include <vector>
 #include <string>
 #include <fstream>
 #include <filesystem>
 #include "MegaBoyDebugger.h"
 #include "imgui.h"
 #include "UI/UIConfig.h"
+#include "UI/DisassemblyWindow.h"
+#include "cartridge/Cartridge.h"
 
-MegaBoyDebugger::MegaBoyDebugger() : registerWindow(cpu) {
-    cpu.reset();
+MegaBoyDebugger::MegaBoyDebugger() {
+
+    gb = std::make_unique<Gameboy>();
+    screenData = reinterpret_cast<uint8_t *>(&gb->lcd.rgbBuffer);
+    gb->cpu.reset();
+
+}
+
+MegaBoyDebugger::~MegaBoyDebugger()
+{
+    is_running = false;
+    if(gb_thread.joinable()) {
+        gb_thread.join();
+    }
+}
+
+void MegaBoyDebugger::LoadBIOSRom()
+{
+    std::filesystem::path filename = "../DMG_ROM.bin";
+    auto path = std::filesystem::absolute(filename);
+    auto size = std::filesystem::file_size(path);
+
+    if(exists(path)){
+        std::cout << "file exists! :)";
+    } else {
+        std::cout << "file DOES NOT exist!";
+    }
+    std::ifstream z80file (path, std::ios::in | std::ios::binary);
+    if (!z80file) {
+        std::cout << "could not read " << path;
+    } else
+    {
+        std::cout << "Reading " << path;
+        z80file.read ((char*)&gb->cpu.mem[0], size );
+        z80file.close();
+    }
+
+    gb->cpu.regs.PC = 0;
 }
 
 void MegaBoyDebugger::LoadTestRom()
 {
-    //std::filesystem::path filename = "zexdoc.com";
-    std::filesystem::path filename = "zexdoc_sdsc.sms";
+
+    //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
+    //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+
+    //std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
+    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    //std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Pipe Dream (USA).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Heiankyo Alien (USA).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Missile Command (USA, Europe).gb";
+
+    //std::filesystem::path filename = "../tests/game_roms/BOBBLE.GB";
+    //std::filesystem::path filename = "../tests/game_roms/Adventures of Lolo (Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/After Burst (Japan).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Alien 3 (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Bust-A-Move 2 - Arcade Edition (USA, Europe).gb";
+
+    //std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
+    //std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/03-op sp,hl.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/04-op r,imm.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/05-op rp.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/06-ld r,r.gb"; PASSED
+    //std::filesystem::path filename = "../tests/test_roms/07-jr,jp,call,ret,rst.gb"; PASSED
+    //std::filesystem::path filename = "../tests/test_roms/08-misc instrs.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/09-op r,r.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
+    //std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
+
 
     auto path = std::filesystem::absolute(filename);
-    auto size = std::filesystem::file_size(path);
 
     std::cout << "path: " << path << std::endl;
     if(exists(path)){
@@ -30,72 +99,58 @@ void MegaBoyDebugger::LoadTestRom()
     }
     std::ifstream z80file (path, std::ios::in | std::ios::binary);
     if (!z80file) {
-        std::cout << "could not read zexdoc.com";
+        std::cout << "could not read " << path;
     } else
     {
-        std::cout << "Reading zexdoc.com";
-        z80file.read ((char*)&cpu.mem[0], size );
+        auto size = std::filesystem::file_size(path);
+        std::cout << "Reading " << path << "size=" << size << std::endl;
+        auto *buffer = new uint8_t[size];
+        z80file.read ((char*)buffer, size );
+
+        // TODO:
+        //  - Create instance of Cartridge on HostMemory.
+        //  - load buffer into Cartridge
+        gb->cartridge.load(buffer,size);
+        //memcpy(&gb->mem[0],buffer, size);
+        delete[] buffer;
         z80file.close();
     }
+
 }
 
-void MegaBoyDebugger::UpdateUI() {
+void MegaBoyDebugger::UpdateUI() 
+{
+
+    if(!is_running) {
+        RegisterWindow::UpdateUI(gb->cpu);
+        DisassemblyWindow::UpdateUI(gb->cpu);
+
+    ImGui::Begin("PPU");
 
 
-    static bool is_running = false;
 
-    registerWindow.UpdateUI();
+    ImGui::Text("FF42 - SCY:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xFF42]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xFF42]);
 
-    ImGui::Begin("Disassembly");
+    ImGui::Text("FF43 - SCX:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xFF43]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xFF43]);
 
-   static int item_current_idx = 0;
+    ImGui::Text("FF44 - LY :"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xff44]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xff44]);
 
-    if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
+    ImGui::Text("FF45 - LYC:"); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x",gb->mem[0xff45]); ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)",gb->mem[0xff45]);
 
-        //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
-        {
-            ImGuiListClipper clipper;
-            clipper.Begin(cpu.debug_log_entries.size());
-            while (clipper.Step())
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++){
-                    auto& entry = cpu.debug_log_entries[i];
-                    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,"0x%04x ",entry.PC);
-
-                    for (unsigned char opcode : entry.opcodes) {
-                        if (opcode != 0) {
-                            ImGui::SameLine();
-                            ImGui::Text("%02x", opcode);
-                        } else {
-                            ImGui::SameLine();
-                            ImGui::Text("  ");
-                        }
-                    }
-                    ImGui::SameLine();
-                    ImGui::Text("%s", entry.text.c_str());
-
-                    if( i == clipper.DisplayEnd-1){
-                        if(scroll_to_bottom){
-                            ImGui::SetScrollHereY();
-                            scroll_to_bottom = false;
-                        }
-                    }
-                }
-        }
-
-    }
-    ImGui::EndListBox();
 
     ImGui::End();
 
-
-
-
-    if (ImGui::Button("Reset"))
-    {
-        is_running = false;
-        cpu.debug_log_entries.clear();
-        //Step();
     }
+
+    ImGui::Begin("Debugging controls");
 
    if (ImGui::Button("Step"))
    {
@@ -103,25 +158,79 @@ void MegaBoyDebugger::UpdateUI() {
        Step();
    }
 
-    if (ImGui::Button("Run"))
-    {
-        is_running = true;
-    }
+    ImGui::SameLine();
 
     if(is_running){
-        Step();
+       if(ImGui::Button("Stop")){
+           is_running = false;
+       }
+   } else {
+       if (ImGui::Button("Run"))
+       {
+           is_running = true;
+       }
+   }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Reset") )
+    {
+        is_running = false;
+        gb->cpu.debug_log_entries.clear();
+        gb->cpu.reset();
+        //Step();
     }
 
 
-    //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    if(ImGui::Button("Dump debug log") ){
+        gb->cpu.DumpDebugLog();
+    }
 
+
+    static char addr_input[5] = {"100"}; ImGui::InputText("hexadecimal", addr_input, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+    ImGui::SameLine();
+    if(ImGui::Button("Run to")){
+        std::string addr_string = addr_input;
+        unsigned int addr_int = std::stoul(addr_string, nullptr, 16);
+        run_to = addr_int;
+        is_running = true;
+    };
 
     ImGui::End();
+
+    if(is_running) {
+        Run();
+    }
+
+}
+
+void MegaBoyDebugger::SetKeyState( Joypad::Button button , bool pressed ){
+    gb->joypad.SetButtonState( button, pressed );
+}
+
+void MegaBoyDebugger::Run()
+{
+    int cycles = 0;
+
+    //std::this_thread::sleep_for(std::chrono::nanoseconds (1/4194304));
+    // The CPU clock rate is fixed at 2MHz, so a single clock cycle is 1/2000000s = 0.5µs. The frametime is the inverse of the refresh rate; so if the refresh rate is 60Hz, the frame time is 1/60s or ~16ms. The ratio is 16ms/0.5µs ~~ 33000.
+    // 67108 cycles pr frame
+    constexpr int CYCLES_PR_FRAME = 67108;
+    while(cycles < CYCLES_PR_FRAME)
+    {
+        cycles +=gb->Step();
+
+        if(gb->cpu.regs.PC == run_to ){
+            is_running = false;
+            break;
+        }
+    }
 
 }
 
 void MegaBoyDebugger::Step()
 {
-    cpu.step();
+    gb->Step();
+    //UpdateLCDBuffer();
     scroll_to_bottom = true;
 }

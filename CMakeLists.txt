@@ -7,43 +7,92 @@ if(MSVC)
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
 endif(MSVC)
 
-Include(FetchContent)
+find_package(SDL2 REQUIRED)
 
-FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG        v3.0.0-preview3
-)
+#Include(FetchContent)
+
+#FetchContent_Declare(
+#        Catch2
+#        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+#        GIT_TAG        v2.13.7
+#)
 add_compile_definitions(DEBUG_LOG)
-FetchContent_MakeAvailable(Catch2)
+#FetchContent_MakeAvailable(Catch2)
 
 # Direct X ####################################
+
+if(WIN32)
+set(MainFile "main.cpp" "imgui/backends/imgui_impl_win32.cpp" "imgui/backends/imgui_impl_dx9.cpp")
+set(MainLibs "d3d9.lib")
+else()
+set(MainFile "main_linux.cpp" "imgui/backends/imgui_impl_sdl.cpp" "imgui/backends/imgui_impl_opengl3.cpp")
+set(MainLibs "")
+endif()
 
 # IMGUI #####################################
 
 # Set where the ImGui files are stored
-set(IMGUI_PATH  "imgui")
+set(IMGUI_PATH  "./imgui/")
 
 # Compile as static library
 file(GLOB IMGUI_SOURCES ${IMGUI_PATH}/*.cpp)
 add_library("ImGui" STATIC ${IMGUI_SOURCES})
 target_include_directories("ImGui" PUBLIC ${IMGUI_PATH})
+if(WIN32)
 target_link_libraries("ImGui" d3d9.lib)
+endif()
 
-        # Testing ###################################
-
-enable_testing()
-add_executable(cputests cputests.cpp cpu.cpp bit_instructions.h jump_instructions.h load_instructions.h in_out_instructions.h arithmetic_instructions.h general_instructions.h ex_block_search_instruction.h jump_tests.h)
-target_link_libraries(cputests PRIVATE Catch2::Catch2WithMain)
+# Testing ###################################
+find_package(Catch2 REQUIRED)
+# enable_testing()
+add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/lcd_tests.cpp tests/timer_tests.cpp tests/dma_controller_tests.cpp)
+target_link_libraries(cputests Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
-add_executable(MegaBoy main.cpp cpu.cpp imgui/backends/imgui_impl_win32.cpp imgui/backends/imgui_impl_dx9.cpp imgui/imgui.cpp MegaBoyDebugger.cpp MegaBoyDebugger.h UI/RegisterWindow.cpp UI/RegisterWindow.h UI/UIConfig.h gameboy_instructions.h)
+
+add_executable(MegaBoy ${MainFile})
+target_sources(MegaBoy PRIVATE
+        LCD/lcd.cpp
+        CPU/cpu.cpp
+        imgui/imgui.cpp
+        MegaBoyDebugger.cpp
+        UI/RegisterWindow.cpp
+        UI/RegisterWindow.h
+        UI/UIConfig.h
+        Gameboy.cpp
+        Gameboy.h
+        HostMemory.cpp
+        HostMemory.h
+        Timer.cpp
+        Timer.h
+        LCD/lcd.cpp
+        DMAController.cpp
+        DMAController.h
+        UI/DisassemblyWindow.cpp
+        UI/DisassemblyWindow.h
+        Joypad.cpp
+        Joypad.h
+        cartridge/Cartridge.cpp
+        cartridge/Cartridge.h)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
-target_link_libraries(MegaBoy PUBLIC ImGui d3d9.lib)
+include_directories(${SDL2_INCLUDE_DIRS})
+target_link_libraries(MegaBoy PUBLIC ImGui SDL2 GLESv2 ${MainLibs})
+
+# profilling
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -g -Og ") # -fsanitize=address
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -O0")
+
+#set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
+#set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -fsanitize=bounds -fsanitize=pointer-subtract")
 
 #include "imgui/backends/imgui_impl_win32.h"
 #include "imgui/backends/imgui_impl_dx9.h"

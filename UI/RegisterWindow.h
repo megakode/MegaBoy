@@ -6,18 +6,16 @@
 #define MEGABOY_REGISTERWINDOW_H
 
 
-#include "../cpu.h"
+#include "../CPU/cpu.h"
 
 class RegisterWindow {
 
-    CPU& cpu;
+    static void DrawRegisterTable(CPU &cpu);
+    static void DrawFlagsTable(CPU &cpu);
 
 public:
 
-    explicit RegisterWindow(CPU &cpu) : cpu(cpu) {
-    }
-
-    void UpdateUI();
+    static void UpdateUI(CPU &cpu);
 
 };
 
