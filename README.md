@@ -4,22 +4,39 @@ My first try at writing an emulator.
 
 Work in progress, and will probably rewrite large chunks of it a couple of times :)
 
+**Screenshot**
+
+![screenshot](documentation/megaboy_debugger.png)
+
+**Status**
+
+CPU emulator passes the following test ROMs:
+
+```
+01-special.gb
+02-interrupts.gb
+03-op sp,hl.gb
+04-op r,imm.gb
+05-op rp.gb
+06-ld r,r.gb
+07-jr,jp,call,ret,rst.gb
+08-misc instrs.gb
+09-op r,r.gb
+10-bit ops.gb
+11-op a,(hl).gb
+halt_bug.gb
+```
+
+A few 32KB games plays but still with quite a few glitches.
+
+
+
 **TODO**
 
- - IRQ handling: trigger IRQs from Timer, LCD, Input, etc.
+ - Mappers (only 32KB games with no ROM mapper works right now)
+ - Sound
 
-**References:**
-
-Bare metal programming for rPi
-https://forums.raspberrypi.com/viewtopic.php?f=72&t=72260
-
-Immediate mode UI - good for embedding 
-https://github.com/Immediate-Mode-UI/Nuklear
-
-Embox RTOS
-https://github.com/embox/embox
-
-Gameboy docs
+**Gameboy docs**
 
 https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
