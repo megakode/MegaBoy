@@ -54,11 +54,11 @@ void MegaBoyDebugger::LoadBIOSRom()
 void MegaBoyDebugger::LoadTestRom()
 {
 
-    //std::filesystem::path filename = "../tests/game_roms/DRMARIO.GB";
+    std::filesystem::path filename = "../tests/game_roms/Dr. Mario (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
 
     //std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
-    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     //std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     //std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";

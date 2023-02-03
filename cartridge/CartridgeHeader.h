@@ -154,4 +154,4 @@ struct CartridgeHeader {
         return (32*1024) << ROM_size;
     }
 
-};
+} __attribute__((packed));

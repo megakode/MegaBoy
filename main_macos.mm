@@ -64,6 +64,7 @@ int main(int, char**)
 
      //MegaBoyDebugger::GB_SCREEN_WIDTH
      MegaBoyDebugger debugger;
+     debugger.LoadTestRom();
 
     // Setup Platform/Renderer backends
     CAMetalLayer* layer = (__bridge CAMetalLayer*)SDL_RenderGetMetalLayer(renderer);
