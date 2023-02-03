@@ -131,8 +131,8 @@ void CPU::CALL_cc_nn()
         regs.PC = location;
     }
 #ifdef DEBUG_LOG
-    std::string conditionName = name_from_condition(conditionCode);
-    AddDebugLog("CALL %s,%04x",conditionName,regs.PC);
+    //auto conditionName = name_from_condition(conditionCode).c_str();
+    AddDebugLog("CALL %s,%04x",name_from_condition(conditionCode).c_str(),regs.PC);
 #endif
 }
 

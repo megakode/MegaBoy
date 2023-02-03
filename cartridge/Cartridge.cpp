@@ -26,4 +26,5 @@ bool Cartridge::load( uint8_t *data, long size ) {
         //memcpy(rom.data(),data,size);
     }
 
+    return true;
 }
