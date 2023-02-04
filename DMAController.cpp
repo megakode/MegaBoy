@@ -10,7 +10,8 @@ DMAController::DMAController(HostMemory &mem) : mem(mem) {
 
 void DMAController::Step( uint16_t cycles ){
 
-    mem.Write( static_cast<uint16_t>(IOAddress::DMATransferStartAddress) , last_requested_source_addr);
+    // If using mem.Write we trigger didWriteToIOAddress, which create an infinite loop and triggering another DMA transfer request
+    mem.memory[(uint16_t)IOAddress::DMATransferStartAddress] = last_requested_source_addr;
 
     if(!transfer_in_progress){
         return;
