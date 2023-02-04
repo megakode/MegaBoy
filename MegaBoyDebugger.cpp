@@ -54,8 +54,8 @@ void MegaBoyDebugger::LoadBIOSRom()
 void MegaBoyDebugger::LoadTestRom()
 {
 
-    std::filesystem::path filename = "../tests/game_roms/Dr. Mario (World).gb";
-    //std::filesystem::path filename = "../tests/game_roms/TETRIS.GB";
+    //std::filesystem::path filename = "../tests/game_roms/Dr. Mario (World).gb";
+    //std::filesystem::path filename = "../tests/game_roms/Pac-Man (USA).gb";
 
     //std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
     //std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
@@ -86,7 +86,7 @@ void MegaBoyDebugger::LoadTestRom()
     //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
     //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
+    std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
 
 
     auto path = std::filesystem::absolute(filename);

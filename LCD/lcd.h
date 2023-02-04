@@ -43,10 +43,10 @@ private:
                 uint8_t G = 0;
                 uint8_t B = 0;
                 uint8_t A = 0xff;
-            } __attribute__((packed));
+            };
             uint32_t RGBA;
         };
-    } __attribute__((packed));
+    };
 
     struct OAM_Sprite {
         uint8_t y_position;

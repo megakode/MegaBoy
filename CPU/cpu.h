@@ -39,7 +39,7 @@ struct DebugLogEntry {
 class CPU {
 
     public:
-    
+
     explicit CPU(HostMemory& mem);
 
     CPU() = delete;
@@ -89,7 +89,7 @@ class CPU {
             struct { uint8_t SPL; uint8_t SPH; };
         };
         uint16_t PC;    // Program Counter
-    } __attribute__((packed));
+    };
 
     GeneralRegisters regs;
 

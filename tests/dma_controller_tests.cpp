@@ -2,7 +2,7 @@
 // Created by sbeam on 1/18/22.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <fstream>
 
 #include "../HostMemory.h"

@@ -10,7 +10,6 @@
 #include "arithmetic_instructions.h"
 #include "general_instructions.h"
 
-
 CPU::CPU(HostMemory& memref) : mem(memref) {
     
     // Based on tables from:

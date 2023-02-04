@@ -2,7 +2,7 @@
 // Created by sbeam on 1/14/22.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <fstream>
 
 #include "../CPU/cpu.h"
@@ -10,7 +10,8 @@
 
 TEST_CASE("timer")
 {
-    HostMemory mem;
+    Cartridge cart;
+    HostMemory mem{cart};
     CPU cpu(mem);
     Timer timer(mem);
     bool didOverflow = false;

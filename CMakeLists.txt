@@ -56,7 +56,20 @@ endif()
 # Testing ###################################
 
 # enable_testing()
-add_executable(cputests tests/cputests.cpp CPU/cpu.cpp HostMemory.cpp CPU/bit_instructions.h CPU/jump_instructions.h CPU/load_instructions.h CPU/arithmetic_instructions.h CPU/general_instructions.h tests/lcd_tests.cpp tests/timer_tests.cpp tests/dma_controller_tests.cpp)
+add_executable(cputests 
+    tests/cputests.cpp 
+    CPU/cpu.cpp 
+    HostMemory.cpp
+    cartridge/Cartridge.cpp
+    CPU/bit_instructions.h 
+    CPU/jump_instructions.h 
+    CPU/load_instructions.h 
+    CPU/arithmetic_instructions.h 
+    CPU/general_instructions.h 
+    tests/lcd_tests.cpp 
+    tests/timer_tests.cpp 
+    tests/dma_controller_tests.cpp)
+
 target_link_libraries(cputests Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
@@ -72,23 +85,14 @@ target_sources(MegaBoy PRIVATE
         imgui/imgui.cpp
         MegaBoyDebugger.cpp
         UI/RegisterWindow.cpp
-        UI/RegisterWindow.h
-        UI/UIConfig.h
         Gameboy.cpp
-        Gameboy.h
         HostMemory.cpp
-        HostMemory.h
         Timer.cpp
-        Timer.h
         LCD/lcd.cpp
         DMAController.cpp
-        DMAController.h
         UI/DisassemblyWindow.cpp
-        UI/DisassemblyWindow.h
         Joypad.cpp
-        Joypad.h
-        cartridge/Cartridge.cpp
-        cartridge/Cartridge.h)
+        cartridge/Cartridge.cpp)
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui ${SDL2_LIBRARIES} ${MainLibs})

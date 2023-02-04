@@ -2,7 +2,7 @@
 // Created by sbeam on 12/25/21.
 //
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <fstream>
 
 #include "../CPU/cpu.h"
@@ -10,7 +10,8 @@
 
 TEST_CASE("LCD_Control_Register flags")
 {
-    HostMemory mem;
+    Cartridge cart;
+    HostMemory mem{cart};
     LCD lcd(mem);
     mem.Write(LCD::LCD_Control_Register, 0);
 
