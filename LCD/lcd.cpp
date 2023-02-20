@@ -7,6 +7,13 @@ void LCD::DrawScanline()
 {
     // All the drawing functions below only renders the current scanline
 
+    // TODO: Add a 'uint16_t delta_cycles' parameter to this method, and call it every time Step is called, 
+    // and not only once when switching mode.
+    // After this change, we are able to implement all the correct FIFO timing stuff,
+    // where we render 8 pixels at a time, and looks at the BGP and LCDC registers each time.
+    // Especially the LCDC register is important, as that enables turning sprites/window/bg on/off mid-scanline.
+    // according to https://gbdev.io/pandocs/LCDC this can be read at any point in time.
+
     if(IsFlagSet(LCDCBitmask::BG_And_Window_Enable) )
     {
         DrawBackground();
