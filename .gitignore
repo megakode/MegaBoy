@@ -8,3 +8,4 @@ cmake-build-debug
 _deps/
 /tests/game_roms/
 tests/game-boy-test-roms-v5.1/
+tests/test_roms/mts/
