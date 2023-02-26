@@ -81,6 +81,8 @@ catch_discover_tests(cputests)
 add_executable(MegaBoy ${MainFile})
 target_sources(MegaBoy PRIVATE
         LCD/lcd.cpp
+        LCD/Fetcher.cpp
+        LCD/FIFO.cpp
         CPU/cpu.cpp
         imgui/imgui.cpp
         MegaBoyDebugger.cpp

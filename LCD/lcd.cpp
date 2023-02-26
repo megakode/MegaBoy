@@ -300,8 +300,13 @@ void LCD::Step( uint16_t delta_cycles )
 
     accumulated_cycles += delta_cycles;
 
-    // If enough cycles has passed: switch to next mode
+    // FIFO draw
+    // if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Reading_OAM){
+    //     DrawScanline(delta_cycles);
+    // }
 
+
+    // If enough cycles has passed: switch to next mode
 
     if( accumulated_cycles >= LCD_Mode_Cycles[LCD_Mode_Order[current_mode_index]] )
     {
