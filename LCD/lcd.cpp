@@ -59,7 +59,7 @@ void LCD::DrawSprites()
     // Perform OAM scan to determine visible sprites
 
     OAM_Sprite *spr = reinterpret_cast<OAM_Sprite *>(&mem.memory[OAM_Address]); // NOLINT
-    std::array<OAM_Sprite*,10> visible_sprites = { NULL };
+    std::array<OAM_Sprite*,10> visible_sprites = {};
     uint8_t number_of_sprites_visible_on_scanline = 0;
 
     bool sprite_is_visible_on_current_scanline;
@@ -300,11 +300,13 @@ void LCD::Step( uint16_t delta_cycles )
 
     accumulated_cycles += delta_cycles;
 
-    // FIFO draw
-    // if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Reading_OAM){
-    //     DrawScanline(delta_cycles);
-    // }
 
+    // FIFO draw
+    if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Reading_OAM){
+        for(int i = 0 ; i < delta_cycles; i++){
+            fetcher.Tick(fifo);
+        }
+    }
 
     // If enough cycles has passed: switch to next mode
 
@@ -327,9 +329,9 @@ void LCD::Step( uint16_t delta_cycles )
             }
         }
 
-        if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Reading_OAM){
-            DrawScanline();
-        }
+        // if(LCD_Mode_Order[current_mode_index] == LCD_Mode_Reading_OAM){
+        //     DrawScanline();
+        // }
 
         if(LCD_Mode_Order[current_mode_index] == LCD_Mode_HBlank){
             if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_HBlank){
@@ -396,42 +398,43 @@ void LCD::RenderRGBBuffer( uint8_t line_number )
 /// Get the address of a tiles data based on tile id and the current LCD_Control_Register control bits
 /// \param tile_id for which to get data
 /// \return Address in GB memory
-uint16_t LCD::GetTileDataAddr(uint8_t tile_id)
-{
-    if(IsFlagSet(LCDCBitmask::BG_And_Window_Tile_Data_Area))
-    {
-        return Tile_Data_Block_0 + tile_id*16;
-    }
-    else
-    {
-        // If LCD_Control_Register.4 == 1 then tile ids are interpreted as signed with 0x9000 as base address.
-        // See table here: https://gbdev.io/pandocs/Tile_Data.html
-        return Tile_Data_Block_2 + static_cast<int8_t>(tile_id)*16;
-    }
-}
+
+// uint16_t LCD::GetTileDataAddr(uint8_t tile_id)
+// {
+//     if(IsFlagSet(LCDCBitmask::BG_And_Window_Tile_Data_Area))
+//     {
+//         return Tile_Data_Block_0 + tile_id*16;
+//     }
+//     else
+//     {
+//         // If LCD_Control_Register.4 == 1 then tile ids are interpreted as signed with 0x9000 as base address.
+//         // See table here: https://gbdev.io/pandocs/Tile_Data.html
+//         return Tile_Data_Block_2 + static_cast<int8_t>(tile_id)*16;
+//     }
+// }
 
     /// Render a tile from GB memory to an internal renderBuffer, and translate the GB 2BPP format to an index color.
     /// \param tile_data_addr Address in GB memory where tile data for this tile is located
     /// \param dst_x Destination X on screen (0-255)
     /// \param dst_y Destination Y on screen (0-255)
-void LCD::DrawTile( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y ) {
+// void LCD::DrawTile( uint16_t tile_data_addr, uint8_t dst_x, uint8_t dst_y ) {
 
-    uint8_t *dst_ptr = &renderBuffer[(dst_y) * BUFFER_WIDTH + (dst_x)];
+//     uint8_t *dst_ptr = &renderBuffer[(dst_y) * BUFFER_WIDTH + (dst_x)];
 
-    for (int y = 0; y < TILE_HEIGHT; y++) {
-        uint8_t lobits = mem.memory[tile_data_addr++]; //mem.Read(tile_data_addr++);
-        uint8_t hibits = mem.memory[tile_data_addr++];
-        for (int x = 0; x < TILE_WIDTH; x++) {
-            // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
-            // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
-            uint8_t bit_number = 7-x;
-            uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
-            *dst_ptr = color;
-            dst_ptr++;
-            //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
-        }
+//     for (int y = 0; y < TILE_HEIGHT; y++) {
+//         uint8_t lobits = mem.memory[tile_data_addr++]; //mem.Read(tile_data_addr++);
+//         uint8_t hibits = mem.memory[tile_data_addr++];
+//         for (int x = 0; x < TILE_WIDTH; x++) {
+//             // TODO: Unroll this X loop. figure out way to do the planar to indexed thing faster.
+//             // TODO: maybe just cache these in indexed mode instead? Why transform them every time we draw them?
+//             uint8_t bit_number = 7-x;
+//             uint8_t color = ( (lobits >> bit_number) & 1 ) |  ( ((hibits >> bit_number) & 1)  << 1 );
+//             *dst_ptr = color;
+//             dst_ptr++;
+//             //renderBuffer[(dst_y+y) * BUFFER_WIDTH + (dst_x+x)] = color;
+//         }
 
-        dst_ptr += BUFFER_WIDTH-TILE_WIDTH;
+//         dst_ptr += BUFFER_WIDTH-TILE_WIDTH;
 
-    }
-}
+//     }
+// }

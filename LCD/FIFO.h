@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <optional>
 #include <queue>
 
 // The palette that the FIFO pixel uses

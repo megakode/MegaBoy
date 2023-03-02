@@ -1,4 +1,5 @@
 #include <optional>
+#include <cassert>
 #include "FIFO.h"
 
 FIFO::FIFO()
