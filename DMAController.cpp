@@ -33,6 +33,10 @@ void DMAController::Step( uint16_t cycles ){
 
 void DMAController::RequestTransfer(uint8_t addr_hibyte){
 
+    // Set the last request address regardless of it being legal or a transfer already in progress.
+    // This is tested in mooneye-test-suite/acceptance/oam_dma/reg_read.s
+    last_requested_source_addr = addr_hibyte;
+
     // 0xE0-0xff if not allowed
     if( addr_hibyte >= 0xE0 || transfer_in_progress ){
         return;
@@ -40,7 +44,6 @@ void DMAController::RequestTransfer(uint8_t addr_hibyte){
 
     transfer_in_progress = true;
     current_bytes_transferred = 0;
-    last_requested_source_addr = addr_hibyte;
     current_source_address = addr_hibyte << 8;
 }
 
