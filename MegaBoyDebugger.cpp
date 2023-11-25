@@ -111,7 +111,7 @@ void MegaBoyDebugger::LoadTestRom()
 
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/basic.gb";
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/reg_read.gb";
-    std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb";
+    //std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb";
 
     auto path = std::filesystem::absolute(filename);
 
