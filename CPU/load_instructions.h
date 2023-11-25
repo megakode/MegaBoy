@@ -26,6 +26,17 @@ void CPU::LD_r_r()
 
     write_to_register( dstRegCode, src_value);
 
+    if(dstRegCode == 0 && srcRegCode == 0)
+    {
+        // LD B,B - mooneye test has completed
+        if(regs.B == 3)
+        {
+            std::cout << "Test OK!" << std::flush;
+        } else {
+            std::cout << "Test FAILED" << std::flush;
+        }
+    }
+
 #ifdef DEBUG_LOG
     AddDebugLog("LD %s,%s",reg_name_from_regcode(dstRegCode).c_str(),reg_name_from_regcode(srcRegCode).c_str());
 #endif
