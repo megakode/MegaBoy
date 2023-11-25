@@ -337,11 +337,20 @@ void LCD::Step( uint16_t delta_cycles )
             is_hblank_irq_already_triggered_on_this_line = false;
         }
 
-        if(LCD_Mode_Order[current_mode_index] == LCD_Mode_VBlank){
-            if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_VBlank){
+    }
+
+    // bool to make sure vblank interrupt is only triggered once in LCD_Mode_VBlank (mode 1)
+    static bool is_vblank_irq_already_triggered = false; 
+
+    if(LCD_Mode_Order[current_mode_index] == LCD_Mode_VBlank){
+        if(mem[LCD_Stat_Register] & LCD_Stat_IRQ_From_VBlank){
+            if(!is_vblank_irq_already_triggered){
                 mem.SetInterruptFlag(Interrupt_Flag_LCD_Stat,true);
+                is_vblank_irq_already_triggered = true;
             }
         }
+    } else {
+        is_vblank_irq_already_triggered = false;
     }
 
     mem[LCD_Stat_Register] &= 0b11111100;                         // Clear mode bits
