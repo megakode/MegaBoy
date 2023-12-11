@@ -6,6 +6,7 @@
 
 #include <string>
 #include <map>
+#include <cstdint>
 
 /// MCB3 with RAM size 64KB refers to MBC30, used only in Ppcket Monster Crystal Version (jap)
 enum CartridgeType : uint8_t {

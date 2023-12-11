@@ -29,7 +29,7 @@ add_compile_definitions(DEBUG_LOG)
 # Direct X ####################################
 
 if(WIN32)
-set(MainFile "main.cpp" "imgui/backends/imgui_impl_win32.cpp" "imgui/backends/imgui_impl_dx9.cpp")
+set(MainFile "main_windows.cpp" "imgui/backends/imgui_impl_win32.cpp" "imgui/backends/imgui_impl_dx9.cpp")
 set(MainLibs "d3d9.lib")
 elseif(APPLE)
 set(MainFile "main_macos.mm" "imgui/backends/imgui_impl_sdl.cpp" "imgui/backends/imgui_impl_metal.mm")

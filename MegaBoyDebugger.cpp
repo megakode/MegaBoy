@@ -149,42 +149,68 @@ void MegaBoyDebugger::LoadTestRom()
 void MegaBoyDebugger::UpdateUI()
 {
 
-    if (!is_running)
+    //if (!is_running)
     {
-        RegisterWindow::UpdateUI(gb->cpu);
         DisassemblyWindow::UpdateUI(gb->cpu);
 
-        ImGui::Begin("PPU");
+        if(ImGui::Begin("Debugger"))
+        {
 
-        ImGui::Text("FF42 - SCY:");
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF42]);
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF42]);
+            // ImGui::Begin("Debugging controls");
 
-        ImGui::Text("FF43 - SCX:");
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF43]);
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF43]);
+            DrawDebuggingControls();
+    
+            // ImGui::End();
 
-        ImGui::Text("FF44 - LY :");
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xff44]);
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xff44]);
+            if (ImGui::CollapsingHeader("CPU",ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                RegisterWindow::UpdateUI(gb->cpu);
+            }
 
-        ImGui::Text("FF45 - LYC:");
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xff45]);
-        ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xff45]);
+            if (ImGui::CollapsingHeader("PPU"))
+            {
+                DrawPPURegisters();
+            }
 
-        ImGui::End();
+        }
+            ImGui::End();
     }
 
-    ImGui::Begin("Debugging controls");
+    if (is_running)
+    {
+        Run();
+    }
+}
 
+void MegaBoyDebugger::DrawPPURegisters()
+{
+    ImGui::Text("FF42 - SCY:");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF42]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF42]);
+
+    ImGui::Text("FF43 - SCX:");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF43]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF43]);
+
+    ImGui::Text("FF44 - LY :");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xff44]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xff44]);
+
+    ImGui::Text("FF45 - LYC:");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xff45]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xff45]);
+}
+
+void MegaBoyDebugger::DrawDebuggingControls()
+{
     if (ImGui::Button("Step"))
     {
         is_running = false;
@@ -234,12 +260,6 @@ void MegaBoyDebugger::UpdateUI()
         is_running = true;
     };
 
-    ImGui::End();
-
-    if (is_running)
-    {
-        Run();
-    }
 }
 
 void MegaBoyDebugger::SetKeyState(Joypad::Button button, bool pressed)

@@ -9,7 +9,7 @@
 void RegisterWindow::UpdateUI(CPU &cpu) {
 
     // Create window
-    ImGui::Begin("Registers");
+    //ImGui::Begin("Registers");
 
     DrawRegisterTable(cpu);
 
@@ -31,7 +31,7 @@ void RegisterWindow::UpdateUI(CPU &cpu) {
 
     DrawFlagsTable(cpu);
 
-    ImGui::End();
+    //ImGui::End();
 
 }
 

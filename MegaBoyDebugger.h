@@ -30,6 +30,10 @@ public:
 
     void UpdateUI();
 
+    void DrawDebuggingControls();
+
+    void DrawPPURegisters();
+
     void LoadTestRom();
 
     void Step();
