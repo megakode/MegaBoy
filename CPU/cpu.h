@@ -52,7 +52,7 @@ class CPU {
     };
 
     std::vector<Instruction> instructions;
-    std::vector<std::function<void()>> extended_instructions;
+    //std::vector<std::function<void()>> extended_instructions;
 
     std::vector<DebugLogEntry> debug_log_entries;
 

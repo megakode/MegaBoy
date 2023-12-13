@@ -1,6 +1,26 @@
 {
     "files.associations": {
         "filesystem": "cpp",
-        "memory_resource": "cpp"
+        "memory_resource": "cpp",
+        "any": "cpp",
+        "*.tcc": "cpp",
+        "bitset": "cpp",
+        "charconv": "cpp",
+        "codecvt": "cpp",
+        "vector": "cpp",
+        "exception": "cpp",
+        "string_view": "cpp",
+        "functional": "cpp",
+        "format": "cpp",
+        "fstream": "cpp",
+        "future": "cpp",
+        "iosfwd": "cpp",
+        "istream": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "system_error": "cpp",
+        "regex": "cpp",
+        "*.inc": "cpp",
+        "*.rh": "cpp"
     }
 }

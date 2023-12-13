@@ -66,9 +66,13 @@ add_executable(cputests
     CPU/load_instructions.h 
     CPU/arithmetic_instructions.h 
     CPU/general_instructions.h 
+    CPU/disassembler.cpp
     tests/lcd_tests.cpp 
     tests/timer_tests.cpp 
-    tests/dma_controller_tests.cpp)
+    tests/dma_controller_tests.cpp
+    tests/disassembler_tests.cpp
+    
+    )
 
 target_link_libraries(cputests Catch2::Catch2WithMain)
 target_compile_features(cputests PRIVATE cxx_std_17)

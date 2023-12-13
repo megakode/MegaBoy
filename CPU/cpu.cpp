@@ -14,6 +14,7 @@ CPU::CPU(HostMemory& memref) : mem(memref) {
     
     // Based on tables from:
     // https://clrhome.org/table/
+    // https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
     instructions = {
         { 4, &CPU::NOP},        // 0x00 NOP
