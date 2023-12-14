@@ -67,6 +67,7 @@ add_executable(cputests
     CPU/arithmetic_instructions.h 
     CPU/general_instructions.h 
     CPU/disassembler.cpp
+    CPU/disassembler_arithmetic.cpp
     tests/lcd_tests.cpp 
     tests/timer_tests.cpp 
     tests/dma_controller_tests.cpp
@@ -75,7 +76,7 @@ add_executable(cputests
     )
 
 target_link_libraries(cputests Catch2::Catch2WithMain)
-target_compile_features(cputests PRIVATE cxx_std_17)
+target_compile_features(cputests PRIVATE cxx_std_20)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
@@ -100,6 +101,12 @@ target_sources(MegaBoy PRIVATE
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui ${SDL2_LIBRARIES} ${MainLibs})
+
+# std::format is still experimental in Clang 15, so set the compiler and linker flags to enable it
+if(APPLE)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fexperimental-library")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --lc++experimental")
+endif()
 
 # profilling
 # does not work on MacOS

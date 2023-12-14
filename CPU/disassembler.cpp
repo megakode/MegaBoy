@@ -1,13 +1,13 @@
 #include "disassembler.h"
-#include "arithmetic_instructions_disassembler.h"
 
-Disassembler::Disassembler(){
-     // Based on tables from:
+Disassembler::Disassembler()
+{
+    // Based on tables from:
     // https://clrhome.org/table/
     // https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
 
     instructions = {
-        // { 4, &Disassembler::NOP},        // 0x00 NOP
+        // {&Disassembler::NOP}, // 0x00 NOP
         // {12, &Disassembler::LD_BC_nn},   // 0x01 LD BC,NN
         // { 8, &Disassembler::LD_pBC_A},   // 0x02 "LD (BC),A"
         // { 8, &Disassembler::INC_BC},     // 0x03 "INC BC"
@@ -143,77 +143,77 @@ Disassembler::Disassembler(){
         // {8, &Disassembler::LD_r_r},      // 0x7e "LD R,R"
         // {4, &Disassembler::LD_r_r},      // 0x7f "LD R,R"
 
-        { &Disassembler::ADD_A_r},          // 0x80 "ADD A,B"
-        { &Disassembler::ADD_A_r},          // 0x81 "ADD A,C"
-        { &Disassembler::ADD_A_r},          // 0x82 "ADD A,D"
-        { &Disassembler::ADD_A_r},          // 0x83 "ADD A,E"
-        { &Disassembler::ADD_A_r},          // 0x84 "ADD A,H"
-        { &Disassembler::ADD_A_r},          // 0x85 "ADD A,L"
-        { &Disassembler::ADD_A_r},          // 0x86 "ADD A,(HL)"
-        { &Disassembler::ADD_A_r},          // 0x87 "ADD A,A"
+        {&Disassembler::ADD_A_r}, // 0x80 "ADD A,B"
+        {&Disassembler::ADD_A_r}, // 0x81 "ADD A,C"
+        {&Disassembler::ADD_A_r}, // 0x82 "ADD A,D"
+        {&Disassembler::ADD_A_r}, // 0x83 "ADD A,E"
+        {&Disassembler::ADD_A_r}, // 0x84 "ADD A,H"
+        {&Disassembler::ADD_A_r}, // 0x85 "ADD A,L"
+        {&Disassembler::ADD_A_r}, // 0x86 "ADD A,(HL)"
+        {&Disassembler::ADD_A_r}, // 0x87 "ADD A,A"
 
-        // {4, &Disassembler::ADC_A_r},          // 0x88 "ADC A,B"
-        // {4, &Disassembler::ADC_A_r},          // 0x89 "ADC A,C"
-        // {4, &Disassembler::ADC_A_r},          // 0x8a "ADC A,D"
-        // {4, &Disassembler::ADC_A_r},          // 0x8b "ADC A,E"
-        // {4, &Disassembler::ADC_A_r},          // 0x8c "ADC A,H"
-        // {4, &Disassembler::ADC_A_r},          // 0x8d "ADC A,L"
-        // {8, &Disassembler::ADC_A_r},          // 0x8e "ADC A,(HL)"
-        // {4, &Disassembler::ADC_A_r},          // 0x8f "ADC A,A"
+        {&Disassembler::ADC_A_r}, // 0x88 "ADC A,B"
+        {&Disassembler::ADC_A_r}, // 0x89 "ADC A,C"
+        {&Disassembler::ADC_A_r}, // 0x8a "ADC A,D"
+        {&Disassembler::ADC_A_r}, // 0x8b "ADC A,E"
+        {&Disassembler::ADC_A_r}, // 0x8c "ADC A,H"
+        {&Disassembler::ADC_A_r}, // 0x8d "ADC A,L"
+        {&Disassembler::ADC_A_r}, // 0x8e "ADC A,(HL)"
+        {&Disassembler::ADC_A_r}, // 0x8f "ADC A,A"
 
-        // {4, &Disassembler::SUB_r},              // 0x90 "SUB B"
-        // {4, &Disassembler::SUB_r},              // 0x91 "SUB C"
-        // {4, &Disassembler::SUB_r},              // 0x92 "SUB D"
-        // {4, &Disassembler::SUB_r},              // 0x93 "SUB E"
-        // {4, &Disassembler::SUB_r},              // 0x94 "SUB H"
-        // {4, &Disassembler::SUB_r},              // 0x95 "SUB L"
-        // {8, &Disassembler::SUB_r},              // 0x96 "SUB (HL)"
-        // {4, &Disassembler::SUB_r},              // 0x97 "SUB A"
+        {&Disassembler::SUB_r}, // 0x90 "SUB B"
+        {&Disassembler::SUB_r}, // 0x91 "SUB C"
+        {&Disassembler::SUB_r}, // 0x92 "SUB D"
+        {&Disassembler::SUB_r}, // 0x93 "SUB E"
+        {&Disassembler::SUB_r}, // 0x94 "SUB H"
+        {&Disassembler::SUB_r}, // 0x95 "SUB L"
+        {&Disassembler::SUB_r}, // 0x96 "SUB (HL)"
+        {&Disassembler::SUB_r}, // 0x97 "SUB A"
 
-        // {4, &Disassembler::SBC_r},              // 0x98 "SBC B"
-        // {4, &Disassembler::SBC_r},              // 0x99 "SBC C"
-        // {4, &Disassembler::SBC_r},              // 0x9a "SBC D"
-        // {4, &Disassembler::SBC_r},              // 0x9b "SBC E"
-        // {4, &Disassembler::SBC_r},              // 0x9c "SBC H"
-        // {4, &Disassembler::SBC_r},              // 0x9d "SBC L"
-        // {8, &Disassembler::SBC_r},              // 0x9e "SBC (HL)"
-        // {4, &Disassembler::SBC_r},              // 0x9f "SBC A"
+        {&Disassembler::SBC_r}, // 0x98 "SBC B"
+        {&Disassembler::SBC_r}, // 0x99 "SBC C"
+        {&Disassembler::SBC_r}, // 0x9a "SBC D"
+        {&Disassembler::SBC_r}, // 0x9b "SBC E"
+        {&Disassembler::SBC_r}, // 0x9c "SBC H"
+        {&Disassembler::SBC_r}, // 0x9d "SBC L"
+        {&Disassembler::SBC_r}, // 0x9e "SBC (HL)"
+        {&Disassembler::SBC_r}, // 0x9f "SBC A"
 
-        // {4, &Disassembler::AND_r},          // 0xa0 "AND B"
-        // {4, &Disassembler::AND_r},          // 0xa1 "AND C"
-        // {4, &Disassembler::AND_r},          // 0xa2 "AND D"
-        // {4, &Disassembler::AND_r},          // 0xa3 "AND E"
-        // {4, &Disassembler::AND_r},          // 0xa4 "AND H"
-        // {4, &Disassembler::AND_r},          // 0xa5 "AND L"
-        // {8, &Disassembler::AND_r},          // 0xa6 "AND (HL)"
-        // {4, &Disassembler::AND_r},          // 0xa7 "AND A"
+        {&Disassembler::AND_r}, // 0xa0 "AND B"
+        {&Disassembler::AND_r}, // 0xa1 "AND C"
+        {&Disassembler::AND_r}, // 0xa2 "AND D"
+        {&Disassembler::AND_r}, // 0xa3 "AND E"
+        {&Disassembler::AND_r}, // 0xa4 "AND H"
+        {&Disassembler::AND_r}, // 0xa5 "AND L"
+        {&Disassembler::AND_r}, // 0xa6 "AND (HL)"
+        {&Disassembler::AND_r}, // 0xa7 "AND A"
 
-        // {4, &Disassembler::XOR_r},          // 0xa8 "XOR B"
-        // {4, &Disassembler::XOR_r},          // 0xa9 "XOR C"
-        // {4, &Disassembler::XOR_r},          // 0xaa "XOR D"
-        // {4, &Disassembler::XOR_r},          // 0xab "XOR E"
-        // {4, &Disassembler::XOR_r},          // 0xac "XOR H"
-        // {4, &Disassembler::XOR_r},          // 0xad "XOR L"
-        // {8, &Disassembler::XOR_r},          // 0xae "XOR (HL)"
-        // {4, &Disassembler::XOR_r},          // 0xaf "XOR A"
+        {&Disassembler::XOR_r}, // 0xa8 "XOR B"
+        {&Disassembler::XOR_r}, // 0xa9 "XOR C"
+        {&Disassembler::XOR_r}, // 0xaa "XOR D"
+        {&Disassembler::XOR_r}, // 0xab "XOR E"
+        {&Disassembler::XOR_r}, // 0xac "XOR H"
+        {&Disassembler::XOR_r}, // 0xad "XOR L"
+        {&Disassembler::XOR_r}, // 0xae "XOR (HL)"
+        {&Disassembler::XOR_r}, // 0xaf "XOR A"
 
-        // {4, &Disassembler::OR_r},           // 0xb0 "OR B"
-        // {4, &Disassembler::OR_r},           // 0xb1 "OR C"
-        // {4, &Disassembler::OR_r},           // 0xb2 "OR D"
-        // {4, &Disassembler::OR_r},           // 0xb3 "OR E"
-        // {4, &Disassembler::OR_r},           // 0xb4 "OR H"
-        // {4, &Disassembler::OR_r},           // 0xb5 "OR L"
-        // {8, &Disassembler::OR_r},           // 0xb6 "OR (HL)"
-        // {4, &Disassembler::OR_r},           // 0xb7 "OR A"
+        {&Disassembler::OR_r}, // 0xb0 "OR B"
+        {&Disassembler::OR_r}, // 0xb1 "OR C"
+        {&Disassembler::OR_r}, // 0xb2 "OR D"
+        {&Disassembler::OR_r}, // 0xb3 "OR E"
+        {&Disassembler::OR_r}, // 0xb4 "OR H"
+        {&Disassembler::OR_r}, // 0xb5 "OR L"
+        {&Disassembler::OR_r}, // 0xb6 "OR (HL)"
+        {&Disassembler::OR_r}, // 0xb7 "OR A"
 
-        // {4, &Disassembler::CP_r},           // 0xb8 "CP B"
-        // {4, &Disassembler::CP_r},           // 0xb9 "CP C"
-        // {4, &Disassembler::CP_r},           // 0xba "CP D"
-        // {4, &Disassembler::CP_r},           // 0xbb "CP E"
-        // {4, &Disassembler::CP_r},           // 0xbc "CP H"
-        // {4, &Disassembler::CP_r},           // 0xbd "CP L"
-        // {8, &Disassembler::CP_r},           // 0xbe "CP (HL)"
-        // {4, &Disassembler::CP_r},           // 0xbf "CP A"
+        {&Disassembler::CP_r}, // 0xb8 "CP B"
+        {&Disassembler::CP_r}, // 0xb9 "CP C"
+        {&Disassembler::CP_r}, // 0xba "CP D"
+        {&Disassembler::CP_r}, // 0xbb "CP E"
+        {&Disassembler::CP_r}, // 0xbc "CP H"
+        {&Disassembler::CP_r}, // 0xbd "CP L"
+        {&Disassembler::CP_r}, // 0xbe "CP (HL)"
+        {&Disassembler::CP_r}, // 0xbf "CP A"
 
         // { 8, &Disassembler::RET_cc},        // 0xc0 "RET NZ"
         // {12, &Disassembler::pop_qq},        // 0xc1 "POP BC"
@@ -285,11 +285,11 @@ Disassembler::Disassembler(){
     };
 }
 
-DisassemblyLine Disassembler::DisassembleAddress( uint16_t address , const HostMemory& memref )
+DisassemblyLine Disassembler::DisassembleAddress(uint16_t address, const HostMemory &memref)
 {
-    InstructionBytes bytes = { memref.Read(address), memref.Read(address+1), memref.Read(address+2) };
+    InstructionBytes bytes = {memref.Read(address), memref.Read(address + 1), memref.Read(address + 2)};
 
-     auto line = (this->*instructions[bytes.data[0]].code)(bytes);
+    auto line = (this->*instructions[bytes.data[0]].code)(bytes);
 
-     return std::move(line);
+    return std::move(line);
 }
