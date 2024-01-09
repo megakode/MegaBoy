@@ -12,14 +12,16 @@
 
 #pragma once
 
-enum FlagBitmask : uint8_t {
+enum FlagBitmask : uint8_t
+{
     FlagBitmaskZero = 0b10000000,
     FlagBitmaskN = 0b01000000,
     FlagBitmaskHalfCarry = 0b00100000,
     FlagBitmaskC = 0b00010000
 };
 
-enum RegisterCode : uint8_t {
+enum RegisterCode : uint8_t
+{
     B = 0,
     C,
     D,
@@ -30,21 +32,23 @@ enum RegisterCode : uint8_t {
     A
 };
 
-struct DebugLogEntry {
+struct DebugLogEntry
+{
     uint16_t PC = 0;
-    uint8_t opcodes[4] = {0,0,0,0};
+    uint8_t opcodes[4] = {0, 0, 0, 0};
     std::string text;
 };
 
-class CPU {
+class CPU
+{
 
-    public:
-
-    explicit CPU(HostMemory& mem);
+public:
+    explicit CPU(HostMemory &mem);
 
     CPU() = delete;
 
-    struct Instruction {
+    struct Instruction
+    {
         /// Number of CPU cycles the instruction takes to execute
         uint8_t cycles = 0;
         /// pointer to the function executing the instruction
@@ -52,43 +56,64 @@ class CPU {
     };
 
     std::vector<Instruction> instructions;
-    //std::vector<std::function<void()>> extended_instructions;
+    // std::vector<std::function<void()>> extended_instructions;
 
     std::vector<DebugLogEntry> debug_log_entries;
 
-    HostMemory& mem;
+    HostMemory &mem;
 
-    struct GeneralRegisters {
-
-        union {
-            uint16_t BC;
-            struct { uint8_t C,B; };
-        };
-
-        union {
-            uint16_t DE;
-            struct { uint8_t E,D; };
-        };
-
-        union {
-            uint16_t HL;
-            struct { uint8_t L,H; };
-        };
-
-        union {
-            uint16_t AF;
-            struct { uint8_t F,A; };
-        };
-
-        //uint8_t I;      // Interrupt Page Address Register
-        uint8_t R;      // Memory Refresh Register
+    struct GeneralRegisters
+    {
 
         union
         {
-            uint16_t SP;    // Stack Pointer
-            struct { uint8_t SPL; uint8_t SPH; };
+            uint16_t BC;
+            struct
+            {
+                uint8_t C, B;
+            };
         };
-        uint16_t PC;    // Program Counter
+
+        union
+        {
+            uint16_t DE;
+            struct
+            {
+                uint8_t E, D;
+            };
+        };
+
+        union
+        {
+            uint16_t HL;
+            struct
+            {
+                uint8_t L, H;
+            };
+        };
+
+        union
+        {
+            uint16_t AF;
+            struct
+            {
+                uint8_t F, A;
+            };
+        };
+
+        // uint8_t I;      // Interrupt Page Address Register
+        uint8_t R; // Memory Refresh Register
+
+        union
+        {
+            uint16_t SP; // Stack Pointer
+            struct
+            {
+                uint8_t SPL;
+                uint8_t SPH;
+            };
+        };
+        uint16_t PC; // Program Counter
     };
 
     GeneralRegisters regs;
@@ -119,15 +144,17 @@ class CPU {
     uint8_t step();
 
     /// Fetch next instruction byte from memory and increase Program Counter by +1 (PC)
-    inline uint8_t fetch8BitValue(){
+    inline uint8_t fetch8BitValue()
+    {
         return mem.Read(regs.PC++);
     };
 
     /// Fetch two instruction bytes from memory as a 16 bit address and increase Program Counter by +2 (PC)
-    inline uint16_t fetch16BitValue(){
+    inline uint16_t fetch16BitValue()
+    {
         uint8_t lowbyte = fetch8BitValue();
         uint16_t hibyte = fetch8BitValue();
-        return (hibyte<<8) + lowbyte;
+        return (hibyte << 8) + lowbyte;
     };
 
     // *********************************************************************************
@@ -135,81 +162,102 @@ class CPU {
     // *********************************************************************************
 
     /// Write to a register based on a register code.
-    inline void write_to_register( uint8_t regCode , uint8_t value )
+    inline void write_to_register(uint8_t regCode, uint8_t value)
     {
         regCode &= 0b00000111; // remove excess bits just in case
 
-        switch (regCode) {
-            case RegisterCode::HLPtr:
-                mem.Write(regs.HL,value);
-                break;
-            case RegisterCode::A:
-                regs.A = value;
-                break;
-            case RegisterCode::B:
-                regs.B = value;
-                break;
-            case RegisterCode::C:
-                regs.C = value;
-                break;
-            case RegisterCode::D:
-                regs.D = value;
-                break;
-            case RegisterCode::E:
-                regs.E = value;
-                break;
-            case RegisterCode::L:
-                regs.L = value;
-                break;
-            case RegisterCode::H:
-                regs.H = value;
-                break;
-            default:
-                regs.A = value; // just to silence the compiler warning
+        switch (regCode)
+        {
+        case RegisterCode::HLPtr:
+            mem.Write(regs.HL, value);
+            break;
+        case RegisterCode::A:
+            regs.A = value;
+            break;
+        case RegisterCode::B:
+            regs.B = value;
+            break;
+        case RegisterCode::C:
+            regs.C = value;
+            break;
+        case RegisterCode::D:
+            regs.D = value;
+            break;
+        case RegisterCode::E:
+            regs.E = value;
+            break;
+        case RegisterCode::L:
+            regs.L = value;
+            break;
+        case RegisterCode::H:
+            regs.H = value;
+            break;
+        default:
+            regs.A = value; // just to silence the compiler warning
         }
     }
 
     /// Returns the value a register based on a 3bit register code, which is encoded in all opcodes which deals with registers.
     /// \param regCode Register code
     /// \return Reference to register
-    inline uint8_t read_from_register(uint8_t regCode ) const
+    inline uint8_t read_from_register(uint8_t regCode) const
     {
         regCode &= 0b00000111; // remove excess bits just in case
 
-        switch (regCode) {
-            case RegisterCode::HLPtr:
-                return mem.Read(regs.HL);
-            case RegisterCode::A:
-                return regs.A;
-            case RegisterCode::B:
-                return regs.B;
-            case RegisterCode::C:
-                return regs.C;
-            case RegisterCode::D:
-                return regs.D;
-            case RegisterCode::E:
-                return regs.E;
-            case RegisterCode::L:
-                return regs.L;
-            case RegisterCode::H:
-                return regs.H;
-            default:
-                return regs.A; // just to silence the compiler warning
+        switch (regCode)
+        {
+        case RegisterCode::HLPtr:
+            return mem.Read(regs.HL);
+        case RegisterCode::A:
+            return regs.A;
+        case RegisterCode::B:
+            return regs.B;
+        case RegisterCode::C:
+            return regs.C;
+        case RegisterCode::D:
+            return regs.D;
+        case RegisterCode::E:
+            return regs.E;
+        case RegisterCode::L:
+            return regs.L;
+        case RegisterCode::H:
+            return regs.H;
+        default:
+            return regs.A; // just to silence the compiler warning
         }
     }
 
-    static inline std::string reg_name_from_regcode( uint8_t regcode )
+    static inline std::string reg_name_from_regcode(uint8_t regcode)
     {
-        switch (regcode) {
-            case RegisterCode::A: return "A"; break;
-            case RegisterCode::B: return "B"; break;
-            case RegisterCode::C: return "C"; break;
-            case RegisterCode::D: return "D"; break;
-            case RegisterCode::E: return "E"; break;
-            case RegisterCode::H: return "H"; break;
-            case RegisterCode::L: return "L"; break;
-            case RegisterCode::HLPtr: return "(HL)"; break;
-            default: return "Regcode not found!"; break;
+        switch (regcode)
+        {
+        case RegisterCode::A:
+            return "A";
+            break;
+        case RegisterCode::B:
+            return "B";
+            break;
+        case RegisterCode::C:
+            return "C";
+            break;
+        case RegisterCode::D:
+            return "D";
+            break;
+        case RegisterCode::E:
+            return "E";
+            break;
+        case RegisterCode::H:
+            return "H";
+            break;
+        case RegisterCode::L:
+            return "L";
+            break;
+        case RegisterCode::HLPtr:
+            return "(HL)";
+            break;
+        default:
+            return "Regcode not found!";
+            break;
         }
     }
 
@@ -217,76 +265,90 @@ class CPU {
     /// Each condition code reflects a flag and a state. E.g. Carry, non-carry, zero, non-zero, etc.
     /// \param conditionCode The 3bit condition code from 0-7
     /// \return Condition state.
-    [[nodiscard]] inline bool is_condition_true( uint8_t conditionCode ) const{
+    [[nodiscard]] inline bool is_condition_true(uint8_t conditionCode) const
+    {
         switch (conditionCode)
         {
-            case 0: return !(regs.F & FlagBitmaskZero); // Non zero
-            case 1: return (regs.F & FlagBitmaskZero); // zero
-            case 2: return !(regs.F & FlagBitmaskC); // non carry
-            case 3: return (regs.F & FlagBitmaskC); // carry
-            default: return false;
+        case 0:
+            return !(regs.F & FlagBitmaskZero); // Non zero
+        case 1:
+            return (regs.F & FlagBitmaskZero); // zero
+        case 2:
+            return !(regs.F & FlagBitmaskC); // non carry
+        case 3:
+            return (regs.F & FlagBitmaskC); // carry
+        default:
+            return false;
         }
     }
 
     /// Debug method to get the name of a condition code, encoded in jump instruction
-    static inline std::string name_from_condition( uint8_t conditionCode )
+    static inline std::string name_from_condition(uint8_t conditionCode)
     {
         switch (conditionCode)
         {
-            case 0: return "NZ"; // Non zero
-            case 1: return "Z"; // zero
-            case 2: return "NC"; // non carry
-            case 3: return "C"; // carry
-            default: return "Unknown condition code?!";
+        case 0:
+            return "NZ"; // Non zero
+        case 1:
+            return "Z"; // zero
+        case 2:
+            return "NC"; // non carry
+        case 3:
+            return "C"; // carry
+        default:
+            return "Unknown condition code?!";
         }
     }
 
-    static inline bool has_parity( uint8_t x )
+    static inline bool has_parity(uint8_t x)
     {
         uint8_t p = 1;
         while (x)
         {
             p ^= 1;
-            x &= x-1; // at each iteration, we set the least significant 1 to 0
+            x &= x - 1; // at each iteration, we set the least significant 1 to 0
         }
         return p;
     }
 
-    inline void setFlag( FlagBitmask flag, bool value ){
-        if(value){
+    inline void setFlag(FlagBitmask flag, bool value)
+    {
+        if (value)
+        {
             regs.F |= flag;
-        } else {
+        }
+        else
+        {
             regs.F &= ~flag;
         }
     }
 
-    inline bool getFlag( FlagBitmask flag ) const{
+    inline bool getFlag(FlagBitmask flag) const
+    {
         return regs.F & flag;
     }
 
-    void add( uint8_t srcValue, bool carry = false);
-    void add16( uint16_t &regPair, uint16_t value_to_add);
-    void sub( uint8_t srcValue, bool carry = false, bool onlySetFlagsForComparison = false );
+    void add(uint8_t srcValue, bool carry = false);
+    void add16(uint16_t &regPair, uint16_t value_to_add);
+    void sub(uint8_t srcValue, bool carry = false, bool onlySetFlagsForComparison = false);
 
     void and_a_with_value(uint8_t value);
     void or_a_with_value(uint8_t value);
     void xor_a_with_value(uint8_t value);
 
-    void INC_r(uint8_t &reg );
-    void DEC_r(uint8_t &reg );
+    void INC_r(uint8_t &reg);
+    void DEC_r(uint8_t &reg);
 
-    uint8_t do_bit_instruction( uint8_t op2, uint8_t& reg );
+    uint8_t do_bit_instruction(uint8_t op2, uint8_t &reg);
 
-    void AddDebugLog(const char* fmt, ...);
+    void AddDebugLog(const char *fmt, ...);
     void AddDebugLog(const char *text, va_list args);
 
     void set_AND_operation_flags();
     void set_INC_operation_flags(uint8_t result);
     void set_DEC_operation_flags(uint8_t result);
 
-
 public:
-
     void enable_interrupts();
     void disable_interrupts();
 
@@ -307,7 +369,7 @@ public:
     void LD_A_pDE();
     void LD_r_n();
     void LD_pnn_SP();
-    void LD_R_A();
+    // void LD_R_A();
     void LDI_pHL_A();
     void LDI_A_pHL();
     void LDD_pHL_A();
@@ -318,8 +380,6 @@ public:
     void LD_A_ff00C();
     void LD_HL_SPs8();
     void LD_A_pnn();
-
-
 
     void INC_A();
     void DEC_A();

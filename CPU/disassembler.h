@@ -1,6 +1,6 @@
+#include "../HostMemory.h"
 #include <cstdint>
 #include <string>
-#include "../HostMemory.h"
 // #include "arithmetic_instructions_disassembler.h"
 #pragma once
 
@@ -14,6 +14,7 @@ struct DisassemblyLine
     uint16_t PC = 0;
     uint8_t cycles;
     InstructionBytes instructionBytes;
+    uint8_t numberOfBytes;
     std::string text;
 };
 
@@ -32,59 +33,69 @@ public:
     struct Instruction
     {
         /// Number of CPU cycles the instruction takes to execute
-        //  uint8_t cycles = 0;
+        uint8_t numBytes = 0;
+        uint8_t cycles = 0;
         /// pointer to the function executing the instruction
-        DisassemblyLine (Disassembler::*code)(const InstructionBytes &) = nullptr;
+        // void (Disassembler::*code)(const InstructionBytes &) = nullptr;
+        std::function<std::string(const InstructionBytes &bytes)> code;
     };
 
     // Arithmetic instructions
 
-    DisassemblyLine CP_r(const InstructionBytes &bytes);
-    DisassemblyLine CP_n(const InstructionBytes &bytes);
-    DisassemblyLine ADD_HL_HL(const InstructionBytes &bytes);
-    DisassemblyLine ADD_HL_BC(const InstructionBytes &bytes);
-    DisassemblyLine ADD_HL_DE(const InstructionBytes &bytes);
-    DisassemblyLine ADD_HL_SP(const InstructionBytes &bytes);
-    DisassemblyLine ADD_A_r(const InstructionBytes &bytes);
-    DisassemblyLine ADD_A_n(const InstructionBytes &bytes);
-    DisassemblyLine ADC_A_r(const InstructionBytes &bytes);
-    DisassemblyLine ADC_A_n(const InstructionBytes &bytes);
-    DisassemblyLine SUB_r(const InstructionBytes &bytes);
-    DisassemblyLine SUB_n(const InstructionBytes &bytes);
-    DisassemblyLine SBC_r(const InstructionBytes &bytes);
-    DisassemblyLine SBC_n(const InstructionBytes &bytes);
-    DisassemblyLine AND_r(const InstructionBytes &bytes);
-    DisassemblyLine AND_n(const InstructionBytes &bytes);
-    DisassemblyLine XOR_r(const InstructionBytes &bytes);
-    DisassemblyLine XOR_n(const InstructionBytes &bytes);
-    DisassemblyLine OR_r(const InstructionBytes &bytes);
-    DisassemblyLine OR_n(const InstructionBytes &bytes);
+    std::string CP_r(const InstructionBytes &bytes);
+    std::string CP_n(const InstructionBytes &bytes);
+    std::string ADD_HL_HL(const InstructionBytes &bytes);
+    std::string ADD_HL_BC(const InstructionBytes &bytes);
+    std::string ADD_HL_DE(const InstructionBytes &bytes);
+    std::string ADD_HL_SP(const InstructionBytes &bytes);
+    std::string ADD_A_r(const InstructionBytes &bytes);
+    std::string ADD_A_n(const InstructionBytes &bytes);
+    std::string ADC_A_r(const InstructionBytes &bytes);
+    std::string ADC_A_n(const InstructionBytes &bytes);
+    std::string SUB_r(const InstructionBytes &bytes);
+    std::string SUB_n(const InstructionBytes &bytes);
+    std::string SBC_r(const InstructionBytes &bytes);
+    std::string SBC_n(const InstructionBytes &bytes);
+    std::string AND_r(const InstructionBytes &bytes);
+    std::string AND_n(const InstructionBytes &bytes);
+    std::string XOR_r(const InstructionBytes &bytes);
+    std::string XOR_n(const InstructionBytes &bytes);
+    std::string OR_r(const InstructionBytes &bytes);
+    std::string OR_n(const InstructionBytes &bytes);
 
-    DisassemblyLine DEC_SP(const InstructionBytes &bytes);
-    DisassemblyLine INC_A(const InstructionBytes &bytes);
-    DisassemblyLine DEC_A(const InstructionBytes &bytes);
-    DisassemblyLine DEC_HL(const InstructionBytes &bytes);
-    DisassemblyLine INC_L(const InstructionBytes &bytes);
-    DisassemblyLine DEC_L(const InstructionBytes &bytes);
-    DisassemblyLine INC_SP(const InstructionBytes &bytes);
-    DisassemblyLine INC_pHL(const InstructionBytes &bytes);
-    DisassemblyLine DEC_pHL(const InstructionBytes &bytes);
-    DisassemblyLine INC_BC(const InstructionBytes &bytes);
-    DisassemblyLine INC_B(const InstructionBytes &bytes);
-    DisassemblyLine DEC_B(const InstructionBytes &bytes);
-    DisassemblyLine DEC_BC(const InstructionBytes &bytes);
-    DisassemblyLine INC_C(const InstructionBytes &bytes);
-    DisassemblyLine DEC_C(const InstructionBytes &bytes);
-    DisassemblyLine INC_DE(const InstructionBytes &bytes);
-    DisassemblyLine INC_D(const InstructionBytes &bytes);
-    DisassemblyLine DEC_D(const InstructionBytes &bytes);
-    DisassemblyLine INC_HL(const InstructionBytes &bytes);
-    DisassemblyLine INC_H(const InstructionBytes &bytes);
-    DisassemblyLine DEC_H(const InstructionBytes &bytes);
-    DisassemblyLine DEC_DE(const InstructionBytes &bytes);
-    DisassemblyLine INC_E(const InstructionBytes &bytes);
-    DisassemblyLine DEC_E(const InstructionBytes &bytes);
-    DisassemblyLine ADD_SP_s8(const InstructionBytes &bytes);
+    std::string DEC_SP(const InstructionBytes &bytes);
+    std::string INC_A(const InstructionBytes &bytes);
+    std::string DEC_A(const InstructionBytes &bytes);
+    std::string DEC_HL(const InstructionBytes &bytes);
+    std::string INC_L(const InstructionBytes &bytes);
+    std::string DEC_L(const InstructionBytes &bytes);
+    std::string INC_SP(const InstructionBytes &bytes);
+    std::string INC_pHL(const InstructionBytes &bytes);
+    std::string DEC_pHL(const InstructionBytes &bytes);
+    std::string INC_BC(const InstructionBytes &bytes);
+    std::string INC_B(const InstructionBytes &bytes);
+    std::string DEC_B(const InstructionBytes &bytes);
+    std::string DEC_BC(const InstructionBytes &bytes);
+    std::string INC_C(const InstructionBytes &bytes);
+    std::string DEC_C(const InstructionBytes &bytes);
+    std::string INC_DE(const InstructionBytes &bytes);
+    std::string INC_D(const InstructionBytes &bytes);
+    std::string DEC_D(const InstructionBytes &bytes);
+    std::string INC_HL(const InstructionBytes &bytes);
+    std::string INC_H(const InstructionBytes &bytes);
+    std::string DEC_H(const InstructionBytes &bytes);
+    std::string DEC_DE(const InstructionBytes &bytes);
+    std::string INC_E(const InstructionBytes &bytes);
+    std::string DEC_E(const InstructionBytes &bytes);
+    std::string ADD_SP_s8(const InstructionBytes &bytes);
+
+    // Load instructions
+
+    std::string LD_pnn_SP(const InstructionBytes &bytes);
+    //std::string LD_r_r(const InstructionBytes &bytes);
+    // std::string LD_r_n(const InstructionBytes &bytes);
+    //std::string LD_HL_nn(const InstructionBytes &bytes);
+    std::string LD_BC_nn(const InstructionBytes &bytes);
 
 private:
     enum RegisterCode : uint8_t
@@ -97,6 +108,14 @@ private:
         L,
         HLPtr,
         A
+    };
+
+    /// Fetch two instruction bytes from memory as a 16 bit address
+    static inline uint16_t fetch16BitValue(const InstructionBytes &bytes)
+    {
+        uint8_t lowbyte = bytes.data[1];
+        uint16_t hibyte = bytes.data[2];
+        return (hibyte << 8) + lowbyte;
     };
 
     static inline std::string reg_name_from_regcode(uint8_t regcode)

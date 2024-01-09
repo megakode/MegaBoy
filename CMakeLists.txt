@@ -68,6 +68,7 @@ add_executable(cputests
     CPU/general_instructions.h 
     CPU/disassembler.cpp
     CPU/disassembler_arithmetic.cpp
+    CPU/disassembler_load_instructions.cpp
     tests/lcd_tests.cpp 
     tests/timer_tests.cpp 
     tests/dma_controller_tests.cpp
