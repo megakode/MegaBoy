@@ -9,11 +9,43 @@
 // Load Instructions
 // ***********************************************************************************
 
-// LD (nn),SP
+// LD (nnnn),SP
 // Cycles: 16
-std::string Disassembler::LD_pnn_SP(const InstructionBytes &bytes)
+std::string Disassembler::LD_pnnnn_SP(const InstructionBytes &bytes)
 {
-    return std::format("LD ({}),SP", bytes.data[1]);
+    return std::format("LD (0x{:02X}{:02X}),SP", bytes.data[2], bytes.data[1]);
+}
+
+// LD HL,nnnn
+// opcode: 0x21
+// cycles: 10
+// flags: -
+std::string Disassembler::LD_HL_nnnn(const InstructionBytes &bytes)
+{
+    return std::format("LD HL,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
+}
+
+// // ld de,nnnn
+// // opcode: 11 n  n
+// // cycles: 12
+std::string Disassembler::LD_DE_nnnn(const InstructionBytes &bytes)
+{
+    return std::format("LD BC,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
+}
+
+// ld bc,nnnn
+// cycles: 10
+std::string Disassembler::LD_BC_nnnn(const InstructionBytes &bytes)
+{
+    return std::format("LD BC,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
+}
+
+// // LD SP,NN
+// // opcode: 0x31
+// // flags: -
+std::string Disassembler::LD_SP_nnnn(const InstructionBytes &bytes)
+{
+    return std::format("LD SP,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
 }
 
 // // LD r,r
@@ -48,44 +80,11 @@ std::string Disassembler::LD_pnn_SP(const InstructionBytes &bytes)
 
 // LD r,n
 // cycles: 8 / 12
-// std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
-// {
-//     uint8_t dstRegCode = (bytes.data[0] >> 3) & 0b111;
-//     uint8_t value = bytes.data[1];
-//     uint8_t cycles = 8;
-
-//     if (dstRegCode == RegisterCode::HLPtr)
-//     {
-//         cycles = 12;
-//     }
-
-//     return {.cycles = cycles, .text = std::format("LD {},{:#x}", reg_name_from_regcode(dstRegCode), value)};
-// }
-
-// LD HL,NN
-// opcode: 0x21
-// cycles: 10
-// flags: -
-// std::string Disassembler::LD_HL_nn(const InstructionBytes &bytes)
-// {
-//     regs.L = fetch8BitValue();
-//     regs.H = fetch8BitValue();
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD HL,0x%04x", regs.HL);
-// #endif
-// }
-
-// // LD SP,NN
-// // opcode: 0x31
-// // flags: -
-// std::string Disassembler::LD_SP_nn()
-// {
-//     regs.SP = fetch16BitValue();
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD SP,0x%04x", regs.SP);
-// #endif
-// }
+std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
+{
+    uint8_t dstRegCode = (bytes.data[0] >> 3) & 0b111;
+    return std::format("LD {},{:#x}", reg_name_from_regcode(dstRegCode), bytes.data[1]);
+}
 
 // // LD (NN),A
 // // opcode: 0x32
@@ -108,132 +107,6 @@ std::string Disassembler::LD_pnn_SP(const InstructionBytes &bytes)
 
 // #ifdef DEBUG_LOG
 //     AddDebugLog("LD (HL),0x%02x", value);
-// #endif
-// }
-
-// // LD SP,HL
-// // opcode: 0xf9
-// // flags: -
-// // cycles: 6
-// std::string Disassembler::ld_sp_hl()
-// {
-//     regs.SP = regs.HL;
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD SP,HL");
-// #endif
-// }
-
-// // ld bc,nn
-// // opcode: 01 n  n
-// // cycles: 10
-std::string Disassembler::LD_BC_nn(const InstructionBytes &bytes)
-{
-    return std::format("LD BC,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
-}
-
-// // ld (bc),a
-// // Opcode: 02
-// // Cycles: 7
-// std::string Disassembler::LD_pBC_A()
-// {
-//     mem.Write(regs.BC, regs.A);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (BC),A");
-// #endif
-// }
-
-// // LD A,(BC)
-// // opcode: 0x0A
-// // cycles: 7
-// // flags: -
-// std::string Disassembler::LD_A_pBC()
-// {
-//     regs.A = mem.Read(regs.BC);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD A,(BC)");
-// #endif
-// }
-
-// // ld de,nn
-// // opcode: 11 n  n
-// // cycles: 10
-// std::string Disassembler::LD_DE_nn()
-// {
-//     regs.DE = fetch16BitValue();
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD DE,0x%04x", regs.DE);
-// #endif
-// }
-
-// // load (de),a
-// // opcode: 0x12
-// // cycles: 7
-// std::string Disassembler::LD_pDE_A()
-// {
-//     mem.Write(regs.DE, regs.A);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (DE),A");
-// #endif
-// }
-
-// // LD A,(DE)
-// // opcode: 0x1a
-// // cycles: 7
-// // flags: -
-// std::string Disassembler::LD_A_pDE()
-// {
-//     regs.A = mem.Read(regs.DE);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD A,(DE)");
-// #endif
-// }
-
-// /// LDI  (HL),A
-// /// opcode: 22
-// /// cycles: 8
-// std::string Disassembler::LDI_pHL_A()
-// {
-//     mem.Write(regs.HL++, regs.A);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LDI (HL),A");
-// #endif
-// }
-
-// /// LDI  A,(HL)
-// /// opcode: 2a
-// /// cycles: 8
-// std::string Disassembler::LDI_A_pHL()
-// {
-//     regs.A = mem.Read(regs.HL++);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LDI A,(HL)");
-// #endif
-// }
-
-// /// LDD (HL),A
-// /// opcode: 0x32
-// /// cycles: 8
-// std::string Disassembler::LDD_pHL_A()
-// {
-//     mem.Write(regs.HL--, regs.A);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LDD (HL),A");
-// #endif
-// }
-
-// /// LDD  A,(HL)
-// /// opcode: 0x3a
-// /// cycles: 8
-// std::string Disassembler::LDD_A_pHL()
-// {
-//     regs.A = mem.Read(regs.HL--);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LDD A,(HL)");
 // #endif
 // }
 

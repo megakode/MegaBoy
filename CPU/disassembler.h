@@ -91,11 +91,13 @@ public:
 
     // Load instructions
 
-    std::string LD_pnn_SP(const InstructionBytes &bytes);
-    //std::string LD_r_r(const InstructionBytes &bytes);
-    // std::string LD_r_n(const InstructionBytes &bytes);
-    //std::string LD_HL_nn(const InstructionBytes &bytes);
-    std::string LD_BC_nn(const InstructionBytes &bytes);
+    std::string LD_pnnnn_SP(const InstructionBytes &bytes);
+    std::string LD_HL_nnnn(const InstructionBytes &bytes);
+    std::string LD_DE_nnnn(const InstructionBytes &bytes);
+    std::string LD_BC_nnnn(const InstructionBytes &bytes);
+    std::string LD_SP_nnnn(const InstructionBytes &bytes);
+    std::string LD_r_n(const InstructionBytes &bytes);
+    // std::string LD_r_r(const InstructionBytes &bytes);
 
 private:
     enum RegisterCode : uint8_t
