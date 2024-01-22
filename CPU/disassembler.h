@@ -44,10 +44,6 @@ public:
 
     std::string CP_r(const InstructionBytes &bytes);
     std::string CP_n(const InstructionBytes &bytes);
-    std::string ADD_HL_HL(const InstructionBytes &bytes);
-    std::string ADD_HL_BC(const InstructionBytes &bytes);
-    std::string ADD_HL_DE(const InstructionBytes &bytes);
-    std::string ADD_HL_SP(const InstructionBytes &bytes);
     std::string ADD_A_r(const InstructionBytes &bytes);
     std::string ADD_A_n(const InstructionBytes &bytes);
     std::string ADC_A_r(const InstructionBytes &bytes);
@@ -63,30 +59,6 @@ public:
     std::string OR_r(const InstructionBytes &bytes);
     std::string OR_n(const InstructionBytes &bytes);
 
-    std::string DEC_SP(const InstructionBytes &bytes);
-    std::string INC_A(const InstructionBytes &bytes);
-    std::string DEC_A(const InstructionBytes &bytes);
-    std::string DEC_HL(const InstructionBytes &bytes);
-    std::string INC_L(const InstructionBytes &bytes);
-    std::string DEC_L(const InstructionBytes &bytes);
-    std::string INC_SP(const InstructionBytes &bytes);
-    std::string INC_pHL(const InstructionBytes &bytes);
-    std::string DEC_pHL(const InstructionBytes &bytes);
-    std::string INC_BC(const InstructionBytes &bytes);
-    std::string INC_B(const InstructionBytes &bytes);
-    std::string DEC_B(const InstructionBytes &bytes);
-    std::string DEC_BC(const InstructionBytes &bytes);
-    std::string INC_C(const InstructionBytes &bytes);
-    std::string DEC_C(const InstructionBytes &bytes);
-    std::string INC_DE(const InstructionBytes &bytes);
-    std::string INC_D(const InstructionBytes &bytes);
-    std::string DEC_D(const InstructionBytes &bytes);
-    std::string INC_HL(const InstructionBytes &bytes);
-    std::string INC_H(const InstructionBytes &bytes);
-    std::string DEC_H(const InstructionBytes &bytes);
-    std::string DEC_DE(const InstructionBytes &bytes);
-    std::string INC_E(const InstructionBytes &bytes);
-    std::string DEC_E(const InstructionBytes &bytes);
     std::string ADD_SP_s8(const InstructionBytes &bytes);
 
     // Load instructions
