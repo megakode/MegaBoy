@@ -82,7 +82,8 @@ void CPU::JR_nz(){
 
 /// jr n - Jump relative
 /// opcode: 0x18
-/// cycles: 12
+/// bytes: 2
+/// cycles: 3
 void CPU::JR_n(){
     int8_t offset =  static_cast<int8_t>(fetch8BitValue());
     regs.PC += offset;
@@ -180,7 +181,7 @@ void CPU::RETI()
 
 
 // RET cc (NZ/Z/NC/C/PO/PE/P/N)
-// cycles: 11 (true) 5 (false)
+// cycles: 5 (true) 2 (false)
 // flags: -
 void CPU::RET_cc(){
 

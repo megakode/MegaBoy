@@ -226,7 +226,7 @@ CPU::CPU(HostMemory &memref) : mem(memref)
         {8, &CPU::CP_r}, // 0xbe "CP (HL)"
         {4, &CPU::CP_r}, // 0xbf "CP A"
 
-        {8, &CPU::RET_cc},                 // 0xc0 "RET NZ"
+        {5, &CPU::RET_cc},                 // 0xc0 "RET NZ"
         {12, &CPU::pop_qq},                // 0xc1 "POP BC"
         {12, &CPU::JP_cc_nn},              // 0xc2 "JP NZ NN"
         {16, &CPU::JP_nn},                 // 0xc3 "JP NN"

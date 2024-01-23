@@ -69,7 +69,12 @@ public:
     std::string LD_BC_nnnn(const InstructionBytes &bytes);
     std::string LD_SP_nnnn(const InstructionBytes &bytes);
     std::string LD_r_n(const InstructionBytes &bytes);
-    // std::string LD_r_r(const InstructionBytes &bytes);
+
+    std::string RET_cc(const InstructionBytes &bytes);
+    std::string JP_cc_nn(const InstructionBytes &bytes);
+    std::string JR_n(const InstructionBytes &bytes);
+    std::string JR_cc_nn(const InstructionBytes &bytes);
+    std::string JP_nnnn(const InstructionBytes &bytes);
 
 private:
     enum RegisterCode : uint8_t
@@ -91,6 +96,25 @@ private:
         uint16_t hibyte = bytes.data[2];
         return (hibyte << 8) + lowbyte;
     };
+
+
+    /// Debug method to get the name of a condition code, encoded in jump instruction
+    static inline std::string name_from_condition(uint8_t conditionCode)
+    {
+        switch (conditionCode)
+        {
+        case 0:
+            return "NZ"; // Non zero
+        case 1:
+            return "Z"; // zero
+        case 2:
+            return "NC"; // non carry
+        case 3:
+            return "C"; // carry
+        default:
+            return "Unknown condition code?!";
+        }
+    }
 
     static inline std::string reg_name_from_regcode(uint8_t regcode)
     {
