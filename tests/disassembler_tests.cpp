@@ -2,7 +2,7 @@
 #include <catch2/catch_all.hpp>
 #include <fstream>
 
-#include "../CPU/disassembler.h"
+#include "../disassembler/disassembler.h"
 
 TEST_CASE("Disassembler CP2")
 {
@@ -31,7 +31,7 @@ TEST_CASE("ld instructions")
     Disassembler dis;
 
     // "LD_pnn_SP"
-    auto line = dis.LD_pnn_SP({0x00, 0x11, 0x22});
+    auto line = dis.LD_pnnnn_SP({0x00, 0x11, 0x22});
 
     // std::cout << line.text;
     // REQUIRE(line.cycles == 16);

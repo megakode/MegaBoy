@@ -2,7 +2,7 @@
 // Created by sbeam on 03/12/2021.
 //
 
-#pragma once
+#include "cpu.h"
 
 // ***********************************************************************************
 // Load Instructions
@@ -315,7 +315,7 @@ void CPU::LD_HL_SPs8()
 /// LD A,(nn)
 /// opcode: 0xfa
 /// cycles: 16
-void CPU::LD_A_pnn()
+void CPU::LD_A_pnnnn()
 {
     auto addr = fetch16BitValue();
     regs.A = mem.Read(addr);

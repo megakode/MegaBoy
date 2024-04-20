@@ -56,7 +56,6 @@ public:
     };
 
     std::vector<Instruction> instructions;
-    // std::vector<std::function<void()>> extended_instructions;
 
     std::vector<DebugLogEntry> debug_log_entries;
 
@@ -379,7 +378,7 @@ public:
     void LD_A_ff00n();
     void LD_A_ff00C();
     void LD_HL_SPs8();
-    void LD_A_pnn();
+    void LD_A_pnnnn();
 
     void INC_A();
     void DEC_A();

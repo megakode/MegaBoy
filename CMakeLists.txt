@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5.0)
 project(MegaBoy VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_C_COMPILER /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc)
@@ -16,7 +16,7 @@ Include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.4.0 # or a later release
+  GIT_TAG        v3.5.4 # or a later release
 )
 
 FetchContent_MakeAvailable(Catch2)
@@ -58,22 +58,23 @@ endif()
 # enable_testing()
 add_executable(cputests 
     tests/cputests.cpp 
-    CPU/cpu.cpp 
     HostMemory.cpp
     cartridge/Cartridge.cpp
-    CPU/bit_instructions.h 
-    CPU/jump_instructions.h 
-    CPU/load_instructions.h 
-    CPU/arithmetic_instructions.h 
-    CPU/general_instructions.h 
-    CPU/disassembler.cpp
-    CPU/disassembler_arithmetic.cpp
-    CPU/disassembler_load_instructions.cpp
+    CPU/cpu.cpp 
+    CPU/cpu_arithmetic_instructions.cpp
+    CPU/cpu_bit_instructions.cpp
+    CPU/cpu_general_instructions.cpp
+    CPU/cpu_jump_instructions.cpp
+    CPU/cpu_load_instructions.cpp
+    disassembler/disassembler_arithmetic.cpp
+    disassembler/disassembler_jump.cpp
+    disassembler/disassembler_load.cpp
+    disassembler/disassembler_bit.cpp
+    disassembler/disassembler.cpp
     tests/lcd_tests.cpp 
     tests/timer_tests.cpp 
     tests/dma_controller_tests.cpp
     tests/disassembler_tests.cpp
-    
     )
 
 target_link_libraries(cputests Catch2::Catch2WithMain)
@@ -83,11 +84,15 @@ include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
+# Main executable #################################
 
 add_executable(MegaBoy ${MainFile})
+
+add_subdirectory(CPU)
+add_subdirectory(disassembler)
+
 target_sources(MegaBoy PRIVATE
         LCD/lcd.cpp
-        CPU/cpu.cpp
         imgui/imgui.cpp
         MegaBoyDebugger.cpp
         UI/RegisterWindow.cpp

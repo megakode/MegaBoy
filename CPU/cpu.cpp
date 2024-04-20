@@ -4,12 +4,6 @@
 
 #include "cpu.h"
 
-#include "bit_instructions.h"
-#include "load_instructions.h"
-#include "jump_instructions.h"
-#include "arithmetic_instructions.h"
-#include "general_instructions.h"
-
 CPU::CPU(HostMemory &memref) : mem(memref)
 {
 
@@ -287,7 +281,7 @@ CPU::CPU(HostMemory &memref) : mem(memref)
         {16, &CPU::RST},               // 0xf7 "RST 30h"
         {12, &CPU::LD_HL_SPs8},        // 0xf8 "LD HL,SP+s8"
         {8, &CPU::ld_sp_hl},           // 0xf9 "LD SP,HL"
-        {16, &CPU::LD_A_pnn},          // 0xfa "JP M,NN"
+        {16, &CPU::LD_A_pnnnn},        // 0xfa "LD A,(nnnn)"
         {4, &CPU::enable_interrupts},  // 0xfb "EI"
         {0, &CPU::invalid_opcode},     // 0xfc
         {0, &CPU::invalid_opcode},     // 0xfd
@@ -383,9 +377,6 @@ uint8_t CPU::step()
         //    exit(1);
         // }
 
-#ifdef DEBUG_LOG
-        // std::cout << std::nouppercase << std::showbase << std::hex << regs.PC-1 << "[" << static_cast<int>(current_opcode) << "] ";
-#endif
         (this->*instructions[current_opcode].code)();
 
         // Cycles spent in this step = base instruction cycles + additional cycles spent (i.e. jumps and conditions taking longer depending on outcome)

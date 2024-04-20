@@ -35,42 +35,6 @@ std::string Disassembler::CP_n(const InstructionBytes &bytes)
 // ADD
 // *********************************************************************************
 
-// add hl,hl
-// opcode: 0x29
-// cycles: 8
-// flags: C H N
-std::string Disassembler::ADD_HL_HL(const InstructionBytes &bytes)
-{
-    return "ADD HL,HL";
-}
-
-// ADD HL,BC
-// opcode: 0x09
-// cycles: 8
-// flags: H, N, C
-std::string Disassembler::ADD_HL_BC(const InstructionBytes &bytes)
-{
-    return "ADD HL,BC";
-}
-
-// add hl,de
-// opcode: 0x19
-// cycleS: 8
-// flag: C N H
-std::string Disassembler::ADD_HL_DE(const InstructionBytes &bytes)
-{
-    return "ADD HL,DE";
-}
-
-// ADD HL,SP
-// opcode: 0x39
-// cycles: 8
-// flags: - 0 H C
-std::string Disassembler::ADD_HL_SP(const InstructionBytes &bytes)
-{
-    return "ADD HL,SP";
-}
-
 // ADD a,r
 // cycles: 4 / 8
 // flags: s z h pv n c
@@ -364,11 +328,12 @@ std::string Disassembler::DEC_E(const InstructionBytes &bytes)
     return std::format("DEC E");
 }
 
-// /// ADD SP,dd
+// /// ADD SP,dd (signed)
 // /// opcode: 0xe8
 // /// cycles: 16
 // /// flags: 00hc
 std::string Disassembler::ADD_SP_s8(const InstructionBytes &bytes)
 {
-    return std::format("ADD SP,{}", bytes.data[1]);
+    int8_t offset = static_cast<int8_t>(bytes.data[1]);
+    return std::format("ADD SP,{}", offset);
 }

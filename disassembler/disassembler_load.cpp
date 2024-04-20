@@ -40,7 +40,7 @@ std::string Disassembler::LD_BC_nnnn(const InstructionBytes &bytes)
     return std::format("LD BC,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
 }
 
-// // LD SP,NN
+// // LD SP,nnnn
 // // opcode: 0x31
 // // flags: -
 std::string Disassembler::LD_SP_nnnn(const InstructionBytes &bytes)
@@ -89,14 +89,10 @@ std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
 // // LD (NN),A
 // // opcode: 0x32
 // // flags: -
-// std::string Disassembler::LD_pnn_A()
-// {
-//     auto addr = fetch16BitValue();
-//     mem.Write(addr, regs.A);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (0x%04x),A", addr);
-// #endif
-// }
+std::string Disassembler::LD_pnnnn_A(const InstructionBytes &bytes)
+{
+    return std::format("LD (0x{:02X}{:02X}),A", bytes.data[2], bytes.data[1]);
+}
 
 // // LD (HL),N
 // // opcode: 0x36
@@ -110,44 +106,18 @@ std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
 // #endif
 // }
 
-// /// LD (0xff00 + n),A
-// /// opcode: e0 nn
-// /// cycles: 8
-// /// flags: -
-// std::string Disassembler::LD_ff00n_A()
-// {
-//     uint8_t lowbyte = fetch8BitValue();
-//     uint16_t addr = 0xff00 + lowbyte;
-//     mem.Write(addr, regs.A);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (0xff00 + 0x%02x),A", lowbyte);
-// #endif
-// }
+/// LD (0xff00 + n),A
+/// opcode: e0 nn
+std::string Disassembler::LD_ff00n_A(const InstructionBytes &bytes)
+{
+    return std::format("LD (0xff00 + 0x{:#x}),A", bytes.data[1]);
+}
 
-// /// LD (FF00+C),A
-// /// opcode: 0xe2
-// std::string Disassembler::LD_ff00C_A()
-// {
-//     uint16_t addr = 0xff00 + regs.C;
-//     mem.Write(addr, regs.A);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (0xff00 + C),A");
-// #endif
-// }
-
-// /// LD A,(0xff00 + n)
-// /// opcode: f0 nn
-// /// cycles: 8
-// /// flags: -
-// std::string Disassembler::LD_A_ff00n()
-// {
-//     uint8_t lowbyte = fetch8BitValue();
-//     uint16_t addr = 0xff00 + lowbyte;
-//     regs.A = mem.Read(addr);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD A,(0xff00 + 0x%02x)", lowbyte);
-// #endif
-// }
+/// LD A,(0xff00 + n)
+std::string Disassembler::LD_A_ff00n(const InstructionBytes &bytes)
+{
+    return std::format("LD A,(0xff00 + 0x{:#x})", bytes.data[1]);
+}
 
 // /// LD A,(FF00+C)
 // /// opcode: 0xe2
@@ -165,31 +135,19 @@ std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
 // /// HL = SP +/- dd ; dd is 8-bit signed number
 // /// cycles: 12
 // /// test rom: ok
-// std::string Disassembler::LD_HL_SPs8()
-// {
-//     auto value = static_cast<int8_t>(fetch8BitValue());
-
-//     regs.HL = regs.SP + value;
-//     regs.F = 0;
-//     setFlag(FlagBitmaskC, (regs.SP & 0xFF) + (value & 0xff) > 0xFF);
-//     setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD HL,SP+%+i", value);
-// #endif
-// }
+std::string Disassembler::LD_HL_SPs8(const InstructionBytes &bytes)
+{
+    int8_t value = static_cast<int8_t>(bytes.data[1]);
+    return std::format("LD HL,SP+{}", value);
+}
 
 // /// LD A,(nn)
 // /// opcode: 0xfa
 // /// cycles: 16
-// std::string Disassembler::LD_A_pnn()
-// {
-//     auto addr = fetch16BitValue();
-//     regs.A = mem.Read(addr);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD A,(0x%04x)", addr);
-// #endif
-// }
+std::string Disassembler::LD_A_pnnnn(const InstructionBytes &bytes)
+{
+    return std::format("LD A,(0x{:02X}{:02X})", bytes.data[2], bytes.data[1]);
+}
 
 // // ********************************************************************************
 // // PUSH / POP
