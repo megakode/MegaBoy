@@ -5,16 +5,17 @@
 #ifndef MEGABOY_DISASSEMBLYWINDOW_H
 #define MEGABOY_DISASSEMBLYWINDOW_H
 
-
 #include "../CPU/cpu.h"
+#include "../disassembler/disassembler.h"
 
-class DisassemblyWindow {
+class DisassemblyWindow
+{
 
 public:
+    void UpdateUI(CPU &cpu);
 
-    static void UpdateUI(CPU &cpu);
-
+private:
+    Disassembler disassembler;
 };
 
-
-#endif //MEGABOY_DISASSEMBLYWINDOW_H
+#endif // MEGABOY_DISASSEMBLYWINDOW_H

@@ -35,8 +35,7 @@ enum RegisterCode : uint8_t
 struct DebugLogEntry
 {
     uint16_t PC = 0;
-    uint8_t opcodes[4] = {0, 0, 0, 0};
-    std::string text;
+    uint8_t opcodes[3] = {0, 0, 0};
 };
 
 class CPU
@@ -340,8 +339,7 @@ public:
 
     uint8_t do_bit_instruction(uint8_t op2, uint8_t &reg);
 
-    void AddDebugLog(const char *fmt, ...);
-    void AddDebugLog(const char *text, va_list args);
+    void AddDebugLog();
 
     void set_AND_operation_flags();
     void set_INC_operation_flags(uint8_t result);
@@ -478,8 +476,6 @@ public:
     void STOP();
 
     void invalid_opcode();
-
-    void DumpDebugLog();
 
     uint8_t do_bit_instruction(uint8_t op2);
 };

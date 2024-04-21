@@ -13,9 +13,6 @@ void CPU::LD_pnn_SP()
     auto addr = fetch16BitValue();
     mem.Write(addr, regs.SPL);
     mem.Write(addr + 1, regs.SPH);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (0x%04x),SP", addr);
-#endif
 }
 
 void CPU::LD_r_r()
@@ -39,10 +36,6 @@ void CPU::LD_r_r()
             std::cout << "Test FAILED" << std::flush;
         }
     }
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD %s,%s", reg_name_from_regcode(dstRegCode).c_str(), reg_name_from_regcode(srcRegCode).c_str());
-#endif
 }
 
 void CPU::LD_r_n()
@@ -51,18 +44,7 @@ void CPU::LD_r_n()
     uint8_t value = fetch8BitValue();
 
     write_to_register(dstRegCode, value);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD %s,0x%02x", reg_name_from_regcode(dstRegCode).c_str(), value);
-#endif
 }
-
-// void CPU::LD_R_A() {
-//     regs.R = regs.A;
-//     #ifdef DEBUG_LOG
-//     AddDebugLog("LD R,A");
-//     #endif
-// }
 
 // LD HL,NN
 // opcode: 0x21
@@ -72,10 +54,6 @@ void CPU::LD_HL_nn()
 {
     regs.L = fetch8BitValue();
     regs.H = fetch8BitValue();
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD HL,0x%04x", regs.HL);
-#endif
 }
 
 // LD SP,NN
@@ -84,9 +62,6 @@ void CPU::LD_HL_nn()
 void CPU::LD_SP_nn()
 {
     regs.SP = fetch16BitValue();
-#ifdef DEBUG_LOG
-    AddDebugLog("LD SP,0x%04x", regs.SP);
-#endif
 }
 
 // LD (NN),A
@@ -96,9 +71,6 @@ void CPU::LD_pnn_A()
 {
     auto addr = fetch16BitValue();
     mem.Write(addr, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (0x%04x),A", addr);
-#endif
 }
 
 // LD (HL),N
@@ -107,10 +79,6 @@ void CPU::LD_pHL_n()
 {
     uint8_t value = fetch8BitValue();
     mem.Write(regs.HL, value);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (HL),0x%02x", value);
-#endif
 }
 
 // LD SP,HL
@@ -120,9 +88,6 @@ void CPU::LD_pHL_n()
 void CPU::ld_sp_hl()
 {
     regs.SP = regs.HL;
-#ifdef DEBUG_LOG
-    AddDebugLog("LD SP,HL");
-#endif
 }
 
 // ld bc,nn
@@ -131,10 +96,6 @@ void CPU::ld_sp_hl()
 void CPU::LD_BC_nn()
 {
     regs.BC = fetch16BitValue();
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD BC,0x%04x", regs.BC);
-#endif
 }
 
 // ld (bc),a
@@ -143,10 +104,6 @@ void CPU::LD_BC_nn()
 void CPU::LD_pBC_A()
 {
     mem.Write(regs.BC, regs.A);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (BC),A");
-#endif
 }
 
 // LD A,(BC)
@@ -156,10 +113,6 @@ void CPU::LD_pBC_A()
 void CPU::LD_A_pBC()
 {
     regs.A = mem.Read(regs.BC);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,(BC)");
-#endif
 }
 
 // ld de,nn
@@ -168,10 +121,6 @@ void CPU::LD_A_pBC()
 void CPU::LD_DE_nn()
 {
     regs.DE = fetch16BitValue();
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD DE,0x%04x", regs.DE);
-#endif
 }
 
 // load (de),a
@@ -180,10 +129,6 @@ void CPU::LD_DE_nn()
 void CPU::LD_pDE_A()
 {
     mem.Write(regs.DE, regs.A);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (DE),A");
-#endif
 }
 
 // LD A,(DE)
@@ -193,10 +138,6 @@ void CPU::LD_pDE_A()
 void CPU::LD_A_pDE()
 {
     regs.A = mem.Read(regs.DE);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,(DE)");
-#endif
 }
 
 /// LDI  (HL),A
@@ -205,9 +146,6 @@ void CPU::LD_A_pDE()
 void CPU::LDI_pHL_A()
 {
     mem.Write(regs.HL++, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("LDI (HL),A");
-#endif
 }
 
 /// LDI  A,(HL)
@@ -216,9 +154,6 @@ void CPU::LDI_pHL_A()
 void CPU::LDI_A_pHL()
 {
     regs.A = mem.Read(regs.HL++);
-#ifdef DEBUG_LOG
-    AddDebugLog("LDI A,(HL)");
-#endif
 }
 
 /// LDD (HL),A
@@ -227,9 +162,6 @@ void CPU::LDI_A_pHL()
 void CPU::LDD_pHL_A()
 {
     mem.Write(regs.HL--, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("LDD (HL),A");
-#endif
 }
 
 /// LDD  A,(HL)
@@ -238,9 +170,6 @@ void CPU::LDD_pHL_A()
 void CPU::LDD_A_pHL()
 {
     regs.A = mem.Read(regs.HL--);
-#ifdef DEBUG_LOG
-    AddDebugLog("LDD A,(HL)");
-#endif
 }
 
 /// LD (0xff00 + n),A
@@ -252,9 +181,6 @@ void CPU::LD_ff00n_A()
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
     mem.Write(addr, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (0xff00 + 0x%02x),A", lowbyte);
-#endif
 }
 
 /// LD (FF00+C),A
@@ -263,9 +189,6 @@ void CPU::LD_ff00C_A()
 {
     uint16_t addr = 0xff00 + regs.C;
     mem.Write(addr, regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD (0xff00 + C),A");
-#endif
 }
 
 /// LD A,(0xff00 + n)
@@ -277,9 +200,6 @@ void CPU::LD_A_ff00n()
     uint8_t lowbyte = fetch8BitValue();
     uint16_t addr = 0xff00 + lowbyte;
     regs.A = mem.Read(addr);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,(0xff00 + 0x%02x)", lowbyte);
-#endif
 }
 
 /// LD A,(FF00+C)
@@ -288,9 +208,6 @@ void CPU::LD_A_ff00C()
 {
     uint16_t addr = 0xff00 + regs.C;
     regs.A = mem.Read(addr);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,(0xff00 + C)");
-#endif
 }
 
 // Opcode: 0xf8
@@ -306,10 +223,6 @@ void CPU::LD_HL_SPs8()
     regs.F = 0;
     setFlag(FlagBitmaskC, (regs.SP & 0xFF) + (value & 0xff) > 0xFF);
     setFlag(FlagBitmaskHalfCarry, (regs.SP & 0xf) + (value & 0xf) > 0xf);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("LD HL,SP+%+i", value);
-#endif
 }
 
 /// LD A,(nn)
@@ -319,9 +232,6 @@ void CPU::LD_A_pnnnn()
 {
     auto addr = fetch16BitValue();
     regs.A = mem.Read(addr);
-#ifdef DEBUG_LOG
-    AddDebugLog("LD A,(0x%04x)", addr);
-#endif
 }
 
 // ********************************************************************************
@@ -345,28 +255,16 @@ void CPU::pop_qq()
     {
     case 0:
         pop16(regs.BC);
-#ifdef DEBUG_LOG
-        AddDebugLog("POP BC");
-#endif
         break;
     case 1:
         pop16(regs.DE);
-#ifdef DEBUG_LOG
-        AddDebugLog("POP DE");
-#endif
         break;
     case 2:
         pop16(regs.HL);
-#ifdef DEBUG_LOG
-        AddDebugLog("POP HL");
-#endif
         break;
     case 3:
         pop16(regs.AF);
         regs.F &= 0xf0; // Always mask out lower nibble of flags, as they are forced zero on hardware
-#ifdef DEBUG_LOG
-        AddDebugLog("POP AF");
-#endif
         break;
     }
 }
@@ -377,9 +275,6 @@ void CPU::push_bc()
 {
     mem.Write(--regs.SP, regs.B);
     mem.Write(--regs.SP, regs.C);
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH BC");
-#endif
 }
 
 /// PUSH DE
@@ -388,9 +283,6 @@ void CPU::push_de()
 {
     mem.Write(--regs.SP, regs.D);
     mem.Write(--regs.SP, regs.E);
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH DE");
-#endif
 }
 
 /// PUSH HL
@@ -399,9 +291,6 @@ void CPU::push_hl()
 {
     mem.Write(--regs.SP, regs.H);
     mem.Write(--regs.SP, regs.L);
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH HL");
-#endif
 }
 
 /// PUSH AF
@@ -410,9 +299,6 @@ void CPU::push_af()
 {
     mem.Write(--regs.SP, regs.A);
     mem.Write(--regs.SP, regs.F & 0xf0); // mask out the lower 4 bits to force them to always be zero
-#ifdef DEBUG_LOG
-    AddDebugLog("PUSH AF");
-#endif
 }
 
 void CPU::push_pc()

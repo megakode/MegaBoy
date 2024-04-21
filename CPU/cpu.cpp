@@ -334,33 +334,10 @@ void CPU::reset()
     */
 }
 
-void CPU::AddDebugLog(const char *fmt, ...)
+void CPU::AddDebugLog()
 {
-    va_list args;
-    va_start(args, fmt);
-    AddDebugLog(fmt, args);
-    va_end(args);
-}
-
-void CPU::AddDebugLog(const char *text, va_list args)
-{
-    constexpr int buffer_length = 200;
-    char buffer[buffer_length];
-    // snprintf(buffer, buffer_length, text,args);
-    vsnprintf(buffer, buffer_length, text, args);
-
-    std::string buffAsStdStr = buffer;
-    // TODO: also add opcodes
-    // std::cout << std::hex << current_pc << ": " << text << std::endl;
-    debug_log_entries.push_back({current_pc, {current_opcode, 0, 0, 0}, buffAsStdStr});
-}
-
-void CPU::DumpDebugLog()
-{
-    for (DebugLogEntry &entry : debug_log_entries)
-    {
-        std::cout << std::hex << entry.PC << ":" << entry.text << std::endl;
-    }
+    // auto entry = DebugLogEntry{current_pc, {current_opcode, 0, 0}};
+    // debug_log_entries.push_back(entry);
 }
 
 uint8_t CPU::step()
@@ -434,15 +411,6 @@ void CPU::set_DEC_operation_flags(uint8_t result)
 
 void CPU::invalid_opcode()
 {
-#ifdef DEBUG_LOG
     std::cout << std::endl
               << "INVALID OPCODE: " << (int)current_opcode << std::endl;
-    // print stacktrace
-    constexpr int number_of_entries_to_print = 50;
-
-    for (int index = debug_log_entries.size() - number_of_entries_to_print; index < debug_log_entries.size(); index++)
-    {
-        std::cout << std::hex << debug_log_entries[index].PC << ": " << debug_log_entries[index].text << std::endl;
-    }
-#endif
 }

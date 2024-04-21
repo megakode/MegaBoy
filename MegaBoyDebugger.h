@@ -5,14 +5,15 @@
 #include "imgui/imgui.h"
 #include "CPU/cpu.h"
 #include "UI/RegisterWindow.h"
+#include "UI/DisassemblyWindow.h"
 #include "Gameboy.h"
 
 #pragma once
 
-class MegaBoyDebugger {
+class MegaBoyDebugger
+{
 
 private:
-
     std::thread gb_thread;
 
     /// Scroll to the lates entry in the disassembly
@@ -23,8 +24,9 @@ private:
 
     std::unique_ptr<Gameboy> gb;
 
-public:
+    DisassemblyWindow disassemblyWindow;
 
+public:
     MegaBoyDebugger();
     ~MegaBoyDebugger();
 
@@ -42,8 +44,6 @@ public:
     static constexpr uint16_t GB_SCREEN_HEIGHT = 256;
     /// RGB screen data
     uint8_t *screenData;
-
-
 
     void Run();
 

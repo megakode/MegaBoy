@@ -43,7 +43,7 @@ Disassembler::Disassembler()
         {.numBytes = 2, .cycles = 8, .text = &Disassembler::LD_r_n},      // 0x1e "LD E,N"
         {.numBytes = 1, .cycles = 4, .text = "RLA"},                      // 0x1f "RRA"
 
-        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_cc},       // 0x20 "JR NZ nn"
+        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_nz},       // 0x20 "JR NZ nn"
         {.numBytes = 3, .cycles = 12, .text = &Disassembler::LD_HL_nnnn}, // 0x21 "LD HL,nnnn"
         {.numBytes = 1, .cycles = 8, .text = "LD (HL+),A"},               // 0x22 "LD (HL+),A"
         {.numBytes = 1, .cycles = 8, .text = "INC HL"},                   // 0x23 "INC HL"
@@ -51,7 +51,7 @@ Disassembler::Disassembler()
         {.numBytes = 1, .cycles = 4, .text = "DEC H"},                    // 0x25 "DEC H"
         {.numBytes = 2, .cycles = 8, .text = &Disassembler::LD_r_n},      // 0x26 "LD H,N"
         {.numBytes = 1, .cycles = 4, .text = "DAA"},                      // 0x27 "DAA"
-        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_cc},       // 0x28 "JR Z nn"
+        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_z},        // 0x28 "JR Z nn"
         {.numBytes = 1, .cycles = 8, .text = "ADD HL,HL"},                // 0x29 "ADD HL,HL"
         {.numBytes = 1, .cycles = 8, .text = "LD A,(HL+)"},               // 0x2a "LD A,(HL+)"
         {.numBytes = 1, .cycles = 8, .text = "DEC HL"},                   // 0x2b "DEC HL"
@@ -60,7 +60,7 @@ Disassembler::Disassembler()
         {.numBytes = 2, .cycles = 8, .text = &Disassembler::LD_r_n},      // 0x2e "LD L,n"
         {.numBytes = 1, .cycles = 4, .text = "CPL"},                      // 0x2f "CPL"
 
-        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_cc},       // 0x30 "JR NC nn",
+        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_nc},       // 0x30 "JR NC nn",
         {.numBytes = 3, .cycles = 12, .text = &Disassembler::LD_SP_nnnn}, // 0x31 "LD SP,nnnn",
         {.numBytes = 1, .cycles = 8, .text = "LD (HL-),A"},               // 0x32 "LD (HL-),A"
         {.numBytes = 1, .cycles = 8, .text = "INC SP"},                   // 0x33 "INC SP"
@@ -68,7 +68,7 @@ Disassembler::Disassembler()
         {.numBytes = 1, .cycles = 12, .text = "DEC (HL)"},                // 0x35 "DEC (HL)"
         {.numBytes = 2, .cycles = 12, .text = &Disassembler::LD_r_n},     // 0x36 "LD (HL),n"
         {.numBytes = 1, .cycles = 4, .text = "SCF"},                      // 0x37 "SCF"
-        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_cc},       // 0x38 "JR C nn"
+        {.numBytes = 2, .cycles = 8, .text = &Disassembler::JR_c},        // 0x38 "JR C nn"
         {.numBytes = 1, .cycles = 8, .text = "ADD HL,SP"},                // 0x39 "ADD HL,SP"
         {.numBytes = 1, .cycles = 8, .text = "LD A,(HL-)"},               // 0x3a "LD A,(HL-)"
         {.numBytes = 1, .cycles = 8, .text = "DEC SP"},                   // 0x3b "DEC SP"
@@ -306,6 +306,8 @@ DisassemblyLine Disassembler::DisassembleAddress(uint16_t address, const HostMem
     line.instructionBytes = bytes;
     line.numberOfBytes = inst.numBytes;
     line.PC = address;
+
+    // std::cout << std::format("addr={} byte=0x{:02X} line={} ", address, bytes.data[0], line.text) << std::endl;
 
     return std::move(line);
 }

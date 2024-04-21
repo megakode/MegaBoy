@@ -103,11 +103,6 @@ void CPU::CP_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = read_from_register(srcRegCode);
     sub(srcRegValue, false, true);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("CP %s", regName.c_str());
-#endif
 }
 
 // CP N
@@ -118,10 +113,6 @@ void CPU::CP_n()
 {
     uint8_t value = fetch8BitValue();
     sub(value, false, true);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("CP %02x", value);
-#endif
 }
 
 // *********************************************************************************
@@ -135,9 +126,6 @@ void CPU::CP_n()
 void CPU::ADD_HL_HL()
 {
     add16(regs.HL, regs.HL);
-#ifdef DEBUG_LOG
-    AddDebugLog("ADD HL,HL");
-#endif
 }
 
 // ADD HL,BC
@@ -176,11 +164,6 @@ void CPU::ADD_A_r()
     uint8_t srcRegValue = read_from_register(srcRegCode);
 
     add(srcRegValue, false);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("ADD A,%s", regName.c_str());
-#endif
 }
 
 // cycles: 7
@@ -188,9 +171,6 @@ void CPU::ADD_A_n()
 {
     uint8_t srcRegValue = fetch8BitValue();
     add(srcRegValue, false);
-#ifdef DEBUG_LOG
-    AddDebugLog("ADD A,%x", srcRegValue);
-#endif
 }
 
 void CPU::ADC_A_r()
@@ -199,10 +179,6 @@ void CPU::ADC_A_r()
     uint8_t srcRegValue = read_from_register(srcRegCode);
 
     add(srcRegValue, true);
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("ADC A,%s", regName.c_str());
-#endif
 }
 
 // ADC A,N
@@ -212,9 +188,6 @@ void CPU::ADC_A_n()
 {
     auto value = fetch8BitValue();
     add(value, true);
-#ifdef DEBUG_LOG
-    AddDebugLog("ADC A,%x", value);
-#endif
 }
 
 // *********************************************************************************
@@ -235,9 +208,6 @@ void CPU::SUB_n()
 {
     uint8_t srcRegValue = fetch8BitValue();
     sub(srcRegValue, false, false);
-#ifdef DEBUG_LOG
-    AddDebugLog("SUB A,%x", srcRegValue);
-#endif
 }
 
 void CPU::SBC_r()
@@ -245,10 +215,6 @@ void CPU::SBC_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = read_from_register(srcRegCode);
     sub(srcRegValue, true, false);
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("SBC A,%s", regName.c_str());
-#endif
 }
 
 // SBC N
@@ -258,9 +224,6 @@ void CPU::SBC_n()
 {
     uint8_t srcRegValue = fetch8BitValue();
     sub(srcRegValue, true, false);
-#ifdef DEBUG_LOG
-    AddDebugLog("SBC A,%x", srcRegValue);
-#endif
 }
 
 // *********************************************************************************
@@ -279,21 +242,12 @@ void CPU::AND_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = read_from_register(srcRegCode);
     and_a_with_value(srcRegValue);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("AND %s", regName.c_str());
-#endif
 }
 
 void CPU::AND_n()
 {
     auto value = fetch8BitValue();
     and_a_with_value(value);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("AND %02x", value);
-#endif
 }
 
 // *********************************************************************************
@@ -311,11 +265,6 @@ void CPU::XOR_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = read_from_register(srcRegCode);
     xor_a_with_value(srcRegValue);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("XOR %s", regName.c_str());
-#endif
 }
 
 // opcode: 0xee
@@ -324,10 +273,6 @@ void CPU::XOR_n()
 {
     auto value = fetch8BitValue();
     xor_a_with_value(value);
-
-#ifdef DEBUG_LOG
-    AddDebugLog("XOR %02x", value);
-#endif
 }
 
 void CPU::xor_a_with_value(uint8_t value)
@@ -353,11 +298,6 @@ void CPU::OR_r()
     uint8_t srcRegCode = current_opcode & 0b111;
     uint8_t srcRegValue = read_from_register(srcRegCode);
     or_a_with_value(srcRegValue);
-
-#ifdef DEBUG_LOG
-    auto regName = reg_name_from_regcode(srcRegCode);
-    AddDebugLog("OR %s", regName.c_str());
-#endif
 }
 
 // OR N
@@ -387,9 +327,6 @@ void CPU::or_a_with_value(uint8_t value)
 void CPU::DEC_SP()
 {
     regs.SP--;
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC SP");
-#endif
 }
 
 // opcode: 0x3c
@@ -397,18 +334,12 @@ void CPU::DEC_SP()
 void CPU::INC_A()
 {
     INC_r(regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC A");
-#endif
 }
 
 // opcode: 0x3d
 void CPU::DEC_A()
 {
     DEC_r(regs.A);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC A");
-#endif
 }
 
 // dec hl
@@ -418,9 +349,6 @@ void CPU::DEC_A()
 void CPU::DEC_HL()
 {
     regs.HL--;
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC HL");
-#endif
 }
 
 // inc l
@@ -429,9 +357,6 @@ void CPU::DEC_HL()
 void CPU::INC_L()
 {
     INC_r(regs.L);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC L");
-#endif
 }
 
 // DEC L
@@ -440,9 +365,6 @@ void CPU::INC_L()
 void CPU::DEC_L()
 {
     DEC_r(regs.L);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC L");
-#endif
 }
 
 // INC SP
@@ -451,9 +373,6 @@ void CPU::DEC_L()
 void CPU::INC_SP()
 {
     regs.SP++;
-#ifdef DEBUG_LOG
-    AddDebugLog("INC SP");
-#endif
 }
 
 // INC (HL)
@@ -482,9 +401,6 @@ void CPU::DEC_pHL()
 void CPU::INC_BC()
 {
     regs.BC++;
-#ifdef DEBUG_LOG
-    AddDebugLog("INC BC");
-#endif
 }
 
 // inc b
@@ -494,9 +410,6 @@ void CPU::INC_BC()
 void CPU::INC_B()
 {
     INC_r(regs.B);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC B");
-#endif
 }
 
 // dec b
@@ -505,9 +418,6 @@ void CPU::INC_B()
 void CPU::DEC_B()
 {
     DEC_r(regs.B);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC B");
-#endif
 }
 
 // DEC BC
@@ -516,9 +426,6 @@ void CPU::DEC_B()
 void CPU::DEC_BC()
 {
     regs.BC--;
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC BC");
-#endif
 }
 
 // INC C
@@ -527,9 +434,6 @@ void CPU::DEC_BC()
 void CPU::INC_C()
 {
     INC_r(regs.C);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC C");
-#endif
 }
 
 // DEC C
@@ -538,9 +442,6 @@ void CPU::INC_C()
 void CPU::DEC_C()
 {
     DEC_r(regs.C);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC C");
-#endif
 }
 
 // inc de
@@ -550,9 +451,6 @@ void CPU::DEC_C()
 void CPU::INC_DE()
 {
     regs.DE++;
-#ifdef DEBUG_LOG
-    AddDebugLog("INC DE");
-#endif
 }
 
 // inc d
@@ -560,9 +458,6 @@ void CPU::INC_DE()
 void CPU::INC_D()
 {
     INC_r(regs.D);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC D");
-#endif
 }
 
 // dec d
@@ -570,9 +465,6 @@ void CPU::INC_D()
 void CPU::DEC_D()
 {
     DEC_r(regs.D);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC D");
-#endif
 }
 
 // INC HL
@@ -582,9 +474,6 @@ void CPU::DEC_D()
 void CPU::INC_HL()
 {
     regs.HL++;
-#ifdef DEBUG_LOG
-    AddDebugLog("INC HL");
-#endif
 }
 
 // INC H
@@ -592,9 +481,6 @@ void CPU::INC_HL()
 void CPU::INC_H()
 {
     INC_r(regs.H);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC H");
-#endif
 }
 
 // DEC H
@@ -602,9 +488,6 @@ void CPU::INC_H()
 void CPU::DEC_H()
 {
     DEC_r(regs.H);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC H");
-#endif
 }
 
 // DEC DE
@@ -613,9 +496,6 @@ void CPU::DEC_H()
 void CPU::DEC_DE()
 {
     regs.DE--;
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC DE");
-#endif
 }
 
 // INC E
@@ -624,9 +504,6 @@ void CPU::DEC_DE()
 void CPU::INC_E()
 {
     INC_r(regs.E);
-#ifdef DEBUG_LOG
-    AddDebugLog("INC E");
-#endif
 }
 
 // DEC E
@@ -635,9 +512,6 @@ void CPU::INC_E()
 void CPU::DEC_E()
 {
     DEC_r(regs.E);
-#ifdef DEBUG_LOG
-    AddDebugLog("DEC E");
-#endif
 }
 
 /// ADD SP,dd

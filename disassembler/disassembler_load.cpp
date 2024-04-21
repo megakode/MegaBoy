@@ -48,36 +48,6 @@ std::string Disassembler::LD_SP_nnnn(const InstructionBytes &bytes)
     return std::format("LD SP,0x{:02X}{:02X}", bytes.data[2], bytes.data[1]);
 }
 
-// // LD r,r
-// // Cycles 4 / 8
-// std::string Disassembler::LD_r_r(const InstructionBytes &bytes)
-// {
-//     uint8_t dstRegCode = (bytes.data[0] >> 3) & 0b111;
-//     uint8_t srcRegCode = bytes.data[0] & 0b111;
-
-//     uint8_t cycles = 4;
-
-//     if (dstRegCode == RegisterCode::HLPtr || srcRegCode == RegisterCode::HLPtr)
-//     {
-//         cycles = 8;
-//     }
-
-//     return {.cycles = cycles, .text = std::format("LD {},{}", reg_name_from_regcode(dstRegCode), reg_name_from_regcode(srcRegCode))};
-
-//     // if (dstRegCode == 0 && srcRegCode == 0)
-//     // {
-//     //     // LD B,B - mooneye test has completed
-//     //     if (regs.B == 3)
-//     //     {
-//     //         std::cout << "Test OK!" << std::flush;
-//     //     }
-//     //     else
-//     //     {
-//     //         std::cout << "Test FAILED" << std::flush;
-//     //     }
-//     // }
-// }
-
 // LD r,n
 // cycles: 8 / 12
 std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
@@ -86,25 +56,13 @@ std::string Disassembler::LD_r_n(const InstructionBytes &bytes)
     return std::format("LD {},{:#x}", reg_name_from_regcode(dstRegCode), bytes.data[1]);
 }
 
-// // LD (NN),A
-// // opcode: 0x32
-// // flags: -
+// LD (NN),A
+// opcode: 0x32
+// flags: -
 std::string Disassembler::LD_pnnnn_A(const InstructionBytes &bytes)
 {
     return std::format("LD (0x{:02X}{:02X}),A", bytes.data[2], bytes.data[1]);
 }
-
-// // LD (HL),N
-// // opcode: 0x36
-// std::string Disassembler::LD_pHL_n()
-// {
-//     uint8_t value = fetch8BitValue();
-//     mem.Write(regs.HL, value);
-
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD (HL),0x%02x", value);
-// #endif
-// }
 
 /// LD (0xff00 + n),A
 /// opcode: e0 nn
@@ -119,129 +77,20 @@ std::string Disassembler::LD_A_ff00n(const InstructionBytes &bytes)
     return std::format("LD A,(0xff00 + 0x{:#x})", bytes.data[1]);
 }
 
-// /// LD A,(FF00+C)
-// /// opcode: 0xe2
-// std::string Disassembler::LD_A_ff00C()
-// {
-//     uint16_t addr = 0xff00 + regs.C;
-//     regs.A = mem.Read(addr);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("LD A,(0xff00 + C)");
-// #endif
-// }
-
-// // Opcode: 0xf8
-// /// LD HL,SP+dd
-// /// HL = SP +/- dd ; dd is 8-bit signed number
-// /// cycles: 12
-// /// test rom: ok
+/// Opcode: 0xf8
+/// LD HL,SP+dd
+/// HL = SP +/- dd ; dd is 8-bit signed number
+/// cycles: 12
 std::string Disassembler::LD_HL_SPs8(const InstructionBytes &bytes)
 {
     int8_t value = static_cast<int8_t>(bytes.data[1]);
     return std::format("LD HL,SP+{}", value);
 }
 
-// /// LD A,(nn)
-// /// opcode: 0xfa
-// /// cycles: 16
+/// LD A,(nnnn)
+/// opcode: 0xfa
+/// cycles: 16
 std::string Disassembler::LD_A_pnnnn(const InstructionBytes &bytes)
 {
     return std::format("LD A,(0x{:02X}{:02X})", bytes.data[2], bytes.data[1]);
 }
-
-// // ********************************************************************************
-// // PUSH / POP
-// // ********************************************************************************
-
-// /// Pop 2 bytes of the stack into a 16 bit register
-// /// \param regPair The 16 bit register pair to pop the stack value into
-// std::string Disassembler::pop16(uint16_t &regPair)
-// {
-//     uint8_t lobyte = mem.Read(regs.SP++);
-//     uint8_t hibyte = mem.Read(regs.SP++);
-//     regPair = (hibyte << 8) + lobyte;
-// }
-
-// // cycles: 10
-// std::string Disassembler::pop_qq()
-// {
-//     uint8_t regPairCode = (current_opcode & 0b00110000) >> 4;
-//     switch (regPairCode)
-//     {
-//     case 0:
-//         pop16(regs.BC);
-// #ifdef DEBUG_LOG
-//         AddDebugLog("POP BC");
-// #endif
-//         break;
-//     case 1:
-//         pop16(regs.DE);
-// #ifdef DEBUG_LOG
-//         AddDebugLog("POP DE");
-// #endif
-//         break;
-//     case 2:
-//         pop16(regs.HL);
-// #ifdef DEBUG_LOG
-//         AddDebugLog("POP HL");
-// #endif
-//         break;
-//     case 3:
-//         pop16(regs.AF);
-//         regs.F &= 0xf0; // Always mask out lower nibble of flags, as they are forced zero on hardware
-// #ifdef DEBUG_LOG
-//         AddDebugLog("POP AF");
-// #endif
-//         break;
-//     }
-// }
-
-// /// PUSH BC
-// /// cycles: 11
-// std::string Disassembler::push_bc()
-// {
-//     mem.Write(--regs.SP, regs.B);
-//     mem.Write(--regs.SP, regs.C);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("PUSH BC");
-// #endif
-// }
-
-// /// PUSH DE
-// /// cycles: 11
-// std::string Disassembler::push_de()
-// {
-//     mem.Write(--regs.SP, regs.D);
-//     mem.Write(--regs.SP, regs.E);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("PUSH DE");
-// #endif
-// }
-
-// /// PUSH HL
-// /// cycles: 11
-// std::string Disassembler::push_hl()
-// {
-//     mem.Write(--regs.SP, regs.H);
-//     mem.Write(--regs.SP, regs.L);
-// #ifdef DEBUG_LOG
-//     AddDebugLog("PUSH HL");
-// #endif
-// }
-
-// /// PUSH AF
-// /// cycles: 11
-// std::string Disassembler::push_af()
-// {
-//     mem.Write(--regs.SP, regs.A);
-//     mem.Write(--regs.SP, regs.F & 0xf0); // mask out the lower 4 bits to force them to always be zero
-// #ifdef DEBUG_LOG
-//     AddDebugLog("PUSH AF");
-// #endif
-// }
-
-// std::string Disassembler::push_pc()
-// {
-//     mem.Write(--regs.SP, regs.PC >> 8);   // hi-byte
-//     mem.Write(--regs.SP, regs.PC & 0xff); // lo-byte
-// }

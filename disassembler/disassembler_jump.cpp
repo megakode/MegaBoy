@@ -25,12 +25,28 @@ std::string Disassembler::JR_n(const InstructionBytes &bytes)
     return std::format("JR {}", offset);
 }
 
-std::string Disassembler::JR_cc(const InstructionBytes &bytes)
+std::string Disassembler::JR_c(const InstructionBytes &bytes)
 {
-    uint8_t conditionCode = (bytes.data[0] & 0b00111000) >> 3;
-    std::string conditionName = name_from_condition(conditionCode);
     int8_t offset = static_cast<int8_t>(bytes.data[1]);
-    return std::format("JR {} {}", conditionName, offset);
+    return std::format("JR C {}", offset);
+}
+
+std::string Disassembler::JR_nc(const InstructionBytes &bytes)
+{
+    int8_t offset = static_cast<int8_t>(bytes.data[1]);
+    return std::format("JR NC {}", offset);
+}
+
+std::string Disassembler::JR_z(const InstructionBytes &bytes)
+{
+    int8_t offset = static_cast<int8_t>(bytes.data[1]);
+    return std::format("JR Z {}", offset);
+}
+
+std::string Disassembler::JR_nz(const InstructionBytes &bytes)
+{
+    int8_t offset = static_cast<int8_t>(bytes.data[1]);
+    return std::format("JR NZ {}", offset);
 }
 
 // Calls

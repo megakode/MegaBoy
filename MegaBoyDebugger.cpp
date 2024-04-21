@@ -151,7 +151,7 @@ void MegaBoyDebugger::UpdateUI()
 
     // if (!is_running)
     {
-        DisassemblyWindow::UpdateUI(gb->cpu);
+        disassemblyWindow.UpdateUI(gb->cpu);
 
         if (ImGui::Begin("Debugger"))
         {
@@ -241,11 +241,6 @@ void MegaBoyDebugger::DrawDebuggingControls()
         gb->cpu.debug_log_entries.clear();
         gb->cpu.reset();
         // Step();
-    }
-
-    if (ImGui::Button("Dump debug log"))
-    {
-        gb->cpu.DumpDebugLog();
     }
 
     static char addr_input[5] = {"100"};

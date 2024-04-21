@@ -110,7 +110,10 @@ public:
     static std::string JP_cc_nnnn(const InstructionBytes &bytes);
     static std::string JP_nnnn(const InstructionBytes &bytes);
     static std::string JR_n(const InstructionBytes &bytes);
-    static std::string JR_cc(const InstructionBytes &bytes);
+    static std::string JR_c(const InstructionBytes &bytes);
+    static std::string JR_nc(const InstructionBytes &bytes);
+    static std::string JR_nz(const InstructionBytes &bytes);
+    static std::string JR_z(const InstructionBytes &bytes);
     static std::string CALL_cc_nnnn(const InstructionBytes &bytes);
     static std::string CALL_nnnn(const InstructionBytes &bytes);
 
