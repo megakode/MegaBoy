@@ -68,13 +68,13 @@ std::string Disassembler::LD_pnnnn_A(const InstructionBytes &bytes)
 /// opcode: e0 nn
 std::string Disassembler::LD_ff00n_A(const InstructionBytes &bytes)
 {
-    return std::format("LD (0xff00 + 0x{:#x}),A", bytes.data[1]);
+    return std::format("LD (0xff00 + {:#x}),A", bytes.data[1]);
 }
 
 /// LD A,(0xff00 + n)
 std::string Disassembler::LD_A_ff00n(const InstructionBytes &bytes)
 {
-    return std::format("LD A,(0xff00 + 0x{:#x})", bytes.data[1]);
+    return std::format("LD A,(0xff00 + {:#x})", bytes.data[1]);
 }
 
 /// Opcode: 0xf8
