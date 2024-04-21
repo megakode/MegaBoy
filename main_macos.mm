@@ -3,6 +3,7 @@
 #include "imgui/backends/imgui_impl_metal.h"
 #include <stdio.h>
 #include <SDL.h>
+#include "UI/UIConfig.h"
 #include "MegaBoyDebugger.h"
 
 #import <Metal/Metal.h>
@@ -92,7 +93,6 @@ int main(int, char**)
     // Our state
     bool show_demo_window = true;
     bool show_another_window = false;
-    float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
     // Main loop
     bool done = false;
@@ -121,7 +121,7 @@ int main(int, char**)
             id<CAMetalDrawable> drawable = [layer nextDrawable];
 
             id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
-            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(clear_color[0] * clear_color[3], clear_color[1] * clear_color[3], clear_color[2] * clear_color[3], clear_color[3]);
+            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(UIConfig::CLEAR_COLOR.x * UIConfig::CLEAR_COLOR.w, UIConfig::CLEAR_COLOR.y * UIConfig::CLEAR_COLOR.w, UIConfig::CLEAR_COLOR.z * UIConfig::CLEAR_COLOR.w, UIConfig::CLEAR_COLOR.w);
             renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
             renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
             renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -132,6 +132,7 @@ int main(int, char**)
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();
+            UIConfig::setupStyle();
 
             debugger.UpdateUI();
 

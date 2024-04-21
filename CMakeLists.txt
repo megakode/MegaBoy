@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.5.0)
 project(MegaBoy VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 20)
 # set(CMAKE_C_COMPILER /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc)
@@ -16,7 +16,7 @@ Include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.4.0 # or a later release
+  GIT_TAG        v3.5.4 # or a later release
 )
 
 FetchContent_MakeAvailable(Catch2)
@@ -58,30 +58,41 @@ endif()
 # enable_testing()
 add_executable(cputests 
     tests/cputests.cpp 
-    CPU/cpu.cpp 
     HostMemory.cpp
     cartridge/Cartridge.cpp
-    CPU/bit_instructions.h 
-    CPU/jump_instructions.h 
-    CPU/load_instructions.h 
-    CPU/arithmetic_instructions.h 
-    CPU/general_instructions.h 
+    CPU/cpu.cpp 
+    CPU/cpu_arithmetic_instructions.cpp
+    CPU/cpu_bit_instructions.cpp
+    CPU/cpu_general_instructions.cpp
+    CPU/cpu_jump_instructions.cpp
+    CPU/cpu_load_instructions.cpp
+    disassembler/disassembler_arithmetic.cpp
+    disassembler/disassembler_jump.cpp
+    disassembler/disassembler_load.cpp
+    disassembler/disassembler_bit.cpp
+    disassembler/disassembler.cpp
     tests/lcd_tests.cpp 
     tests/timer_tests.cpp 
-    tests/dma_controller_tests.cpp)
+    tests/dma_controller_tests.cpp
+    tests/disassembler_tests.cpp
+    )
 
 target_link_libraries(cputests Catch2::Catch2WithMain)
-target_compile_features(cputests PRIVATE cxx_std_17)
+target_compile_features(cputests PRIVATE cxx_std_20)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 catch_discover_tests(cputests)
 
+# Main executable #################################
 
 add_executable(MegaBoy ${MainFile})
+
+add_subdirectory(CPU)
+add_subdirectory(disassembler)
+
 target_sources(MegaBoy PRIVATE
         LCD/lcd.cpp
-        CPU/cpu.cpp
         imgui/imgui.cpp
         MegaBoyDebugger.cpp
         UI/RegisterWindow.cpp
@@ -96,6 +107,12 @@ target_sources(MegaBoy PRIVATE
 target_compile_features(MegaBoy PRIVATE cxx_std_20)
 include_directories(${SDL2_INCLUDE_DIRS})
 target_link_libraries(MegaBoy PUBLIC ImGui ${SDL2_LIBRARIES} ${MainLibs})
+
+# std::format is still experimental in Clang 15, so set the compiler and linker flags to enable it
+if(APPLE)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fexperimental-library")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --lc++experimental")
+endif()
 
 # profilling
 # does not work on MacOS

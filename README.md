@@ -55,6 +55,7 @@ Other GB emulators:
 
 **Test Roms**
 
+- check up on Gameboy Doctor https://github.com/robert/gameboy-doctor
 - https://github.com/retrio/gb-test-roms/tree/master/cpu_instrs
 - https://github.com/mattcurrie/dmg-acid2
 - https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM

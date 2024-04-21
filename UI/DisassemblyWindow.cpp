@@ -12,40 +12,71 @@ void DisassemblyWindow::UpdateUI(CPU &cpu)
 
     static int item_current_idx = 0;
 
-    if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing()))) {
+    if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 20 * ImGui::GetTextLineHeightWithSpacing())))
+    {
 
         int number_of_lines = 10;
-        //int first_index = std::max(0,gb->cpu.debug_log_entries.size() - number_of_lines);
+        // int lines = std::min(10,(int)cpu.debug_log_entries.size());
+        // int max_line_index = (int)cpu.debug_log_entries.size();
+        // for( int index = max_line_index-lines ; index < max_line_index ; index++ )
+        // {
+        //     // Intentionally copy the entry here, as otherwise a sigsegv might occur when we print it further down
+        //     auto entry = cpu.debug_log_entries[index];
+        //     if(index == max_line_index-1){
+        //     } else {
+        //         ImGui::TextColored(UIConfig::COLOR_VALUE_HEX," 0x%04x ",entry.PC);
+        //     }
 
-        int lines = std::min(10,(int)cpu.debug_log_entries.size());
-        int max_line_index = (int)cpu.debug_log_entries.size();
-        for( int index = max_line_index-lines ; index < max_line_index ; index++ )
-            //for(auto it = gb->cpu.debug_log_entries.end() - lines; it != std::end(gb->cpu.debug_log_entries); ++it)
+        //     for (unsigned char opcode : entry.opcodes) {
+        //         if (opcode != 0) {
+
+        uint16_t pc = cpu.regs.PC;
+
+        for (int i = 0; i < 10; i++)
         {
-            // Intentionally copy the entry here, as otherwise a sigsegv might occur when we print it further down
-            //auto entry = *it; // gb->cpu.debug_log_entries[i];
-            auto entry = cpu.debug_log_entries[index];
-            if(index == max_line_index-1){
-                ImGui::TextColored(UIConfig::COLOR_VALUE_HEX,">0x%04x ",entry.PC);
-            } else {
-                ImGui::TextColored(UIConfig::COLOR_VALUE_HEX," 0x%04x ",entry.PC);
+            auto line = disassembler.DisassembleAddress(pc, cpu.mem);
+
+            ImVec4 lineTextColor;
+
+            if (cpu.regs.PC == pc)
+            {
+                lineTextColor = UIConfig::COLOR_DISASSEMBLY_TEXT_CURRENT_LINE;
+                ImGui::TextColored(lineTextColor, ">0x%04x ", line.PC);
+            }
+            else
+            {
+                lineTextColor = UIConfig::COLOR_DISASSEMBLY_TEXT;
+                ImGui::TextColored(lineTextColor, " 0x%04x ", line.PC);
             }
 
-
-            for (unsigned char opcode : entry.opcodes) {
-                if (opcode != 0) {
-                    ImGui::SameLine();
-                    ImGui::Text("%02x", opcode);
-                } else {
-                    ImGui::SameLine();
-                    ImGui::Text("  ");
-                }
-            }
             ImGui::SameLine();
-            ImGui::Text("%s", entry.text.c_str());
+            if (line.numberOfBytes == 1)
+            {
+                ImGui::Text("%02x       ", line.instructionBytes.data[0]);
+            }
+            else if (line.numberOfBytes == 2)
+            {
+                ImGui::Text("%02x %02x    ", line.instructionBytes.data[0], line.instructionBytes.data[1]);
+            }
+            else
+            {
+                ImGui::Text("%02x %02x %02x ", line.instructionBytes.data[0], line.instructionBytes.data[1], line.instructionBytes.data[2]);
+            }
+
+            ImGui::SameLine();
+            ImGui::Text("%s", line.text.c_str());
+
+            pc += line.numberOfBytes;
         }
 
-        //for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
+        //         } else {
+        //             ImGui::SameLine();
+        //             ImGui::Text("  ");
+        //         }
+        //     }
+        // }
+
+        // for( int index = 0 ; index < cpu.debug_log_entries.size() ; index++ )
         /*
         {
             ImGuiListClipper clipper;

@@ -64,7 +64,7 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game_roms/Pac-Man (USA).gb";
 
     // std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
-    // std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     // std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
@@ -79,39 +79,39 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game_roms/Arcade Classic No. 1 - Asteroids & Missile Command (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bust-A-Move 2 - Arcade Edition (USA, Europe).gb";
 
-    //std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
-    //std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/03-op sp,hl.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/04-op r,imm.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/05-op rp.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/06-ld r,r.gb"; PASSED
-    //std::filesystem::path filename = "../tests/test_roms/07-jr,jp,call,ret,rst.gb"; PASSED
-    //std::filesystem::path filename = "../tests/test_roms/08-misc instrs.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/09-op r,r.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
-    //std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
-    // std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
-    
+    //    std::filesystem::path filename = "../tests/test_roms/cpu_instrs.gb";
+    // std::filesystem::path filename = "../tests/test_roms/01-special.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/02-interrupts.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/03-op sp,hl.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/04-op r,imm.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/05-op rp.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/06-ld r,r.gb"; PASSED
+    // std::filesystem::path filename = "../tests/test_roms/07-jr,jp,call,ret,rst.gb"; PASSED
+    // std::filesystem::path filename = "../tests/test_roms/08-misc instrs.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/09-op r,r.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/10-bit ops.gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/11-op a,(hl).gb"; // PASSED
+    // std::filesystem::path filename = "../tests/test_roms/halt_bug.gb"; // PASSED
+    //  std::filesystem::path filename = "../tests/test_roms/dmg-acid2.gb"; //
+
     // Mooneyes
     // https://github.com/Gekkio/mooneye-test-suite/tree/8d742b9d55055f6878a2f3017e0ccf2234cd692c/acceptance
-    
+
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/bits/mem_oam.gb"; // OK
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/bits/reg_f.gb"; // OK
-    
+
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/instr/daa.gb"; // OK
-    
+
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/interrupts/ie_push.gb"; // failed
-    
+
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/basic.gb"; // OK
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/reg_read.gb"; // OK
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/sources-GS.gb"; // OK
-    std::filesystem::path filename = "../tests/test_roms/mts/acceptance/ppu/stat_irq_blocking.gb";
+    // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/ppu/stat_irq_blocking.gb";
 
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/basic.gb";
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/reg_read.gb";
-    //std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb";
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb";
 
     auto path = std::filesystem::absolute(filename);
 
@@ -149,20 +149,20 @@ void MegaBoyDebugger::LoadTestRom()
 void MegaBoyDebugger::UpdateUI()
 {
 
-    //if (!is_running)
+    // if (!is_running)
     {
-        DisassemblyWindow::UpdateUI(gb->cpu);
+        disassemblyWindow.UpdateUI(gb->cpu);
 
-        if(ImGui::Begin("Debugger"))
+        if (ImGui::Begin("Debugger"))
         {
 
             // ImGui::Begin("Debugging controls");
 
             DrawDebuggingControls();
-    
+
             // ImGui::End();
 
-            if (ImGui::CollapsingHeader("CPU",ImGuiTreeNodeFlags_DefaultOpen))
+            if (ImGui::CollapsingHeader("CPU", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 RegisterWindow::UpdateUI(gb->cpu);
             }
@@ -171,9 +171,8 @@ void MegaBoyDebugger::UpdateUI()
             {
                 DrawPPURegisters();
             }
-
         }
-            ImGui::End();
+        ImGui::End();
     }
 
     if (is_running)
@@ -244,11 +243,6 @@ void MegaBoyDebugger::DrawDebuggingControls()
         // Step();
     }
 
-    if (ImGui::Button("Dump debug log"))
-    {
-        gb->cpu.DumpDebugLog();
-    }
-
     static char addr_input[5] = {"100"};
     ImGui::InputText("hexadecimal", addr_input, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
     ImGui::SameLine();
@@ -259,7 +253,6 @@ void MegaBoyDebugger::DrawDebuggingControls()
         run_to = addr_int;
         is_running = true;
     };
-
 }
 
 void MegaBoyDebugger::SetKeyState(Joypad::Button button, bool pressed)
