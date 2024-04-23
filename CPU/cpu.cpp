@@ -323,7 +323,7 @@ void CPU::reset()
     regs.PC = 0;
     // regs.PC = 0x100;
     mem.Write(IOAddress::Boot_ROM_Disabled, 0);
-
+    is_halted = false;
     /*
         regs.SP = 0xFFFE;
         regs.PC = 0x0100;
