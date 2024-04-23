@@ -8,6 +8,13 @@ DMAController::DMAController(HostMemory &mem) : mem(mem)
 {
 }
 
+void DMAController::Reset()
+{
+    last_requested_source_addr = 0;
+    transfer_in_progress = false;
+    current_source_address = 0;
+}
+
 void DMAController::Step(uint16_t cycles)
 {
 

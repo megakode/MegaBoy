@@ -64,7 +64,8 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game_roms/Pac-Man (USA).gb";
 
     // std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
-    std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    // std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
+    std::filesystem::path filename = "../tests/game_roms/Tetris (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     // std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
@@ -238,8 +239,7 @@ void MegaBoyDebugger::DrawDebuggingControls()
     if (ImGui::Button("Reset"))
     {
         is_running = false;
-        gb->cpu.debug_log_entries.clear();
-        gb->cpu.reset();
+        gb->Reset();
         // Step();
     }
 

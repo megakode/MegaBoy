@@ -5,15 +5,15 @@
 #ifndef MEGABOY_DMACONTROLLER_H
 #define MEGABOY_DMACONTROLLER_H
 
-
 #include "HostMemory.h"
 
-class DMAController {
+class DMAController
+{
 
     /// OAM memory is always the destination
     static constexpr uint16_t DestinationBaseAddress = 0xFE00;
 
-    HostMemory& mem;
+    HostMemory &mem;
 
     /// The high-byte of the last requested source address. Returned when reading the DMA transfer 0xff46 address.
     uint8_t last_requested_source_addr = 0;
@@ -22,15 +22,15 @@ class DMAController {
     bool transfer_in_progress = false;
 
 public:
+    explicit DMAController(HostMemory &mem);
 
-    explicit DMAController( HostMemory& mem );
+    void Reset();
 
-    void Step( uint16_t cycles );
+    void Step(uint16_t cycles);
 
-    void RequestTransfer( uint8_t addr_hibyte );
+    void RequestTransfer(uint8_t addr_hibyte);
 
     [[nodiscard]] bool IsTransferInProgress() const;
-
 };
 
-#endif //MEGABOY_DMACONTROLLER_H
+#endif // MEGABOY_DMACONTROLLER_H

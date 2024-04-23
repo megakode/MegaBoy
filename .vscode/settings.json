@@ -79,5 +79,9 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "cinttypes": "cpp"
-    }
+    },
+    "lldb.displayFormat": "hex",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "lldb.consoleMode": "commands"
 }

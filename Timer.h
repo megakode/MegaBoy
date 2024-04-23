@@ -12,10 +12,10 @@
 #pragma once
 
 /// Based on the most detailed description of the GB timing system i could find: https://github.com/AntonioN D/giibiiadvance/blob/master/docs/TCAGBD.pdf
-class Timer {
+class Timer
+{
 
 private:
-
     /// 0xFF04: Divider register value (internally in the GB it is a 16 bit value, but only the upper 8 bits are mapped to memory at 0xFF04
     uint16_t divider_register = 0;
 
@@ -37,22 +37,30 @@ private:
     ///
     uint8_t timer_modulo = 0;
 
-    constexpr static uint8_t TimerEnabledBitmask    = 0b100;
+    constexpr static uint8_t TimerEnabledBitmask = 0b100;
     constexpr static uint8_t TimerMultiplierBitmask = 0b011;
 
-    HostMemory& mem;
+    HostMemory &mem;
 
 public:
-
     std::function<void()> didOverflow = nullptr;
 
     Timer() = delete;
 
-    explicit Timer( HostMemory &mem ) : mem(mem) {
-
+    explicit Timer(HostMemory &mem) : mem(mem)
+    {
     }
 
-    void Step(uint16_t ticks) {
+    void Reset()
+    {
+        divider_register = 0;
+        timer_control_register = 0;
+        timer_counter = 0;
+        timer_modulo = 0;
+    }
+
+    void Step(uint16_t ticks)
+    {
 
         // divider is ALWAYS increasing, regardless of TimerEnabled state in control register
         uint16_t previous_divider_value = divider_register;
@@ -63,40 +71,43 @@ public:
         mem[static_cast<uint16_t>(IOAddress::TimerControl)] = GetTimerControl();
         mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = GetCounter();
 
-        if(!(timer_control_register & TimerEnabledBitmask))
+        if (!(timer_control_register & TimerEnabledBitmask))
         {
             return;
         }
 
         bool increase_timer = false;
 
-        switch (timer_control_register & TimerMultiplierBitmask) {
-            case 0b00: // CPU Clock / 1024 = detect overflow from bits 8-0 in divider register
-                increase_timer = (previous_divider_value & 1023) + ticks > (1023);
-                break;
-            case 0b01: // CPU Clock / 16 = detect overflow from bits 2-0 in divider register
-                //increase_timer = (divider_register & 0b111) < (previous_divider_value & 0b111);
-                increase_timer = (previous_divider_value & 15) + ticks > (15);
-                break;
-            case 0b10: // CPU Clock / 64 = detect overflow from bits 4-0 in divider register
-                //increase_timer = (divider_register & 0b11111) < (previous_divider_value & 0b11111);
-                increase_timer = (previous_divider_value & 63) + ticks > (63);
-                break;
-            case 0b11: // CPU Clock / 256 = detect overflow from bits 6-0 in divider register
-                //increase_timer = (divider_register & 0b1111111) < (previous_divider_value & 0b1111111);
-                increase_timer = (previous_divider_value & 255) + ticks > (255);
-                break;
+        switch (timer_control_register & TimerMultiplierBitmask)
+        {
+        case 0b00: // CPU Clock / 1024 = detect overflow from bits 8-0 in divider register
+            increase_timer = (previous_divider_value & 1023) + ticks > (1023);
+            break;
+        case 0b01: // CPU Clock / 16 = detect overflow from bits 2-0 in divider register
+            // increase_timer = (divider_register & 0b111) < (previous_divider_value & 0b111);
+            increase_timer = (previous_divider_value & 15) + ticks > (15);
+            break;
+        case 0b10: // CPU Clock / 64 = detect overflow from bits 4-0 in divider register
+            // increase_timer = (divider_register & 0b11111) < (previous_divider_value & 0b11111);
+            increase_timer = (previous_divider_value & 63) + ticks > (63);
+            break;
+        case 0b11: // CPU Clock / 256 = detect overflow from bits 6-0 in divider register
+            // increase_timer = (divider_register & 0b1111111) < (previous_divider_value & 0b1111111);
+            increase_timer = (previous_divider_value & 255) + ticks > (255);
+            break;
         }
 
-        if(increase_timer){
+        if (increase_timer)
+        {
             uint8_t last_timer_counter = timer_counter;
             timer_counter++;
 
             // Did timer overflow?
-            if(timer_counter < last_timer_counter){
+            if (timer_counter < last_timer_counter)
+            {
                 timer_counter = timer_modulo;
                 // Set timer interrupt flag (Request timer interrupt)
-                if(didOverflow != nullptr)
+                if (didOverflow != nullptr)
                 {
                     didOverflow();
                 }
@@ -107,8 +118,6 @@ public:
         mem[static_cast<uint16_t>(IOAddress::TimerDivider)] = GetDividerRegister();
         mem[static_cast<uint16_t>(IOAddress::TimerControl)] = GetTimerControl();
         mem[static_cast<uint16_t>(IOAddress::TimerCounter)] = GetCounter();
-
-
     }
 
     /// FF05: TIMA - Timer counter (R/W)
@@ -124,7 +133,8 @@ public:
     }
 
     /// FF06: TMA - Timer Modulo (R/W)
-    void SetModulo(uint8_t value){
+    void SetModulo(uint8_t value)
+    {
         timer_modulo = value;
     }
 
@@ -140,10 +150,10 @@ public:
     }
 
     /// The divider is reset to 0 every time its value is set. (hence the missing value parameters of this function)
-    void SetDividerRegister(){
+    void SetDividerRegister()
+    {
         divider_register = 0;
     }
-
 
     /// FF07 - TAC - Timer Control (R/W)
     /// Bit  2   - Timer Enable
@@ -152,7 +162,7 @@ public:
     /// 01: CPU Clock / 16   (DMG, SGB2, CGB Single Speed Mode: 262144 Hz, SGB1: ~268400 Hz, CGB Double Speed Mode: 524288 Hz)
     /// 10: CPU Clock / 64   (DMG, SGB2, CGB Single Speed Mode:  65536 Hz, SGB1:  ~67110 Hz, CGB Double Speed Mode: 131072 Hz)
     /// 11: CPU Clock / 256  (DMG, SGB2, CGB Single Speed Mode:  16384 Hz, SGB1:  ~16780 Hz, CGB Double Speed Mode:  32768 Hz)
-    void SetTimerControl( uint8_t value )
+    void SetTimerControl(uint8_t value)
     {
         timer_control_register = value;
     }
@@ -161,5 +171,4 @@ public:
     {
         return timer_control_register;
     }
-
 };

@@ -11,15 +11,14 @@
 #include "DMAController.h"
 #include "Joypad.h"
 
-class Gameboy {
+class Gameboy
+{
 
 public:
-
     bool IsDoubleSpeedMode = false;
 
-
-    Cartridge cartridge;    // ORDER DEPENDENCY
-    HostMemory mem;         // ORDER DEPENDENCY
+    Cartridge cartridge; // ORDER DEPENDENCY
+    HostMemory mem;      // ORDER DEPENDENCY
     CPU cpu;
     Timer timer;
     LCD lcd;
@@ -40,7 +39,8 @@ public:
 
     void Start();
 
+    void Reset();
+
     uint16_t Step();
     void HandleInterrupts();
-
 };
