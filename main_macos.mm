@@ -109,6 +109,30 @@ int main(int, char**)
             while (SDL_PollEvent(&event))
             {
                 ImGui_ImplSDL2_ProcessEvent(&event);
+
+                if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+                {
+                    bool pressed = event.type == SDL_KEYDOWN;
+                    if(event.key.keysym.sym == SDLK_LEFT) {
+                        debugger.SetKeyState(Joypad::Button::Left,pressed);
+                    } else if (event.key.keysym.sym == SDLK_RIGHT) {
+                        debugger.SetKeyState(Joypad::Button::Right,pressed);
+                    } else if (event.key.keysym.sym == SDLK_UP) {
+                        debugger.SetKeyState(Joypad::Button::Up,pressed);
+                    } else if (event.key.keysym.sym == SDLK_DOWN) {
+                        debugger.SetKeyState(Joypad::Button::Down,pressed);
+                    } else if (event.key.keysym.sym == SDLK_z) {
+                        debugger.SetKeyState(Joypad::Button::A,pressed);
+                    } else if (event.key.keysym.sym == SDLK_x) {
+                        debugger.SetKeyState(Joypad::Button::B,pressed);
+                    } else if (event.key.keysym.sym == SDLK_s) {
+                        debugger.SetKeyState(Joypad::Button::Start,pressed);
+                    } else if (event.key.keysym.sym == SDLK_a){
+                        debugger.SetKeyState(Joypad::Button::Select,pressed);
+                    }
+
+                }
+
                 if (event.type == SDL_QUIT)
                     done = true;
                 if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
