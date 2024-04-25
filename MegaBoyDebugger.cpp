@@ -125,8 +125,8 @@ void MegaBoyDebugger::LoadTestRom()
     {
         std::cout << "file DOES NOT exist!";
     }
-    std::ifstream z80file(path, std::ios::in | std::ios::binary);
-    if (!z80file)
+    std::ifstream romfile(path, std::ios::in | std::ios::binary);
+    if (!romfile)
     {
         std::cout << "could not read " << path;
     }
@@ -135,7 +135,7 @@ void MegaBoyDebugger::LoadTestRom()
         auto size = std::filesystem::file_size(path);
         std::cout << "Reading " << path << "size=" << size << std::endl;
         auto *buffer = new uint8_t[size];
-        z80file.read((char *)buffer, size);
+        romfile.read((char *)buffer, size);
 
         // TODO:
         //  - Create instance of Cartridge on HostMemory.
@@ -143,7 +143,7 @@ void MegaBoyDebugger::LoadTestRom()
         gb->cartridge.load(buffer, size);
         // memcpy(&gb->mem[0],buffer, size);
         delete[] buffer;
-        z80file.close();
+        romfile.close();
     }
 }
 
