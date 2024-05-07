@@ -65,7 +65,7 @@ void MegaBoyDebugger::LoadTestRom()
 
     // std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
-    std::filesystem::path filename = "../tests/game_roms/Tetris (World).gb";
+    // std::filesystem::path filename = "../tests/game_roms/Tetris (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     // std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
@@ -105,14 +105,32 @@ void MegaBoyDebugger::LoadTestRom()
 
     // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/interrupts/ie_push.gb"; // failed
 
-    // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/basic.gb"; // OK
-    // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/reg_read.gb"; // OK
-    // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/oam_dma/sources-GS.gb"; // OK
-    // std::filesystem::path filename = "../tests/test_roms/mts/acceptance/ppu/stat_irq_blocking.gb";
+    // Timer
 
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/basic.gb";
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/reg_read.gb";
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb";
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/div_write.gb";            // OK
+    std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/rapid_toggle.gb"; // Fail "No intr"
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim00.gb";                // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim00_div_trigger.gb";    // Fail
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim01.gb";                // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim01_div_trigger.gb";    // Fail
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11.gb"; // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11_div_trigger.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10.gb"; // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10_div_trigger.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_reload.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_write_reloading.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tma_write_reloading.gb"; // Failed
+
+    // DMA
+
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/basic.gb"; // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/reg_read.gb"; // OK
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/oam_dma/sources-GS.gb"; // OK
+
+    // PPU tests
+
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/hblank_ly_scx_timing-GS.gb"; // FAIL
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/stat_irq_blocking.gb";
 
     auto path = std::filesystem::absolute(filename);
 
@@ -172,6 +190,11 @@ void MegaBoyDebugger::UpdateUI()
             {
                 DrawPPURegisters();
             }
+
+            if (ImGui::CollapsingHeader("Timer"))
+            {
+                DrawTimerRegisters();
+            }
         }
         ImGui::End();
     }
@@ -180,6 +203,33 @@ void MegaBoyDebugger::UpdateUI()
     {
         Run();
     }
+}
+
+void MegaBoyDebugger::DrawTimerRegisters()
+{
+    ImGui::Text("FF04 - DIV (Divider)");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF04]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF04]);
+
+    ImGui::Text("FF05 - TIMA (Counter)");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF05]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF05]);
+
+    ImGui::Text("FF06 - TMA (Modulo)");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF06]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF06]);
+
+    ImGui::Text("FF07 - TAC (Timer Control)");
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "0x%04x", gb->mem[0xFF07]);
+    ImGui::SameLine();
+    ImGui::TextColored(UIConfig::COLOR_VALUE_DECIMAL, "(%d)", gb->mem[0xFF07]);
 }
 
 void MegaBoyDebugger::DrawPPURegisters()

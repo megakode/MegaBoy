@@ -11,7 +11,7 @@
 
 #pragma once
 
-/// Based on the most detailed description of the GB timing system i could find: https://github.com/AntonioN D/giibiiadvance/blob/master/docs/TCAGBD.pdf
+/// Based on the most detailed description of the GB timing system i could find: https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf
 class Timer
 {
 
@@ -80,20 +80,20 @@ public:
 
         switch (timer_control_register & TimerMultiplierBitmask)
         {
-        case 0b00: // CPU Clock / 1024 = detect overflow from bits 8-0 in divider register
-            increase_timer = (previous_divider_value & 1023) + ticks > (1023);
+        case 0b00: // CPU Clock / 1024 = detect overflow from bits 7-0 in divider register
+            increase_timer = (previous_divider_value & 512) && !(divider_register & 512);
             break;
-        case 0b01: // CPU Clock / 16 = detect overflow from bits 2-0 in divider register
+        case 0b01: // CPU Clock / 16 = detect overflow from bits 3-0 in divider register
             // increase_timer = (divider_register & 0b111) < (previous_divider_value & 0b111);
-            increase_timer = (previous_divider_value & 15) + ticks > (15);
+            increase_timer = (previous_divider_value & 8) && !(divider_register & 8);
             break;
-        case 0b10: // CPU Clock / 64 = detect overflow from bits 4-0 in divider register
+        case 0b10: // CPU Clock / 64 = detect overflow from bits 5-0 in divider register
             // increase_timer = (divider_register & 0b11111) < (previous_divider_value & 0b11111);
-            increase_timer = (previous_divider_value & 63) + ticks > (63);
+            increase_timer = (previous_divider_value & 32) && !(divider_register & 32);
             break;
-        case 0b11: // CPU Clock / 256 = detect overflow from bits 6-0 in divider register
+        case 0b11: // CPU Clock / 256 = detect overflow from bits 7-0 in divider register
             // increase_timer = (divider_register & 0b1111111) < (previous_divider_value & 0b1111111);
-            increase_timer = (previous_divider_value & 255) + ticks > (255);
+            increase_timer = (previous_divider_value & 128) && !(divider_register & 128);
             break;
         }
 

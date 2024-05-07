@@ -16,6 +16,9 @@ Gameboy::Gameboy() : mem(cartridge), cpu(mem), lcd(mem), dma(mem), joypad(mem), 
     {
         switch (addr)
         {
+        case (uint16_t)IOAddress::TimerCounter:
+            timer.SetCounter(value);
+            break;
         case (uint16_t)IOAddress::TimerControl:
             timer.SetTimerControl(value);
             break;
@@ -57,9 +60,13 @@ uint16_t Gameboy::Step()
     // handle interrupts
     HandleInterrupts();
 
+    timer.Step(1);
+
     uint16_t cycles = cpu.step();
 
-    timer.Step(cycles);
+    timer.Step(cycles - 1);
+    // timer.Step(cycles);
+
     lcd.Step(cycles);
     dma.Step(cycles);
 

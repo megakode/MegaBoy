@@ -34,6 +34,7 @@ public:
 
     void DrawDebuggingControls();
 
+    void DrawTimerRegisters();
     void DrawPPURegisters();
 
     void LoadTestRom();

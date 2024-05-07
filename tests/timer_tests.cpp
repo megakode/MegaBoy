@@ -19,29 +19,25 @@ TEST_CASE("timer")
     constexpr uint8_t TimerDisabled = 0b000;
     constexpr uint8_t TimerCPUDiv16 = 0b001;
 
-
-    timer.didOverflow = [&didOverflow](){
+    timer.didOverflow = [&didOverflow]()
+    {
         didOverflow = true;
     };
 
-
-
-
     // Timer increases at CPU clock / 16
-    timer.SetTimerControl( TimerEnabled + TimerCPUDiv16 );
+    timer.SetTimerControl(TimerEnabled + TimerCPUDiv16);
     timer.SetDividerRegister();
-    timer.SetModulo( 0x11 ); // expect counter to be reset to this
+    timer.SetModulo(0x11); // expect counter to be reset to this
     timer.SetCounter(0);
 
-    for(int i = 0 ; i < 255 ; i++ )
+    for (int i = 0; i < 254; i++)
     {
         REQUIRE(timer.GetCounter() == i);
-        timer.Step(16);
+        timer.Step(4);
         std::cout << "i=" << i << "counter=" << timer.GetCounter() << std::endl;
     }
     REQUIRE(didOverflow == false);
     timer.Step(16);
-    REQUIRE(timer.GetCounter() == 0x11 );
+    REQUIRE(timer.GetCounter() == 0x11);
     REQUIRE(didOverflow);
-
 }
