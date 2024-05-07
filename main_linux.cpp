@@ -99,7 +99,7 @@ int main(int, char **)
     // IM_ASSERT(font != NULL);
 
     // Our state
-    bool show_demo_window = true;
+    bool show_demo_window = false;
 
     MegaBoyDebugger debugger;
     debugger.LoadTestRom();
