@@ -12,6 +12,7 @@
 
 #endif
 
+#include "UI/UIConfig.h"
 #include "MegaBoyDebugger.h"
 
 SDL_Renderer *renderer;
@@ -75,7 +76,7 @@ int main(int, char **)
     // Setup Dear ImGui style
 
     // ImGui::StyleColorsDark();
-    setupStyle();
+    UIConfig::setupStyle();
     // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends

@@ -5,7 +5,7 @@
 #ifndef MEGABOY_CARTRIDGE_H
 #define MEGABOY_CARTRIDGE_H
 
-// #include <cstdint>
+#include <cstdint>
 #include <array>
 #include <iostream>
 
