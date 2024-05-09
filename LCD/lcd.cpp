@@ -225,7 +225,7 @@ void LCD::DrawBackground()
             uint8_t bit_number = 7 - x;
             uint8_t color = ((lobits >> bit_number) & 1) | (((hibits >> bit_number) & 1) << 1);
             line_buffer[line_x++] = color;
-            *dst_ptr = color;
+            //*dst_ptr = color;
             dst_ptr++;
         }
     }

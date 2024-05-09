@@ -66,8 +66,9 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game_roms/Asteroids (USA, Europe).gb";
     // std::filesystem::path filename = "../tests/game_roms/Alleyway (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Tetris (World).gb";
+    // std::filesystem::path filename = "../tests/game_roms/Tennis (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
-    // std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     // std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
     // std::filesystem::path filename = "../tests/game_roms/Pipe Dream (USA).gb";
     // std::filesystem::path filename = "../tests/game_roms/Heiankyo Alien (USA).gb";
@@ -117,7 +118,7 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11_div_trigger.gb"; // OK
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10.gb"; // OK
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10_div_trigger.gb"; // OK
-    std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_reload.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_reload.gb"; // Failed
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_write_reloading.gb"; // Failed
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tma_write_reloading.gb"; // Failed
 
@@ -131,6 +132,7 @@ void MegaBoyDebugger::LoadTestRom()
 
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/hblank_ly_scx_timing-GS.gb"; // FAIL
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/stat_irq_blocking.gb"; // FAIL
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/age-test-roms/ly/ly-dmgC-cgbBC.gb"; // FAIL
 
     auto path = std::filesystem::absolute(filename);
 
