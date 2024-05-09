@@ -60,6 +60,7 @@ add_executable(cputests
     tests/cputests.cpp 
     HostMemory.cpp
     cartridge/Cartridge.cpp
+    Timer.cpp
     CPU/cpu.cpp 
     CPU/cpu_arithmetic_instructions.cpp
     CPU/cpu_bit_instructions.cpp

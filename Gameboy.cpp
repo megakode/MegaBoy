@@ -63,8 +63,10 @@ uint16_t Gameboy::Step()
     timer.Step(1);
 
     uint16_t cycles = cpu.step();
-
-    timer.Step(cycles - 1);
+    for (int i = 0; i < cycles - 1; i++)
+    {
+        timer.Step(1);
+    }
     // timer.Step(cycles);
 
     lcd.Step(cycles);

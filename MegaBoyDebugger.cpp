@@ -108,16 +108,16 @@ void MegaBoyDebugger::LoadTestRom()
     // Timer
 
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/div_write.gb";            // OK
-    std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/rapid_toggle.gb"; // Fail "No intr"
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/rapid_toggle.gb"; // Fail "No intr"
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim00.gb";                // OK
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim00_div_trigger.gb";    // Fail
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim00_div_trigger.gb"; // OK
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim01.gb";                // OK
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim01_div_trigger.gb";    // Fail
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim01_div_trigger.gb"; // OK
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11.gb"; // OK
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11_div_trigger.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim11_div_trigger.gb"; // OK
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10.gb"; // OK
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10_div_trigger.gb"; // Failed
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_reload.gb"; // Failed
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tim10_div_trigger.gb"; // OK
+    std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_reload.gb"; // Failed
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tima_write_reloading.gb"; // Failed
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/timer/tma_write_reloading.gb"; // Failed
 
@@ -130,7 +130,7 @@ void MegaBoyDebugger::LoadTestRom()
     // PPU tests
 
     // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/hblank_ly_scx_timing-GS.gb"; // FAIL
-    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/stat_irq_blocking.gb";
+    // std::filesystem::path filename = "../tests/game-boy-test-roms-v5.1/mooneye-test-suite/acceptance/ppu/stat_irq_blocking.gb"; // FAIL
 
     auto path = std::filesystem::absolute(filename);
 
