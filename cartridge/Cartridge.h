@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <array>
 #include <iostream>
+#include "CartridgeHeader.h"
 
 class Cartridge
 {
@@ -19,12 +20,16 @@ private:
     int rom_offset = 0;
     std::array<uint8_t, MAXIMUM_ROM_SIZE> rom{}; // Fit the largest ROM size (8Mbit = 1MB)
     // 0xa00 - 0xbfff RAM
+    CartridgeHeader header;
+    bool is_loaded = false;
 
 public:
-    Cartridge() { std::cout << "cartridge()"; }
+    Cartridge() {}
 
+    CartridgeHeader &GetHeader();
+    const std::string CartridgeTypeName();
+    bool isLoaded();
     bool load(uint8_t *data, long size);
-
     uint8_t read(uint16_t address);
     void write(uint8_t value, uint16_t address);
 };

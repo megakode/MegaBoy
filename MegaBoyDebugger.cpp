@@ -57,7 +57,7 @@ void MegaBoyDebugger::LoadBIOSRom()
     gb->cpu.regs.PC = 0;
 }
 
-void MegaBoyDebugger::LoadTestRom()
+void MegaBoyDebugger::LoadRom(std::filesystem::path filename)
 {
 
     // std::filesystem::path filename = "../tests/game_roms/Dr. Mario (World).gb";
@@ -68,7 +68,7 @@ void MegaBoyDebugger::LoadTestRom()
     // std::filesystem::path filename = "../tests/game_roms/Tetris (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Tennis (World).gb";
     // std::filesystem::path filename = "../tests/game_roms/Bubble Ghost (USA, Europe).gb";
-    std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
+    // std::filesystem::path filename = "../tests/game_roms/Motocross Maniacs (USA).gb"; // Invalid opcode - investigate this!
     // std::filesystem::path filename = "../tests/game_roms/Space Invaders (Japan).gb";
     // std::filesystem::path filename = "../tests/game_roms/Pipe Dream (USA).gb";
     // std::filesystem::path filename = "../tests/game_roms/Heiankyo Alien (USA).gb";
@@ -176,7 +176,7 @@ void MegaBoyDebugger::UpdateUI()
 
         if (ImGui::Begin("Debugger"))
         {
-
+            DrawMainMenu();
             // ImGui::Begin("Debugging controls");
 
             DrawDebuggingControls();
@@ -197,6 +197,11 @@ void MegaBoyDebugger::UpdateUI()
             {
                 DrawTimerRegisters();
             }
+
+            if (ImGui::CollapsingHeader("ROM"))
+            {
+                DrawCartridgeHeader();
+            }
         }
         ImGui::End();
     }
@@ -204,6 +209,44 @@ void MegaBoyDebugger::UpdateUI()
     if (is_running)
     {
         Run();
+    }
+}
+
+void MegaBoyDebugger::DrawMainMenu()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Open ROM"))
+            {
+                // Open rom file
+                if (onOpenFile)
+                {
+                    onOpenFile();
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void MegaBoyDebugger::DrawCartridgeHeader()
+{
+    if (gb->cartridge.isLoaded())
+    {
+        ImGui::Text("Title");
+        ImGui::SameLine();
+        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.GetHeader().title);
+
+        ImGui::Text("Cartridge");
+        ImGui::SameLine();
+        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.CartridgeTypeName().c_str());
+    }
+    else
+    {
+        ImGui::Text("N/A");
     }
 }
 

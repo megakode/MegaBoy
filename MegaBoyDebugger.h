@@ -2,6 +2,7 @@
 // Created by sbeam on 04/12/2021.
 //
 #include <memory>
+#include <filesystem>
 #include "imgui/imgui.h"
 #include "CPU/cpu.h"
 #include "UI/RegisterWindow.h"
@@ -32,23 +33,30 @@ public:
 
     void UpdateUI();
 
+    void DrawMainMenu();
+
     void DrawDebuggingControls();
 
+    void DrawCartridgeHeader();
     void DrawTimerRegisters();
     void DrawPPURegisters();
 
-    void LoadTestRom();
+    void LoadRom(std::filesystem::path filename);
 
     void Step();
-
-    static constexpr uint16_t GB_SCREEN_WIDTH = 256;
-    static constexpr uint16_t GB_SCREEN_HEIGHT = 256;
-    /// RGB screen data
-    uint8_t *screenData;
 
     void Run();
 
     void LoadBIOSRom();
 
     void SetKeyState(Joypad::Button button, bool pressed);
+
+    // Callback function when "Open File" is pressed in the cross-platform ImGUI UI.
+    // The native code should set a callback on this property and spawn a native file picker UI when called.
+    std::function<void()> onOpenFile = nullptr;
+
+    static constexpr uint16_t GB_SCREEN_WIDTH = 256;
+    static constexpr uint16_t GB_SCREEN_HEIGHT = 256;
+    /// RGB screen data
+    uint8_t *screenData;
 };

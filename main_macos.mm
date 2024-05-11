@@ -8,6 +8,27 @@
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
+#import <Cocoa/Cocoa.h>
+
+MegaBoyDebugger debugger;
+
+void showOpenFileDialog()
+{
+    NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+    [openPanel setCanChooseFiles:YES];
+    [openPanel setCanChooseDirectories:YES];
+    
+    if ([openPanel runModal] == NSModalResponseOK) {
+        NSURL* selectedURL = [openPanel URL];
+        NSLog(@"Selected File: %@", [selectedURL path]);
+
+        // Convert NSString to std::filesystem::path
+        std::string strPath = [[selectedURL path] UTF8String];
+        std::filesystem::path path(strPath);
+    
+        debugger.LoadRom(path);
+    }
+}
 
 int main(int, char**)
 {
@@ -63,9 +84,11 @@ int main(int, char**)
         return -3;
     }
 
-     //MegaBoyDebugger::GB_SCREEN_WIDTH
-     MegaBoyDebugger debugger;
-     debugger.LoadTestRom();
+     debugger.onOpenFile = [&](){
+        showOpenFileDialog();
+     };
+     // TODO: if command line parameters, load rom
+     //debugger.LoadRom();
 
     // Setup Platform/Renderer backends
     CAMetalLayer* layer = (__bridge CAMetalLayer*)SDL_RenderGetMetalLayer(renderer);

@@ -9,14 +9,15 @@
 #include <cstdint>
 
 /// MCB3 with RAM size 64KB refers to MBC30, used only in Ppcket Monster Crystal Version (jap)
-enum CartridgeType : uint8_t {
+enum CartridgeType : uint8_t
+{
     ROM_Only = 0x0,
     MBC1 = 0x1,
     MBC1_RAM = 0x2,
     MBC1_RAM_BATTERY = 0x3,
     MBC2 = 0x5,
     MBC2_BATTERY = 0x6,
-    ROM_RAM = 0x08, // No official cartridge uses this
+    ROM_RAM = 0x08,         // No official cartridge uses this
     ROM_RAM_BATTERY = 0x09, // No official cartridge uses this
     MMM01 = 0x0B,
     MMM01_RAM = 0x0c,
@@ -40,44 +41,8 @@ enum CartridgeType : uint8_t {
     HuC1 = 0xff,
 };
 
-const std::string& CartridgeTypeName(CartridgeType type){
-
-    static std::map<CartridgeType,const std::string> names = {
-            {ROM_Only,                       "ROM"},
-            {MBC1,                           "MBC1"},
-            {MBC1_RAM,                       "MBC1 + RAM"},
-            {MBC1_RAM_BATTERY,               "MBC1 + RAM + Battery"},
-            {MBC2,                           "MBC2"},
-            {MBC2_BATTERY,                   "MBC2 + Battery"},
-            {ROM_RAM,                        "ROM + RAM (No official cartridge uses this!)"},
-            {ROM_RAM_BATTERY,                "ROM + RAM + Battery (No official cartridge uses this!"},
-            {MMM01,                          "MMM01"},
-            {MMM01_RAM,                      "MMM01 + RAM"},
-            {MMM01_RAM_BATTERY,              "MMM01 + RAM + Battery"},
-            {MBC3_TIMER_BATTERY,             "MBC3 + Timer + Battery"},
-            {MBC3_TIMER_RAM_BATTERY,         "MBC3 + Timer + RAM + Battery"},
-            {MBC3,                           "MBC3"},
-            {MBC3_RAM,                       "MBC3 + RAM"},
-            {MBC3_RAM_BATTERY,               "MBC3 + RAM + Battery"},
-            {MBC5,                           "MBC5"},
-            {MBC5_RAM,                       "MBC5 + RAM"},
-            {MBC5_RAM_BATTERY,               "MBC5 + RAM + Battery"},
-            {MBC5_RUMBLE,                    "MBC5 + Rumble"},
-            {MBC5_RUMBLE_RAM,                "MBC5 + Rumble + RAM"},
-            {MBC5_RUMBLE_RAM_BATTERY,        "MBC5 + Rumble + RAM + Battery"},
-            {MBC6,                           "MBC6"},
-            {MBC7_SENSOR_RUMBLE_RAM_BATTERY, "MBC7 + Sensor + Rumble + RAM + Battery"},
-            {POCKET_CAMERA,                  "Pocket Camera"},
-            {BANDAI_TAMA5,                   "Bandai TAMA5 (Only used in Tamagotchi 3)"},
-            {HuC3,                           "HuC3 - Hudson Soft MBC with RTC and piezo"},
-            {HuC1,                           "HuC1 - Hudson Soft MBC with IR"}
-    };
-
-    return names[type];
-
-};
-
-struct CartridgeHeader {
+struct CartridgeHeader
+{
 
     /// 0x0100 - 0x0103 Code that jumps to actual game entry point. Usually a NOP + JP instruction.
     uint8_t entry_point[4];
@@ -151,8 +116,9 @@ struct CartridgeHeader {
     uint16_t global_checksum;
 
     /// Get the ROM size in bytes, based on the cartridge header field "ROMSize" (0x0148).
-    [[nodiscard]] uint32_t ROMSizeInBytes() const {
-        return (32*1024) << ROM_size;
+    [[nodiscard]] uint32_t ROMSizeInBytes() const
+    {
+        return (32 * 1024) << ROM_size;
     }
 
 } __attribute__((packed));
