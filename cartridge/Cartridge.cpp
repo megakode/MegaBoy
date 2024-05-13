@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cstring>
+#include <format>
 #include "Cartridge.h"
 
 bool Cartridge::isLoaded()
@@ -13,11 +14,22 @@ bool Cartridge::isLoaded()
 
 uint8_t Cartridge::read(uint16_t address)
 {
-    return rom[address + rom_offset];
+    if (mbc)
+    {
+        return mbc->Read(address);
+    }
+    else
+    {
+        return rom[address];
+    }
 }
 
 void Cartridge::write(uint8_t value, uint16_t address)
 {
+    if (mbc)
+    {
+        mbc->Write(value, address);
+    }
 }
 
 bool Cartridge::load(uint8_t *data, long size)
@@ -29,9 +41,19 @@ bool Cartridge::load(uint8_t *data, long size)
         {
             rom[i] = *(data++);
         }
-        // memcpy(rom.data(),data,size);
 
         memcpy(&header, &rom[0x100], sizeof(CartridgeHeader));
+
+        if (header.cartridge_type == CartridgeType::ROM_Only)
+        {
+            // NoMBC *mbc = new NoMBC(rom);
+            mbc = std::make_unique<NoMBC>(rom);
+        }
+        else if (header.cartridge_type == CartridgeType::MBC1 || header.cartridge_type == CartridgeType::MBC1_RAM || header.cartridge_type == CartridgeType::MBC1_RAM_BATTERY)
+        {
+            mbc = std::make_unique<class MBC1>(rom);
+            // MBC *mbc = new MBC1(rom);
+        }
         is_loaded = true;
     }
 
@@ -43,7 +65,31 @@ CartridgeHeader &Cartridge::GetHeader()
     return header;
 }
 
-const std::string Cartridge::CartridgeTypeName()
+const std::string Cartridge::ROMSizeString()
+{
+    static std::array<std::string, 9> names = {
+        "32 KByte - 2 banks (No ROM banking)", // 0x00
+        "64 KByte - 4 banks",                  // 0x01
+        "128 KByte - 8 banks",                 // 0x02
+        "256 KByte - 16 banks",                // 0x03
+        "512 KByte - 32 banks",                // 0x04
+        "1 MByte - 64 banks",                  // 0x05
+        "2 MByte - 128 banks",                 // 0x06
+        "4 MByte - 256 banks",                 // 0x07
+        "8 MByte - 512 banks"                  // 0x08
+    };
+
+    if (header.ROM_size >= names.size())
+    {
+        return std::format("Invalid ROM size: {}", header.ROM_size);
+    }
+    else
+    {
+        return names[header.ROM_size];
+    }
+}
+
+const std::string Cartridge::CartridgeTypeString()
 {
 
     static std::map<CartridgeType, const std::string> names = {

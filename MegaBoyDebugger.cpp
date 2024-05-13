@@ -236,13 +236,17 @@ void MegaBoyDebugger::DrawCartridgeHeader()
 {
     if (gb->cartridge.isLoaded())
     {
-        ImGui::Text("Title");
+        ImGui::Text("Title:");
         ImGui::SameLine();
         ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.GetHeader().title);
 
-        ImGui::Text("Cartridge");
+        ImGui::Text("Cartridge:");
         ImGui::SameLine();
-        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.CartridgeTypeName().c_str());
+        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.CartridgeTypeString().c_str());
+
+        ImGui::Text("ROM Size:");
+        ImGui::SameLine();
+        ImGui::TextColored(UIConfig::COLOR_VALUE_HEX, "%s", gb->cartridge.ROMSizeString().c_str());
     }
     else
     {
