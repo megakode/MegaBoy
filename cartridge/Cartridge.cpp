@@ -8,12 +8,20 @@
 #include "Cartridge.h"
 #include "MBC.h"
 
-bool Cartridge::isLoaded()
+bool Cartridge::IsLoaded()
 {
     return is_loaded;
 }
 
-uint8_t Cartridge::read(uint16_t address)
+void Cartridge::Reset()
+{
+    if (mbc)
+    {
+        mbc->Reset();
+    }
+}
+
+uint8_t Cartridge::Read(uint16_t address)
 {
     if (mbc)
     {
@@ -25,7 +33,7 @@ uint8_t Cartridge::read(uint16_t address)
     }
 }
 
-void Cartridge::write(uint8_t value, uint16_t address)
+void Cartridge::Write(uint8_t value, uint16_t address)
 {
     if (mbc)
     {
@@ -33,7 +41,7 @@ void Cartridge::write(uint8_t value, uint16_t address)
     }
 }
 
-bool Cartridge::load(uint8_t *data, long size)
+bool Cartridge::Load(uint8_t *data, long size)
 {
 
     if (size <= MAXIMUM_ROM_SIZE)

@@ -35,10 +35,12 @@ public:
     const std::string ROMSizeString();
     const std::string CartridgeTypeString();
 
-    bool isLoaded();
-    bool load(uint8_t *data, long size);
-    uint8_t read(uint16_t address);
-    void write(uint8_t value, uint16_t address);
+    bool IsLoaded();
+    // Reset the cartridge but does not remove it. Currently only affects the MBC bank.
+    void Reset();
+    bool Load(uint8_t *data, long size);
+    uint8_t Read(uint16_t address);
+    void Write(uint8_t value, uint16_t address);
 };
 
 #endif // MEGABOY_CARTRIDGE_H

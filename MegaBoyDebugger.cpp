@@ -160,7 +160,7 @@ void MegaBoyDebugger::LoadRom(std::filesystem::path filename)
         // TODO:
         //  - Create instance of Cartridge on HostMemory.
         //  - load buffer into Cartridge
-        gb->cartridge.load(buffer, size);
+        gb->cartridge.Load(buffer, size);
         // memcpy(&gb->mem[0],buffer, size);
         delete[] buffer;
         z80file.close();
@@ -234,7 +234,7 @@ void MegaBoyDebugger::DrawMainMenu()
 
 void MegaBoyDebugger::DrawCartridgeHeader()
 {
-    if (gb->cartridge.isLoaded())
+    if (gb->cartridge.IsLoaded())
     {
         ImGui::Text("Title:");
         ImGui::SameLine();

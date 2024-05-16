@@ -46,6 +46,7 @@ void Gameboy::Reset()
     cpu.reset();
     timer.Reset();
     dma.Reset();
+    cartridge.Reset();
     mem[static_cast<uint16_t>(IOAddress::InterruptEnabled)] = 0;
     mem[static_cast<uint16_t>(IOAddress::InterruptFlag)] = 0;
 }

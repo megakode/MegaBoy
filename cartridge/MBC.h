@@ -6,6 +6,7 @@ class MBC
 {
 public:
     MBC(ROMArray &rom) : rom_array(rom){};
+    virtual void Reset() = 0;
     virtual void Write(uint8_t value, uint16_t address) = 0;
     virtual uint8_t Read(uint16_t address) = 0;
     virtual ~MBC(){};
@@ -24,6 +25,10 @@ public:
     NoMBC(ROMArray &rom) : MBC(rom){};
 
     void Write(uint8_t value, uint16_t address) {
+        // Do nothing
+    };
+
+    void Reset() {
         // Do nothing
     };
 
@@ -46,6 +51,13 @@ class MBC1 : public MBC
 public:
     MBC1(ROMArray &rom) : MBC(rom){};
 
+    void Reset()
+    {
+        rom_bank_lower_bits = 0;
+        rom_bank_upper_bits = 0;
+        rom_bank_number = 1;
+    }
+
     void Write(uint8_t value, uint16_t address)
     {
         if (address >= 0x2000 && address <= 0x3fff)
@@ -58,7 +70,7 @@ public:
                 rom_bank_number = 1;
             }
 
-            // std::cout << std::format("Set ROM Bank (lower) = {} \n", rom_bank_number);
+            std::cout << std::format("Set ROM Bank (lower) = {} \n", rom_bank_number);
         }
         else if (address >= 0x4000 && address <= 0x5fff)
         {

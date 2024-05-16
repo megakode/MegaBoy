@@ -39,7 +39,7 @@ uint8_t HostMemory::Read(uint16_t address) const
 
     if (address <= 0x7fff)
     {
-        return cartridge.read(address);
+        return cartridge.Read(address);
     }
 
     // 0xE000 - 0xFDFF: Echo RAM
@@ -57,7 +57,7 @@ void HostMemory::Write(const uint16_t address, const uint8_t value)
 {
     if (address <= 0x7fff)
     {
-        cartridge.write(value, address);
+        cartridge.Write(value, address);
     }
     else
     {
