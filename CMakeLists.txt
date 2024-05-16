@@ -90,6 +90,7 @@ catch_discover_tests(cputests)
 add_executable(MegaBoy ${MainFile})
 
 add_subdirectory(CPU)
+add_subdirectory(cartridge)
 add_subdirectory(disassembler)
 
 target_sources(MegaBoy PRIVATE

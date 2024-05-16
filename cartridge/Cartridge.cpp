@@ -6,6 +6,7 @@
 #include <cstring>
 #include <format>
 #include "Cartridge.h"
+#include "MBC.h"
 
 bool Cartridge::isLoaded()
 {

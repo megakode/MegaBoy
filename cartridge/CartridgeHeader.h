@@ -8,6 +8,9 @@
 #include <map>
 #include <cstdint>
 
+constexpr static long MAXIMUM_ROM_SIZE = 1048576;
+using ROMArray = std::array<uint8_t, MAXIMUM_ROM_SIZE>;
+
 /// MCB3 with RAM size 64KB refers to MBC30, used only in Ppcket Monster Crystal Version (jap)
 enum CartridgeType : uint8_t
 {
